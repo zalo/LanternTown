@@ -1,0 +1,34 @@
+# generated: models, materials, renders, bakes, telemetry, the upload token (tens of GB) - rebuilt by tools/
+# ( kept: the sources of the MSFT_lod test kit, which live beside the models they generate )
+/out/*
+!/out/web/
+/out/web/*
+!/out/web/_nextglb/
+/out/web/_nextglb/*
+!/out/web/_nextglb/msft_lod_kit/
+/out/web/_nextglb/msft_lod_kit/models/
+
+# the judges' scores and notes ( the gallery's frozen data carries the scores )
+/reviews/
+
+# dependencies and checkouts
+/node_modules/
+/upstream/
+
+# temporary work, logs, local agent state
+/.scratch/
+/logs/
+/.claude/
+__pycache__/
+*.pyc
+/web/next/.base/
+/web/perf/.base/
+
+# private reference material: art-direction boards and their crops, a copyrighted paper, device screenshots
+/assets/*.png
+/assets/*.jpg
+/assets/*.jpeg
+/docs/ref/
+/screenshots/
+
+.DS_Store

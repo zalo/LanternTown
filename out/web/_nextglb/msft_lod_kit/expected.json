@@ -1,0 +1,1506 @@
+{
+	"about": "Expectations for a GLTFLoader with MSFT_lod, read by check.js. Tier A: THREE.LOD in place of the node, everything loaded. Tier B: levels fetched when first needed. See README.md.",
+	"spec": "https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/MSFT_lod",
+	"reference_camera": {
+		"fov": 50,
+		"aspect": 1.7777777777777777,
+		"formula": "distance = radius * sqrt( PI / ( 4 * aspect * tan( fov / 2 )^2 * coverage ) )"
+	},
+	"models": [
+		{
+			"about": "(a) node-level MSFT_lod, 3 levels, MSFT_screencoverage [0.25, 0.05, 0.004] (so: nothing drawn below 0.004). One buffer.",
+			"file": "a_node_lod.gltf",
+			"lod_count": 1,
+			"lods": [
+				{
+					"kind": "node",
+					"node": 0,
+					"levels": [
+						"A_High",
+						"A_Mid",
+						"A_Low"
+					],
+					"level_nodes": [
+						0,
+						1,
+						2
+					],
+					"level_has_mesh": [
+						true,
+						true,
+						true
+					],
+					"parent": null,
+					"coverage": [
+						0.25,
+						0.05,
+						0.004
+					],
+					"world_center": [
+						0,
+						0,
+						0
+					],
+					"world_radius": 1.732051,
+					"reference_distances": [
+						4.937695,
+						11.04102
+					],
+					"reference_cull": 39.03591,
+					"level0": {
+						"name": "A_High",
+						"tag": "a-level-0",
+						"translation": [
+							0,
+							0,
+							0
+						],
+						"rotation": [
+							0,
+							0,
+							0,
+							1
+						],
+						"scale": [
+							1,
+							1,
+							1
+						],
+						"world_position": [
+							0,
+							0,
+							0
+						],
+						"children": []
+					},
+					"level_uris": [
+						[
+							"a_node_lod.bin"
+						],
+						[
+							"a_node_lod.bin"
+						],
+						[
+							"a_node_lod.bin"
+						]
+					],
+					"level_bytes": [
+						23088,
+						1488,
+						648
+					]
+				}
+			]
+		},
+		{
+			"about": "(f) the same model as a_node_lod.gltf in one .glb. One BIN chunk: can only be loaded whole (without range requests).",
+			"file": "a_node_lod.glb",
+			"lod_count": 1,
+			"lods": [
+				{
+					"kind": "node",
+					"node": 0,
+					"levels": [
+						"A_High",
+						"A_Mid",
+						"A_Low"
+					],
+					"level_nodes": [
+						0,
+						1,
+						2
+					],
+					"level_has_mesh": [
+						true,
+						true,
+						true
+					],
+					"parent": null,
+					"coverage": [
+						0.25,
+						0.05,
+						0.004
+					],
+					"world_center": [
+						0,
+						0,
+						0
+					],
+					"world_radius": 1.732051,
+					"reference_distances": [
+						4.937695,
+						11.04102
+					],
+					"reference_cull": 39.03591,
+					"level0": {
+						"name": "A_High",
+						"tag": "a-level-0",
+						"translation": [
+							0,
+							0,
+							0
+						],
+						"rotation": [
+							0,
+							0,
+							0,
+							1
+						],
+						"scale": [
+							1,
+							1,
+							1
+						],
+						"world_position": [
+							0,
+							0,
+							0
+						],
+						"children": []
+					},
+					"level_uris": [
+						[
+							"a_node_lod.glb"
+						],
+						[
+							"a_node_lod.glb"
+						],
+						[
+							"a_node_lod.glb"
+						]
+					],
+					"level_bytes": [
+						23088,
+						1488,
+						648
+					]
+				}
+			],
+			"glb": {
+				"bytes": 27796,
+				"head_bytes": 2572,
+				"coarse_bytes": 648,
+				"finest_bytes": 23088
+			}
+		},
+		{
+			"about": "(b) as (a) without MSFT_screencoverage: the loader needs distances of its own.",
+			"file": "b_no_coverage.gltf",
+			"lod_count": 1,
+			"lods": [
+				{
+					"kind": "node",
+					"node": 0,
+					"levels": [
+						"B_High",
+						"B_Mid",
+						"B_Low"
+					],
+					"level_nodes": [
+						0,
+						1,
+						2
+					],
+					"level_has_mesh": [
+						true,
+						true,
+						true
+					],
+					"parent": null,
+					"coverage": null,
+					"world_center": [
+						0,
+						0,
+						0
+					],
+					"world_radius": 1.732051,
+					"reference_distances": [
+						4.937695,
+						9.87539
+					],
+					"reference_cull": null,
+					"level0": {
+						"name": "B_High",
+						"tag": "b-level-0",
+						"translation": [
+							0,
+							0,
+							0
+						],
+						"rotation": [
+							0,
+							0,
+							0,
+							1
+						],
+						"scale": [
+							1,
+							1,
+							1
+						],
+						"world_position": [
+							0,
+							0,
+							0
+						],
+						"children": []
+					},
+					"level_uris": [
+						[
+							"b_no_coverage.bin"
+						],
+						[
+							"b_no_coverage.bin"
+						],
+						[
+							"b_no_coverage.bin"
+						]
+					],
+					"level_bytes": [
+						23088,
+						1488,
+						648
+					]
+				}
+			]
+		},
+		{
+			"about": "(c) two LODs in one scene: C_Left_High (2 levels; translation, rotation, scale; a child node; under a scaled parent) and C_Right_High (4 levels).",
+			"file": "c_transforms.gltf",
+			"lod_count": 2,
+			"lods": [
+				{
+					"kind": "node",
+					"node": 1,
+					"levels": [
+						"C_Left_High",
+						"C_Left_Low"
+					],
+					"level_nodes": [
+						1,
+						3
+					],
+					"level_has_mesh": [
+						true,
+						true
+					],
+					"parent": "C_Left_Parent",
+					"coverage": [
+						0.1,
+						0
+					],
+					"world_center": [
+						-6,
+						2.6,
+						0
+					],
+					"world_radius": 5.635601,
+					"reference_distances": [
+						25.40235
+					],
+					"reference_cull": null,
+					"level0": {
+						"name": "C_Left_High",
+						"tag": "c-left-0",
+						"translation": [
+							0,
+							1,
+							0
+						],
+						"rotation": [
+							0,
+							0.3826834323650898,
+							0,
+							0.9238795325112867
+						],
+						"scale": [
+							1.5,
+							1,
+							1
+						],
+						"world_position": [
+							-6,
+							2,
+							0
+						],
+						"children": [
+							"C_Left_Child"
+						]
+					},
+					"level_uris": [
+						[
+							"c_transforms.bin"
+						],
+						[
+							"c_transforms.bin"
+						]
+					],
+					"level_bytes": [
+						23736,
+						1488
+					]
+				},
+				{
+					"kind": "node",
+					"node": 4,
+					"levels": [
+						"C_Right_High",
+						"C_Right_Mid",
+						"C_Right_Low",
+						"C_Right_Lowest"
+					],
+					"level_nodes": [
+						4,
+						5,
+						6,
+						7
+					],
+					"level_has_mesh": [
+						true,
+						true,
+						true,
+						true
+					],
+					"parent": null,
+					"coverage": [
+						0.3,
+						0.1,
+						0.03,
+						0.002
+					],
+					"world_center": [
+						6,
+						0,
+						0
+					],
+					"world_radius": 1.732051,
+					"reference_distances": [
+						4.507478,
+						7.807182,
+						14.2539
+					],
+					"reference_cull": 55.20511,
+					"level0": {
+						"name": "C_Right_High",
+						"tag": "c-right-0",
+						"translation": [
+							6,
+							0,
+							0
+						],
+						"rotation": [
+							0,
+							0,
+							0,
+							1
+						],
+						"scale": [
+							1,
+							1,
+							1
+						],
+						"world_position": [
+							6,
+							0,
+							0
+						],
+						"children": []
+					},
+					"level_uris": [
+						[
+							"c_transforms.bin"
+						],
+						[
+							"c_transforms.bin"
+						],
+						[
+							"c_transforms.bin"
+						],
+						[
+							"c_transforms.bin"
+						]
+					],
+					"level_bytes": [
+						23088,
+						1488,
+						648,
+						408
+					]
+				}
+			]
+		},
+		{
+			"about": "(d) material-level MSFT_lod: one mesh, materials D_Mat_High / _Mid / _Low.",
+			"file": "d_material_lod.gltf",
+			"lod_count": 1,
+			"lods": [
+				{
+					"kind": "material",
+					"node": 0,
+					"node_name": "D_Sphere",
+					"levels": [
+						"D_Mat_High",
+						"D_Mat_Mid",
+						"D_Mat_Low"
+					],
+					"coverage": [
+						0.25,
+						0.05,
+						0
+					],
+					"world_center": [
+						0,
+						0,
+						0
+					],
+					"world_radius": 1.732051,
+					"reference_distances": [
+						4.937695,
+						11.04102
+					],
+					"reference_cull": null
+				}
+			]
+		},
+		{
+			"about": "(e) the last id is a node without a mesh: at a distance nothing is drawn.",
+			"file": "e_empty_lowest.gltf",
+			"lod_count": 1,
+			"lods": [
+				{
+					"kind": "node",
+					"node": 0,
+					"levels": [
+						"E_High",
+						"E_Mid",
+						"E_Empty"
+					],
+					"level_nodes": [
+						0,
+						1,
+						2
+					],
+					"level_has_mesh": [
+						true,
+						true,
+						false
+					],
+					"parent": null,
+					"coverage": [
+						0.25,
+						0.02,
+						0
+					],
+					"world_center": [
+						0,
+						0,
+						0
+					],
+					"world_radius": 1.732051,
+					"reference_distances": [
+						4.937695,
+						17.45739
+					],
+					"reference_cull": null,
+					"level0": {
+						"name": "E_High",
+						"tag": "e-level-0",
+						"translation": [
+							0,
+							0,
+							0
+						],
+						"rotation": [
+							0,
+							0,
+							0,
+							1
+						],
+						"scale": [
+							1,
+							1,
+							1
+						],
+						"world_position": [
+							0,
+							0,
+							0
+						],
+						"children": []
+					},
+					"level_uris": [
+						[
+							"e_empty_lowest.bin"
+						],
+						[
+							"e_empty_lowest.bin"
+						],
+						[]
+					],
+					"level_bytes": [
+						23088,
+						1488,
+						0
+					]
+				}
+			]
+		},
+		{
+			"about": "(g) lazy case: one .bin per level, the fine level heavy.",
+			"file": "g_lazy.gltf",
+			"lod_count": 1,
+			"lods": [
+				{
+					"kind": "node",
+					"node": 0,
+					"levels": [
+						"G_High",
+						"G_Mid",
+						"G_Low"
+					],
+					"level_nodes": [
+						0,
+						1,
+						2
+					],
+					"level_has_mesh": [
+						true,
+						true,
+						true
+					],
+					"parent": null,
+					"coverage": [
+						0.25,
+						0.05,
+						0
+					],
+					"world_center": [
+						0,
+						0,
+						0
+					],
+					"world_radius": 1.732051,
+					"reference_distances": [
+						4.937695,
+						11.04102
+					],
+					"reference_cull": null,
+					"level0": {
+						"name": "G_High",
+						"tag": "g-level-0",
+						"translation": [
+							0,
+							0,
+							0
+						],
+						"rotation": [
+							0,
+							0,
+							0,
+							1
+						],
+						"scale": [
+							1,
+							1,
+							1
+						],
+						"world_position": [
+							0,
+							0,
+							0
+						],
+						"children": []
+					},
+					"level_uris": [
+						[
+							"g_lazy.lod0.bin"
+						],
+						[
+							"g_lazy.lod1.bin"
+						],
+						[
+							"g_lazy.lod2.bin"
+						]
+					],
+					"level_bytes": [
+						368688,
+						1488,
+						648
+					]
+				}
+			],
+			"lazy": {
+				"initial_buffers": [
+					"g_lazy.lod2.bin"
+				],
+				"all_buffers": [
+					"g_lazy.lod0.bin",
+					"g_lazy.lod1.bin",
+					"g_lazy.lod2.bin"
+				]
+			}
+		},
+		{
+			"about": "(i) one .glb laid out for HTTP range requests: coarse levels at the front of the BIN chunk.",
+			"file": "i_ranged.glb",
+			"lod_count": 1,
+			"lods": [
+				{
+					"kind": "node",
+					"node": 0,
+					"levels": [
+						"I_High",
+						"I_Mid",
+						"I_Low"
+					],
+					"level_nodes": [
+						0,
+						1,
+						2
+					],
+					"level_has_mesh": [
+						true,
+						true,
+						true
+					],
+					"parent": null,
+					"coverage": [
+						0.25,
+						0.05,
+						0
+					],
+					"world_center": [
+						0,
+						0,
+						0
+					],
+					"world_radius": 1.732051,
+					"reference_distances": [
+						4.937695,
+						11.04102
+					],
+					"reference_cull": null,
+					"level0": {
+						"name": "I_High",
+						"tag": "i-level-0",
+						"translation": [
+							0,
+							0,
+							0
+						],
+						"rotation": [
+							0,
+							0,
+							0,
+							1
+						],
+						"scale": [
+							1,
+							1,
+							1
+						],
+						"world_position": [
+							0,
+							0,
+							0
+						],
+						"children": []
+					},
+					"level_uris": [
+						[
+							"i_ranged.glb"
+						],
+						[
+							"i_ranged.glb"
+						],
+						[
+							"i_ranged.glb"
+						]
+					],
+					"level_bytes": [
+						1474608,
+						1488,
+						648
+					]
+				}
+			],
+			"glb": {
+				"bytes": 1479320,
+				"head_bytes": 2576,
+				"coarse_bytes": 648,
+				"finest_bytes": 1474608
+			},
+			"ranged": {
+				"probe": 65536,
+				"initial_bytes_max": 199832,
+				"total_bytes_max": 1675928
+			}
+		},
+		{
+			"about": "(k) an animation channel targets the LOD's level 0 node.",
+			"file": "k_animated.gltf",
+			"lod_count": 1,
+			"lods": [
+				{
+					"kind": "node",
+					"node": 0,
+					"levels": [
+						"K_High",
+						"K_Low"
+					],
+					"level_nodes": [
+						0,
+						1
+					],
+					"level_has_mesh": [
+						true,
+						true
+					],
+					"parent": null,
+					"coverage": [
+						0.1,
+						0
+					],
+					"world_center": [
+						0,
+						0,
+						0
+					],
+					"world_radius": 1.732051,
+					"reference_distances": [
+						7.807182
+					],
+					"reference_cull": null,
+					"level0": {
+						"name": "K_High",
+						"tag": "k-level-0",
+						"translation": [
+							0,
+							0,
+							0
+						],
+						"rotation": [
+							0,
+							0,
+							0,
+							1
+						],
+						"scale": [
+							1,
+							1,
+							1
+						],
+						"world_position": [
+							0,
+							0,
+							0
+						],
+						"children": []
+					},
+					"level_uris": [
+						[
+							"k_animated.bin"
+						],
+						[
+							"k_animated.bin"
+						]
+					],
+					"level_bytes": [
+						23088,
+						1488
+					]
+				}
+			],
+			"animation": {
+				"name": "K_Rise",
+				"target": "K_High",
+				"at": 0.5,
+				"world_position": [
+					0,
+					1,
+					0
+				]
+			}
+		},
+		{
+			"about": "(n) no MSFT_lod: the result must equal the stock loader's.",
+			"file": "n_plain.gltf",
+			"lod_count": 0,
+			"lods": [],
+			"tree": [
+				[
+					"Object3D",
+					"N_Root",
+					[
+						[
+							"Mesh",
+							"N_Sphere",
+							[]
+						],
+						[
+							"Mesh",
+							"N_Knob",
+							[]
+						]
+					]
+				]
+			]
+		},
+		{
+			"about": "(x) outside the spec: the lower levels are also listed in scene.nodes.",
+			"file": "x_levels_in_scene.gltf",
+			"lod_count": 1,
+			"lods": [
+				{
+					"kind": "node",
+					"node": 0,
+					"levels": [
+						"X_High",
+						"X_Mid",
+						"X_Low"
+					],
+					"level_nodes": [
+						0,
+						1,
+						2
+					],
+					"level_has_mesh": [
+						true,
+						true,
+						true
+					],
+					"parent": null,
+					"coverage": [
+						0.25,
+						0.05,
+						0
+					],
+					"world_center": [
+						0,
+						0,
+						0
+					],
+					"world_radius": 1.732051,
+					"reference_distances": [
+						4.937695,
+						11.04102
+					],
+					"reference_cull": null,
+					"level0": {
+						"name": "X_High",
+						"tag": "x-level-0",
+						"translation": [
+							0,
+							0,
+							0
+						],
+						"rotation": [
+							0,
+							0,
+							0,
+							1
+						],
+						"scale": [
+							1,
+							1,
+							1
+						],
+						"world_position": [
+							0,
+							0,
+							0
+						],
+						"children": []
+					},
+					"level_uris": [
+						[
+							"x_levels_in_scene.bin"
+						],
+						[
+							"x_levels_in_scene.bin"
+						],
+						[
+							"x_levels_in_scene.bin"
+						]
+					],
+					"level_bytes": [
+						23088,
+						1488,
+						648
+					]
+				}
+			],
+			"optional": true
+		},
+		{
+			"about": "(h) cells of a baked town, 4 levels each, meshopt + quantization, one .bin per cell and level (the lowest level of all cells in one .bin).",
+			"file": "town_cells.gltf",
+			"lod_count": 3,
+			"lods": [
+				{
+					"kind": "node",
+					"node": 0,
+					"levels": [
+						"c_0_2:fine",
+						"c_0_2:near",
+						"c_0_2:mid",
+						"c_0_2:lo"
+					],
+					"level_nodes": [
+						0,
+						1,
+						2,
+						3
+					],
+					"level_has_mesh": [
+						true,
+						true,
+						true,
+						true
+					],
+					"parent": "c_0_2",
+					"coverage": [
+						0.14361,
+						0.0363,
+						0.00699,
+						0
+					],
+					"world_center": [
+						7.876953,
+						7.432129,
+						37.91699
+					],
+					"world_radius": 14.54698,
+					"reference_distances": [
+						54.71599,
+						108.8312,
+						248.0093
+					],
+					"reference_cull": null,
+					"level0": {
+						"name": "c_0_2:fine",
+						"tag": null,
+						"translation": [
+							-8.875046874999999,
+							-0.000012499999999998623,
+							-8.750984375000002
+						],
+						"rotation": [
+							0,
+							0,
+							0,
+							1
+						],
+						"scale": [
+							63.9990234375,
+							63.9990234375,
+							63.9990234375
+						],
+						"world_position": [
+							-0.9980469,
+							-0.0703125,
+							29.16602
+						],
+						"children": []
+					},
+					"level_uris": [
+						[
+							"town_cells.fine.c_0_2.bin"
+						],
+						[
+							"town_cells.near.c_0_2.bin"
+						],
+						[
+							"town_cells.mid.c_0_2.bin"
+						],
+						[
+							"town_cells.lo.bin"
+						]
+					],
+					"level_bytes": [
+						1939334,
+						822079,
+						222069,
+						77278
+					]
+				},
+				{
+					"kind": "node",
+					"node": 5,
+					"levels": [
+						"c_1_1:fine",
+						"c_1_1:near",
+						"c_1_1:mid",
+						"c_1_1:lo"
+					],
+					"level_nodes": [
+						5,
+						6,
+						7,
+						8
+					],
+					"level_has_mesh": [
+						true,
+						true,
+						true,
+						true
+					],
+					"parent": "c_1_1",
+					"coverage": [
+						0.18929,
+						0.05239,
+						0.01064,
+						0
+					],
+					"world_center": [
+						23.16162,
+						7.670898,
+						25.64502
+					],
+					"world_radius": 18.33702,
+					"reference_distances": [
+						60.07565,
+						114.1926,
+						253.3912
+					],
+					"reference_cull": null,
+					"level0": {
+						"name": "c_1_1:fine",
+						"tag": null,
+						"translation": [
+							-11.340360937499998,
+							-0.000012499999999998623,
+							-12.1557421875
+						],
+						"rotation": [
+							0,
+							0,
+							0,
+							1
+						],
+						"scale": [
+							63.9990234375,
+							63.9990234375,
+							63.9990234375
+						],
+						"world_position": [
+							11.82129,
+							-0.0703125,
+							13.48926
+						],
+						"children": []
+					},
+					"level_uris": [
+						[
+							"town_cells.fine.c_1_1.bin"
+						],
+						[
+							"town_cells.near.c_1_1.bin"
+						],
+						[
+							"town_cells.mid.c_1_1.bin"
+						],
+						[
+							"town_cells.lo.bin"
+						]
+					],
+					"level_bytes": [
+						1545519,
+						680055,
+						267054,
+						119093
+					]
+				},
+				{
+					"kind": "node",
+					"node": 10,
+					"levels": [
+						"c_-1_2:fine",
+						"c_-1_2:near",
+						"c_-1_2:mid",
+						"c_-1_2:lo"
+					],
+					"level_nodes": [
+						10,
+						11,
+						12,
+						13
+					],
+					"level_has_mesh": [
+						true,
+						true,
+						true,
+						true
+					],
+					"parent": "c_-1_2",
+					"coverage": [
+						0.30276,
+						0.1003,
+						0.02293,
+						0
+					],
+					"world_center": [
+						-1,
+						8.641602,
+						41.44873
+					],
+					"world_radius": 28.33264,
+					"reference_distances": [
+						73.39584,
+						127.5176,
+						266.6973
+					],
+					"reference_cull": null,
+					"level0": {
+						"name": "c_-1_2:fine",
+						"tag": null,
+						"translation": [
+							-24,
+							-0.000012499999999998623,
+							-12.282734375000004
+						],
+						"rotation": [
+							0,
+							0,
+							0,
+							1
+						],
+						"scale": [
+							63.9990234375,
+							63.9990234375,
+							63.9990234375
+						],
+						"world_position": [
+							-25,
+							-0.0703125,
+							29.16602
+						],
+						"children": []
+					},
+					"level_uris": [
+						[
+							"town_cells.fine.c_-1_2.bin"
+						],
+						[
+							"town_cells.near.c_-1_2.bin"
+						],
+						[
+							"town_cells.mid.c_-1_2.bin"
+						],
+						[
+							"town_cells.lo.bin"
+						]
+					],
+					"level_bytes": [
+						2911929,
+						1102903,
+						406428,
+						196010
+					]
+				}
+			],
+			"lazy": {
+				"initial_buffers": [
+					"town_cells.lo.bin"
+				],
+				"all_buffers": [
+					"town_cells.fine.c_-1_2.bin",
+					"town_cells.fine.c_0_2.bin",
+					"town_cells.fine.c_1_1.bin",
+					"town_cells.lo.bin",
+					"town_cells.mid.c_-1_2.bin",
+					"town_cells.mid.c_0_2.bin",
+					"town_cells.mid.c_1_1.bin",
+					"town_cells.near.c_-1_2.bin",
+					"town_cells.near.c_0_2.bin",
+					"town_cells.near.c_1_1.bin"
+				]
+			},
+			"needs": [
+				"meshopt"
+			]
+		},
+		{
+			"about": "(h, ranged) the same cells in one .glb, coarse levels first, for HTTP range requests with meshopt.",
+			"file": "town_cells.glb",
+			"lod_count": 3,
+			"lods": [
+				{
+					"kind": "node",
+					"node": 9,
+					"levels": [
+						"c_0_2:fine",
+						"c_0_2:near",
+						"c_0_2:mid",
+						"c_0_2:lo"
+					],
+					"level_nodes": [
+						9,
+						6,
+						3,
+						0
+					],
+					"level_has_mesh": [
+						true,
+						true,
+						true,
+						true
+					],
+					"parent": "c_0_2",
+					"coverage": [
+						0.14361,
+						0.0363,
+						0.00699,
+						0
+					],
+					"world_center": [
+						7.876953,
+						7.432129,
+						37.91699
+					],
+					"world_radius": 14.54698,
+					"reference_distances": [
+						54.71599,
+						108.8312,
+						248.0093
+					],
+					"reference_cull": null,
+					"level0": {
+						"name": "c_0_2:fine",
+						"tag": null,
+						"translation": [
+							-8.875046874999999,
+							-0.000012499999999998623,
+							-8.750984375000002
+						],
+						"rotation": [
+							0,
+							0,
+							0,
+							1
+						],
+						"scale": [
+							63.9990234375,
+							63.9990234375,
+							63.9990234375
+						],
+						"world_position": [
+							-0.9980469,
+							-0.0703125,
+							29.16602
+						],
+						"children": []
+					},
+					"level_uris": [
+						[
+							"town_cells.glb"
+						],
+						[
+							"town_cells.glb"
+						],
+						[
+							"town_cells.glb"
+						],
+						[
+							"town_cells.glb"
+						]
+					],
+					"level_bytes": [
+						1939334,
+						822079,
+						222069,
+						77278
+					]
+				},
+				{
+					"kind": "node",
+					"node": 10,
+					"levels": [
+						"c_1_1:fine",
+						"c_1_1:near",
+						"c_1_1:mid",
+						"c_1_1:lo"
+					],
+					"level_nodes": [
+						10,
+						7,
+						4,
+						1
+					],
+					"level_has_mesh": [
+						true,
+						true,
+						true,
+						true
+					],
+					"parent": "c_1_1",
+					"coverage": [
+						0.18929,
+						0.05239,
+						0.01064,
+						0
+					],
+					"world_center": [
+						23.16162,
+						7.670898,
+						25.64502
+					],
+					"world_radius": 18.33702,
+					"reference_distances": [
+						60.07565,
+						114.1926,
+						253.3912
+					],
+					"reference_cull": null,
+					"level0": {
+						"name": "c_1_1:fine",
+						"tag": null,
+						"translation": [
+							-11.340360937499998,
+							-0.000012499999999998623,
+							-12.1557421875
+						],
+						"rotation": [
+							0,
+							0,
+							0,
+							1
+						],
+						"scale": [
+							63.9990234375,
+							63.9990234375,
+							63.9990234375
+						],
+						"world_position": [
+							11.82129,
+							-0.0703125,
+							13.48926
+						],
+						"children": []
+					},
+					"level_uris": [
+						[
+							"town_cells.glb"
+						],
+						[
+							"town_cells.glb"
+						],
+						[
+							"town_cells.glb"
+						],
+						[
+							"town_cells.glb"
+						]
+					],
+					"level_bytes": [
+						1545519,
+						680055,
+						267054,
+						119093
+					]
+				},
+				{
+					"kind": "node",
+					"node": 11,
+					"levels": [
+						"c_-1_2:fine",
+						"c_-1_2:near",
+						"c_-1_2:mid",
+						"c_-1_2:lo"
+					],
+					"level_nodes": [
+						11,
+						8,
+						5,
+						2
+					],
+					"level_has_mesh": [
+						true,
+						true,
+						true,
+						true
+					],
+					"parent": "c_-1_2",
+					"coverage": [
+						0.30276,
+						0.1003,
+						0.02293,
+						0
+					],
+					"world_center": [
+						-1,
+						8.641602,
+						41.44873
+					],
+					"world_radius": 28.33264,
+					"reference_distances": [
+						73.39584,
+						127.5176,
+						266.6973
+					],
+					"reference_cull": null,
+					"level0": {
+						"name": "c_-1_2:fine",
+						"tag": null,
+						"translation": [
+							-24,
+							-0.000012499999999998623,
+							-12.282734375000004
+						],
+						"rotation": [
+							0,
+							0,
+							0,
+							1
+						],
+						"scale": [
+							63.9990234375,
+							63.9990234375,
+							63.9990234375
+						],
+						"world_position": [
+							-25,
+							-0.0703125,
+							29.16602
+						],
+						"children": []
+					},
+					"level_uris": [
+						[
+							"town_cells.glb"
+						],
+						[
+							"town_cells.glb"
+						],
+						[
+							"town_cells.glb"
+						],
+						[
+							"town_cells.glb"
+						]
+					],
+					"level_bytes": [
+						2911929,
+						1102903,
+						406428,
+						196010
+					]
+				}
+			],
+			"glb": {
+				"bytes": 10334064,
+				"head_bytes": 44312,
+				"coarse_bytes": 392381,
+				"finest_bytes": 6396782
+			},
+			"ranged": {
+				"probe": 65536,
+				"initial_bytes_max": 764373,
+				"total_bytes_max": 10661744
+			},
+			"needs": [
+				"meshopt"
+			]
+		}
+	]
+}

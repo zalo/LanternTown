@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MSFT_lod check</title>
+<style>
+	body { font: 13px/1.4 system-ui, sans-serif; margin: 16px; background: #14161a; color: #d8dbe0; }
+	h1 { font-size: 17px; margin: 0 0 6px; }
+	code { background: #23262c; padding: 1px 4px; border-radius: 3px; }
+	#how { color: #9aa0a8; max-width: 1100px; }
+	#top { display: flex; gap: 16px; align-items: flex-start; margin: 10px 0; }
+	canvas { background: #000; width: 480px; height: 270px; flex: none; }
+	#summary { font-size: 15px; white-space: pre-wrap; }
+	table { border-collapse: collapse; margin: 4px 0 14px; width: 100%; max-width: 1400px; }
+	td, th { border-bottom: 1px solid #2a2e35; padding: 2px 8px; text-align: left; vertical-align: top; }
+	th { color: #9aa0a8; font-weight: 500; }
+	.pass { color: #58c46a; } .fail { color: #ff6464; } .skip { color: #8a8f98; }
+	.model { margin-top: 14px; font-weight: 600; } .about, .obs { color: #9aa0a8; } .obs { font-family: ui-monospace, monospace; font-size: 12px; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<h1>MSFT_lod loader check</h1>
+<div id="how">
+	<code>check.html?tier=a|b</code> <code>&amp;loader=URL of a GLTFLoader module</code> <code>&amp;setup=URL of an adapter module</code>
+	<code>&amp;three=URL of three.module.js</code> <code>&amp;addons=URL of examples/jsm/</code> <code>&amp;model=part of a file name</code>.
+	Without <code>loader</code> and <code>setup</code>: the stock GLTFLoader of the three.js given. The reference plugin: <code>?setup=setup_reference.js</code>.
+	The result is also in <code>window.__result</code> and in the page title. See README.md.
+</div>
+<div id="top"><canvas id="view" width="640" height="360"></canvas><div id="summary">loading ...</div></div>
+<div id="out"></div>
+<script>
+	// the import map has to be in the page before the first module: built here from the query
+	( function () {
+
+		const q = new URLSearchParams( location.search );
+		const cdn = 'https://cdn.jsdelivr.net/npm/three@0.186.1/';
+		const abs = ( u ) => new URL( u, location.href ).href;
+		const map = document.createElement( 'script' );
+		map.type = 'importmap';
+		map.textContent = JSON.stringify( { imports: { 'three': abs( q.get( 'three' ) || cdn + 'build/three.module.js' ), 'three/addons/': abs( q.get( 'addons' ) || cdn + 'examples/jsm/' ) } } );
+		document.head.appendChild( map );
+		const s = document.createElement( 'script' );
+		s.type = 'module';
+		s.src = 'check.js';
+		document.head.appendChild( s );
+
+	} )();
+</script>
+</body>
+</html>

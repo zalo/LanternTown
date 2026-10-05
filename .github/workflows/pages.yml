@@ -1,0 +1,63 @@
+# The static site on GitHub Pages: this repository's pages and engine + the generated data of one release.
+#
+# The repository holds source only. Everything generated (the baked town, the gallery's pictures, the one-file
+# .glb towns, the gallery's frozen data) is one tar, written on the authoring machine and kept as a release asset:
+#
+#     python3 tools/site.py --data-out out/site-data.tar
+#     gh release create data-1 out/site-data.tar --title "Site data 1" --notes "Generated data for the Pages site"
+#
+# Once: Settings > Pages > Source: GitHub Actions. Then run this workflow from the Actions tab.
+# After a new bake: upload a new release and change DATA_TAG (or give the tag when starting the run).
+name: pages
+
+on:
+  workflow_dispatch:
+    inputs:
+      data_tag:
+        description: Release that holds site-data.tar (empty - the DATA_TAG of the workflow file)
+        required: false
+
+env:
+  DATA_TAG: data-1
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: three.js (the pages import it from node_modules/)
+        run: npm ci --omit=dev
+      - name: Generated data
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.data_tag || env.DATA_TAG }}
+        run: gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern site-data.tar
+      - name: Assemble
+        run: python3 tools/site.py --out _site --data site-data.tar --copy
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

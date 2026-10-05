@@ -1,0 +1,1622 @@
+{
+ "materials": [
+  {
+   "name": "cobble_granite",
+   "kind": "baked",
+   "family": "ground",
+   "tile": [
+    1.6,
+    1.6
+   ],
+   "res": 2048,
+   "tintable": false,
+   "directional": false,
+   "desc": "Rounded grey-buff granite cobbles in irregular courses, tight sandy joints, foot-polished crowns. THE square paving. special = wet sheen.",
+   "grime": {
+    "color": "#4a4438",
+    "rough": 0.85
+   },
+   "wear": {
+    "color": "#bdb6a8",
+    "rough": 0.38,
+    "metal": 0.0
+   },
+   "special": {
+    "kind": "wet",
+    "color": "#000000",
+    "rough": 0.08
+   },
+   "preview": [
+    0.2099,
+    0.1812,
+    0.144
+   ]
+  },
+  {
+   "name": "sett_basalt",
+   "kind": "baked",
+   "family": "ground",
+   "tile": [
+    1.2,
+    1.2
+   ],
+   "res": 2048,
+   "tintable": false,
+   "directional": false,
+   "desc": "Dark blue-grey rectangular basalt setts in running bond, crisp but worn. Roadways, gutters, kerb aprons. special = wet.",
+   "grime": {
+    "color": "#4a4438",
+    "rough": 0.85
+   },
+   "wear": {
+    "color": "#bdb6a8",
+    "rough": 0.38,
+    "metal": 0.0
+   },
+   "special": {
+    "kind": "wet",
+    "color": "#000000",
+    "rough": 0.08
+   },
+   "preview": [
+    0.0904,
+    0.09,
+    0.0875
+   ]
+  },
+  {
+   "name": "flagstone_york",
+   "kind": "baked",
+   "family": "ground",
+   "tile": [
+    2.4,
+    2.4
+   ],
+   "res": 2048,
+   "tintable": false,
+   "directional": false,
+   "desc": "Large warm buff sandstone flags, random rectangular coursing, lipped and cracked. Pavements, terraces, thresholds. special = moss in joints.",
+   "grime": {
+    "color": "#4a4438",
+    "rough": 0.85
+   },
+   "wear": {
+    "color": "#bdb6a8",
+    "rough": 0.38,
+    "metal": 0.0
+   },
+   "special": {
+    "kind": "moss",
+    "color": "#46531f",
+    "rough": 1.0
+   },
+   "preview": [
+    0.3041,
+    0.2555,
+    0.1856
+   ]
+  },
+  {
+   "name": "gravel",
+   "kind": "baked",
+   "family": "ground",
+   "tile": [
+    1.0,
+    1.0
+   ],
+   "res": 1024,
+   "tintable": false,
+   "directional": false,
+   "desc": "Fine packed gravel and dirt. Yard corners, planting beds, under benches. special = wet.",
+   "grime": {
+    "color": "#3a3128",
+    "rough": 0.95
+   },
+   "wear": {
+    "color": "#b8b0a2",
+    "rough": 0.5,
+    "metal": 0.0
+   },
+   "special": {
+    "kind": "wet",
+    "color": "#000000",
+    "rough": 0.08
+   },
+   "preview": [
+    0.1801,
+    0.1497,
+    0.1106
+   ]
+  },
+  {
+   "name": "soil",
+   "kind": "baked",
+   "family": "ground",
+   "tile": [
+    0.6,
+    0.6
+   ],
+   "res": 1024,
+   "tintable": false,
+   "directional": false,
+   "desc": "Dark crumbly planting soil with bits of bark. Inside pots and planters. special = wet.",
+   "grime": {
+    "color": "#3a3128",
+    "rough": 0.95
+   },
+   "wear": {
+    "color": "#b8b0a2",
+    "rough": 0.5,
+    "metal": 0.0
+   },
+   "special": {
+    "kind": "wet",
+    "color": "#000000",
+    "rough": 0.08
+   },
+   "preview": [
+    0.0537,
+    0.0356,
+    0.0233
+   ]
+  },
+  {
+   "name": "ashlar_limestone",
+   "kind": "baked",
+   "family": "masonry",
+   "tile": [
+    2.0,
+    2.0
+   ],
+   "res": 2048,
+   "tintable": false,
+   "directional": false,
+   "desc": "Coursed dressed pale limestone blocks with fine lime joints, tooled faces. Plinths, civic walls, tower bases. special = moss.",
+   "grime": {
+    "color": "#1d1a17",
+    "rough": 0.9
+   },
+   "wear": {
+    "color": "#bdb6a8",
+    "rough": 0.38,
+    "metal": 0.0
+   },
+   "special": {
+    "kind": "moss",
+    "color": "#46531f",
+    "rough": 1.0
+   },
+   "preview": [
+    0.5396,
+    0.458,
+    0.3214
+   ]
+  },
+  {
+   "name": "rubble_fieldstone",
+   "kind": "baked",
+   "family": "masonry",
+   "tile": [
+    2.0,
+    2.0
+   ],
+   "res": 2048,
+   "tintable": false,
+   "directional": false,
+   "desc": "Random rubble wall of mixed grey/ochre field stones in deep recessed mortar. Retaining walls, cellars, back walls. special = moss.",
+   "grime": {
+    "color": "#1d1a17",
+    "rough": 0.9
+   },
+   "wear": {
+    "color": "#bdb6a8",
+    "rough": 0.38,
+    "metal": 0.0
+   },
+   "special": {
+    "kind": "moss",
+    "color": "#46531f",
+    "rough": 1.0
+   },
+   "preview": [
+    0.2349,
+    0.2002,
+    0.1496
+   ]
+  },
+  {
+   "name": "brick_red",
+   "kind": "baked",
+   "family": "masonry",
+   "tile": [
+    0.9,
+    0.9
+   ],
+   "res": 2048,
+   "tintable": false,
+   "directional": false,
+   "desc": "Old hand-made red clay brick, running bond (225x75 mm module), lime mortar, colour variation and spalling. special = moss/efflorescence.",
+   "grime": {
+    "color": "#1d1a17",
+    "rough": 0.9
+   },
+   "wear": {
+    "color": "#c98d6d",
+    "rough": 0.7,
+    "metal": 0
+   },
+   "special": {
+    "kind": "moss",
+    "color": "#7d8250",
+    "rough": 1.0
+   },
+   "preview": [
+    0.2946,
+    0.1704,
+    0.1178
+   ]
+  },
+  {
+   "name": "brick_ochre",
+   "kind": "baked",
+   "family": "masonry",
+   "tile": [
+    0.9,
+    0.9
+   ],
+   "res": 2048,
+   "tintable": false,
+   "directional": false,
+   "desc": "Buff/yellow stock brick with dark headers and sooty faces, Flemish-ish bond. special = lichen.",
+   "grime": {
+    "color": "#1d1a17",
+    "rough": 0.9
+   },
+   "wear": {
+    "color": "#d4bd8a",
+    "rough": 0.7,
+    "metal": 0
+   },
+   "special": {
+    "kind": "moss",
+    "color": "#7d8250",
+    "rough": 1.0
+   },
+   "preview": [
+    0.3055,
+    0.2238,
+    0.1392
+   ]
+  },
+  {
+   "name": "stone_smooth",
+   "kind": "baked",
+   "family": "stone",
+   "tile": [
+    1.0,
+    1.0
+   ],
+   "res": 1024,
+   "tintable": true,
+   "directional": false,
+   "desc": "Fine-grained dressed stone face without joints, subtle tooling and veining. Use on individually modelled blocks: sills, copings, fountain bowls, steps, quoins, statues. Tintable (default warm grey limestone). special = moss.",
+   "grime": {
+    "color": "#1d1a17",
+    "rough": 0.9
+   },
+   "wear": {
+    "color": "#bdb6a8",
+    "rough": 0.38,
+    "metal": 0.0
+   },
+   "special": {
+    "kind": "moss",
+    "color": "#46531f",
+    "rough": 1.0
+   },
+   "preview": [
+    0.47,
+    0.45,
+    0.392
+   ]
+  },
+  {
+   "name": "stone_rough",
+   "kind": "baked",
+   "family": "stone",
+   "tile": [
+    1.0,
+    1.0
+   ],
+   "res": 1024,
+   "tintable": true,
+   "directional": false,
+   "desc": "Rough-hewn / split stone face without joints, pitted and chiselled. Kerbs, bollards, rubble blocks, boulders, plinth courses. Tintable. special = moss.",
+   "grime": {
+    "color": "#1d1a17",
+    "rough": 0.9
+   },
+   "wear": {
+    "color": "#bdb6a8",
+    "rough": 0.38,
+    "metal": 0.0
+   },
+   "special": {
+    "kind": "moss",
+    "color": "#46531f",
+    "rough": 1.0
+   },
+   "preview": [
+    0.372,
+    0.356,
+    0.318
+   ]
+  },
+  {
+   "name": "slate",
+   "kind": "baked",
+   "family": "stone",
+   "tile": [
+    0.8,
+    0.8
+   ],
+   "res": 1024,
+   "tintable": true,
+   "directional": false,
+   "desc": "Riven blue-black slate with cleavage ridges. Individually modelled roof slates, hearths, chalk-free sign boards. Tintable. special = lichen.",
+   "grime": {
+    "color": "#3a3128",
+    "rough": 0.95
+   },
+   "wear": {
+    "color": "#8f959b",
+    "rough": 0.4,
+    "metal": 0
+   },
+   "special": {
+    "kind": "moss",
+    "color": "#7d8250",
+    "rough": 1.0
+   },
+   "preview": [
+    0.0558,
+    0.0633,
+    0.0744
+   ]
+  },
+  {
+   "name": "mortar",
+   "kind": "baked",
+   "family": "stone",
+   "tile": [
+    0.8,
+    0.8
+   ],
+   "res": 1024,
+   "tintable": true,
+   "directional": false,
+   "desc": "Plain sandy lime mortar / render fill. Behind modelled stones, pointing, cement patches. Tintable. special = moss.",
+   "grime": {
+    "color": "#1d1a17",
+    "rough": 0.9
+   },
+   "wear": {
+    "color": "#b8b0a2",
+    "rough": 0.5,
+    "metal": 0.0
+   },
+   "special": {
+    "kind": "moss",
+    "color": "#46531f",
+    "rough": 1.0
+   },
+   "preview": [
+    0.4069,
+    0.3442,
+    0.2498
+   ]
+  },
+  {
+   "name": "plaster_lime",
+   "kind": "baked",
+   "family": "plaster",
+   "tile": [
+    2.0,
+    2.0
+   ],
+   "res": 2048,
+   "tintable": true,
+   "directional": false,
+   "desc": "Hand-trowelled lime plaster / limewash: soft undulation, trowel arcs, hairline cracks, faint patch repairs. Tintable (white base - pick any wall colour). wear = plaster chipped to pale substrate; special = damp/algae staining.",
+   "grime": {
+    "color": "#1d1a17",
+    "rough": 0.9
+   },
+   "wear": {
+    "color": "#cdbfa6",
+    "rough": 0.9,
+    "metal": 0
+   },
+   "special": {
+    "kind": "moss",
+    "color": "#5d6338",
+    "rough": 0.95
+   },
+   "preview": [
+    0.6514,
+    0.6338,
+    0.5767
+   ]
+  },
+  {
+   "name": "plaster_rough",
+   "kind": "baked",
+   "family": "plaster",
+   "tile": [
+    2.0,
+    2.0
+   ],
+   "res": 2048,
+   "tintable": true,
+   "directional": false,
+   "desc": "Coarse roughcast / stucco with aggregate, flaking patches. Tintable (white base). Back streets, upper storeys, chimneys. special = damp/algae.",
+   "grime": {
+    "color": "#1d1a17",
+    "rough": 0.9
+   },
+   "wear": {
+    "color": "#b9aa90",
+    "rough": 0.95,
+    "metal": 0
+   },
+   "special": {
+    "kind": "moss",
+    "color": "#5d6338",
+    "rough": 0.95
+   },
+   "preview": [
+    0.5553,
+    0.5107,
+    0.4218
+   ]
+  },
+  {
+   "name": "roof_tile_clay",
+   "kind": "baked",
+   "family": "roof",
+   "tile": [
+    1.2,
+    1.2
+   ],
+   "res": 2048,
+   "tintable": false,
+   "directional": false,
+   "desc": "Overlapping hand-made plain clay roof tiles in courses (eaves at V=0, ridge towards +V). Terracotta reds/oranges, moss in laps. For distant / large roofs; hero roofs should model tiles with 'terracotta'. special = moss.",
+   "grime": {
+    "color": "#1d1a17",
+    "rough": 0.9
+   },
+   "wear": {
+    "color": "#c98764",
+    "rough": 0.7,
+    "metal": 0
+   },
+   "special": {
+    "kind": "moss",
+    "color": "#46531f",
+    "rough": 1.0
+   },
+   "preview": [
+    0.1788,
+    0.0733,
+    0.0399
+   ]
+  },
+  {
+   "name": "roof_slate",
+   "kind": "baked",
+   "family": "roof",
+   "tile": [
+    1.5,
+    1.2
+   ],
+   "res": 2048,
+   "tintable": false,
+   "directional": false,
+   "desc": "Coursed blue-grey roof slates, staggered, some slipped / chipped (eaves at V=0). special = lichen.",
+   "grime": {
+    "color": "#1d1a17",
+    "rough": 0.9
+   },
+   "wear": {
+    "color": "#b8b0a2",
+    "rough": 0.5,
+    "metal": 0.0
+   },
+   "special": {
+    "kind": "moss",
+    "color": "#7d8250",
+    "rough": 1.0
+   },
+   "preview": [
+    0.0768,
+    0.0876,
+    0.1045
+   ]
+  },
+  {
+   "name": "wood_shingle",
+   "kind": "baked",
+   "family": "roof",
+   "tile": [
+    1.2,
+    1.0
+   ],
+   "res": 2048,
+   "tintable": false,
+   "directional": false,
+   "desc": "Split cedar shingles in courses, silvered and cupped (eaves at V=0). Turrets, porches, stall roofs. special = moss.",
+   "grime": {
+    "color": "#3a3128",
+    "rough": 0.95
+   },
+   "wear": {
+    "color": "#b89468",
+    "rough": 0.55,
+    "metal": 0.0
+   },
+   "special": {
+    "kind": "moss",
+    "color": "#46531f",
+    "rough": 1.0
+   },
+   "preview": [
+    0.1905,
+    0.1647,
+    0.1371
+   ]
+  },
+  {
+   "name": "copper_patina",
+   "kind": "baked",
+   "family": "roof",
+   "tile": [
+    1.2,
+    1.2
+   ],
+   "res": 1024,
+   "tintable": false,
+   "directional": false,
+   "desc": "Weathered copper sheet: brown oxide to streaky verdigris green (the special mask pushes it fully green). Domes, turret caps, flashing, gutters. Plain sheet without seams - model the standing seams.",
+   "grime": {
+    "color": "#1d1a17",
+    "rough": 0.9
+   },
+   "wear": {
+    "color": "#b87348",
+    "rough": 0.35,
+    "metal": 1.0
+   },
+   "special": {
+    "kind": "verdigris",
+    "color": "#4f9a86",
+    "rough": 0.85
+   },
+   "metal": true,
+   "preview": [
+    0.0775,
+    0.1212,
+    0.0882
+   ]
+  },
+  {
+   "name": "wood_oak",
+   "kind": "baked",
+   "family": "wood",
+   "tile": [
+    1.2,
+    0.6
+   ],
+   "res": 1024,
+   "tintable": true,
+   "directional": true,
+   "desc": "Sawn oak, warm mid brown, visible straight grain with rays and the odd knot. Single continuous board (no seams): model your own planks. Tintable for stains (e.g. #6b4a2e dark, #3a2a1e tarred beam, #c8a070 fresh). wear = pale bare wood.",
+   "grime": {
+    "color": "#3a3128",
+    "rough": 0.95
+   },
+   "wear": {
+    "color": "#b89468",
+    "rough": 0.55,
+    "metal": 0.0
+   },
+   "special": {
+    "kind": "moss",
+    "color": "#46531f",
+    "rough": 1.0
+   },
+   "preview": [
+    0.2648,
+    0.1393,
+    0.0607
+   ]
+  },
+  {
+   "name": "wood_weathered",
+   "kind": "baked",
+   "family": "wood",
+   "tile": [
+    1.2,
+    0.6
+   ],
+   "res": 1024,
+   "tintable": true,
+   "directional": true,
+   "desc": "Silver-grey weathered softwood: raised grain, checks and splits, nail stains. Crates, fences, cart beds, shutters left unpainted. Tintable. special = moss/algae.",
+   "grime": {
+    "color": "#3a3128",
+    "rough": 0.95
+   },
+   "wear": {
+    "color": "#a89a86",
+    "rough": 0.6,
+    "metal": 0
+   },
+   "special": {
+    "kind": "moss",
+    "color": "#55602d",
+    "rough": 1.0
+   },
+   "preview": [
+    0.2688,
+    0.2417,
+    0.2023
+   ]
+  },
+  {
+   "name": "wood_painted",
+   "kind": "baked",
+   "family": "wood",
+   "tile": [
+    1.2,
+    0.6
+   ],
+   "res": 1024,
+   "tintable": true,
+   "directional": true,
+   "desc": "Brush-painted timber: faint grain telegraphing, brush strokes, drips. Tintable (white base - choose the paint colour). The WEAR mask chips the paint back to grey-brown wood, special = sun-fade. Doors, shutters, window frames, shopfronts, signs, benches.",
+   "grime": {
+    "color": "#3a3128",
+    "rough": 0.95
+   },
+   "wear": {
+    "color": "#8d7557",
+    "rough": 0.75,
+    "metal": 0.0
+   },
+   "special": {
+    "kind": "fade",
+    "color": "#d8d2c4",
+    "rough": 0.9
+   },
+   "preview": [
+    0.5753,
+    0.5452,
+    0.4549
+   ]
+  },
+  {
+   "name": "wood_planks",
+   "kind": "baked",
+   "family": "wood",
+   "tile": [
+    1.6,
+    1.0
+   ],
+   "res": 1024,
+   "tintable": true,
+   "directional": true,
+   "desc": "Tongue-and-groove board cladding: ~125 mm boards running along U with seams, nail heads, slight cupping. For big boarded surfaces you do not model plank-by-plank (stall backs, attic gables, doors' inner faces). Tintable. special = moss.",
+   "grime": {
+    "color": "#3a3128",
+    "rough": 0.95
+   },
+   "wear": {
+    "color": "#b89468",
+    "rough": 0.55,
+    "metal": 0.0
+   },
+   "special": {
+    "kind": "moss",
+    "color": "#46531f",
+    "rough": 1.0
+   },
+   "preview": [
+    0.2153,
+    0.1434,
+    0.0872
+   ]
+  },
+  {
+   "name": "wood_endgrain",
+   "kind": "baked",
+   "family": "wood",
+   "tile": [
+    0.3,
+    0.3
+   ],
+   "res": 1024,
+   "tintable": true,
+   "directional": false,
+   "desc": "End grain: growth rings and radial checks. Beam ends, log ends, barrel heads' edges, chopping blocks. Tintable.",
+   "grime": {
+    "color": "#3a3128",
+    "rough": 0.95
+   },
+   "wear": {
+    "color": "#b89468",
+    "rough": 0.55,
+    "metal": 0.0
+   },
+   "special": {
+    "kind": "none"
+   },
+   "preview": [
+    0.231,
+    0.161,
+    0.101
+   ]
+  },
+  {
+   "name": "bark",
+   "kind": "baked",
+   "family": "wood",
+   "tile": [
+    0.6,
+    1.2
+   ],
+   "res": 1024,
+   "tintable": false,
+   "directional": false,
+   "desc": "Deeply furrowed grey-brown tree bark, ridges running along V (up the trunk). Tree trunks and branches. special = moss/lichen.",
+   "grime": {
+    "color": "#3a3128",
+    "rough": 0.95
+   },
+   "wear": {
+    "color": "#b8b0a2",
+    "rough": 0.5,
+    "metal": 0.0
+   },
+   "special": {
+    "kind": "moss",
+    "color": "#7d8250",
+    "rough": 1.0
+   },
+   "preview": [
+    0.1338,
+    0.1024,
+    0.0694
+   ]
+  },
+  {
+   "name": "wicker",
+   "kind": "baked",
+   "family": "wood",
+   "tile": [
+    0.24,
+    0.24
+   ],
+   "res": 1024,
+   "tintable": true,
+   "directional": false,
+   "desc": "Woven willow basketry: horizontal weavers over vertical stakes (U horizontal). Baskets, hampers, chair seats, cloches. Tintable.",
+   "grime": {
+    "color": "#3a3128",
+    "rough": 0.95
+   },
+   "wear": {
+    "color": "#c9a878",
+    "rough": 0.5,
+    "metal": 0
+   },
+   "special": {
+    "kind": "none"
+   },
+   "preview": [
+    0.2623,
+    0.1618,
+    0.0679
+   ]
+  },
+  {
+   "name": "iron_wrought",
+   "kind": "baked",
+   "family": "metal",
+   "tile": [
+    0.5,
+    0.5
+   ],
+   "res": 1024,
+   "tintable": false,
+   "directional": false,
+   "desc": "Hand-forged black iron: hammer facets, fire scale, blackened/oiled finish. Brackets, scrolls, railings, hinges, lantern frames, chains. wear = burnished bright steel; special = rust.",
+   "grime": {
+    "color": "#3a3128",
+    "rough": 0.95
+   },
+   "wear": {
+    "color": "#9a9590",
+    "rough": 0.32,
+    "metal": 1.0
+   },
+   "special": {
+    "kind": "rust",
+    "color": "#7a3f1c",
+    "rough": 0.92
+   },
+   "metal": true,
+   "preview": [
+    0.0486,
+    0.0486,
+    0.0547
+   ]
+  },
+  {
+   "name": "iron_painted",
+   "kind": "baked",
+   "family": "metal",
+   "tile": [
+    0.6,
+    0.6
+   ],
+   "res": 1024,
+   "tintable": true,
+   "directional": false,
+   "desc": "Thickly painted cast iron: sand-cast orange-peel under glossy paint, chips and runs. Tintable (white base - classic colours: #1f2a22 green-black, #20232a, #5a1414 red, #1c2f4a blue). Lamp posts, benches, bollards, pumps, pillar boxes. WEAR chips to dark iron; special = rust bleeding.",
+   "grime": {
+    "color": "#3a3128",
+    "rough": 0.95
+   },
+   "wear": {
+    "color": "#3b2a22",
+    "rough": 0.6,
+    "metal": 0.6
+   },
+   "special": {
+    "kind": "rust",
+    "color": "#7a3f1c",
+    "rough": 0.92
+   },
+   "preview": [
+    0.5467,
+    0.5292,
+    0.4796
+   ]
+  },
+  {
+   "name": "iron_rusty",
+   "kind": "baked",
+   "family": "metal",
+   "tile": [
+    0.6,
+    0.6
+   ],
+   "res": 1024,
+   "tintable": false,
+   "directional": false,
+   "desc": "Heavily rusted, pitted, flaking iron in oranges and dark browns. Old tools, anchors, drain grates, neglected fittings. wear = dark polished iron.",
+   "grime": {
+    "color": "#3a3128",
+    "rough": 0.95
+   },
+   "wear": {
+    "color": "#5b5450",
+    "rough": 0.4,
+    "metal": 1.0
+   },
+   "special": {
+    "kind": "rust",
+    "color": "#7a3f1c",
+    "rough": 0.92
+   },
+   "preview": [
+    0.1301,
+    0.0515,
+    0.0171
+   ]
+  },
+  {
+   "name": "zinc",
+   "kind": "baked",
+   "family": "metal",
+   "tile": [
+    0.6,
+    0.6
+   ],
+   "res": 1024,
+   "tintable": false,
+   "directional": false,
+   "desc": "Dull grey galvanised / zinc sheet with spangle and white bloom. Buckets, watering cans, gutters, downpipes, roof flashing. special = rust.",
+   "grime": {
+    "color": "#3a3128",
+    "rough": 0.95
+   },
+   "wear": {
+    "color": "#9a9590",
+    "rough": 0.32,
+    "metal": 1.0
+   },
+   "special": {
+    "kind": "rust",
+    "color": "#7a3f1c",
+    "rough": 0.92
+   },
+   "metal": true,
+   "preview": [
+    0.4241,
+    0.4464,
+    0.4571
+   ]
+  },
+  {
+   "name": "brass",
+   "kind": "baked",
+   "family": "metal",
+   "tile": [
+    0.4,
+    0.4
+   ],
+   "res": 1024,
+   "tintable": true,
+   "directional": false,
+   "desc": "Aged brass: warm yellow metal with brown tarnish in recesses and fine polishing lines. Tintable (#ffffff brass; #f2c9a0 copper-ish; #e6d9c0 nickel). Lantern fittings, door furniture, bells, clock bezels, taps. wear = bright polished; special = verdigris.",
+   "grime": {
+    "color": "#3a3128",
+    "rough": 0.95
+   },
+   "wear": {
+    "color": "#e3bb6c",
+    "rough": 0.22,
+    "metal": 1.0
+   },
+   "special": {
+    "kind": "verdigris",
+    "color": "#4f9a86",
+    "rough": 0.85
+   },
+   "metal": true,
+   "preview": [
+    0.5368,
+    0.387,
+    0.1502
+   ]
+  },
+  {
+   "name": "bronze_aged",
+   "kind": "baked",
+   "family": "metal",
+   "tile": [
+    0.6,
+    0.6
+   ],
+   "res": 1024,
+   "tintable": false,
+   "directional": false,
+   "desc": "Dark statuary bronze, chocolate-brown patina with green in recesses and rubbed golden highlights. Statues, fountain spouts, plaques, bells. special = verdigris.",
+   "grime": {
+    "color": "#3a3128",
+    "rough": 0.95
+   },
+   "wear": {
+    "color": "#c9964f",
+    "rough": 0.25,
+    "metal": 1.0
+   },
+   "special": {
+    "kind": "verdigris",
+    "color": "#4f9a86",
+    "rough": 0.85
+   },
+   "metal": true,
+   "preview": [
+    0.0489,
+    0.0276,
+    0.0148
+   ]
+  },
+  {
+   "name": "lead",
+   "kind": "baked",
+   "family": "metal",
+   "tile": [
+    0.5,
+    0.5
+   ],
+   "res": 1024,
+   "tintable": false,
+   "directional": false,
+   "desc": "Soft dull blue-grey lead sheet with white oxide bloom and dents. Flashing, window cames, cistern linings, roof finials.",
+   "grime": {
+    "color": "#3a3128",
+    "rough": 0.95
+   },
+   "wear": {
+    "color": "#a7abb0",
+    "rough": 0.35,
+    "metal": 1.0
+   },
+   "special": {
+    "kind": "none"
+   },
+   "metal": true,
+   "preview": [
+    0.1971,
+    0.2105,
+    0.2214
+   ]
+  },
+  {
+   "name": "canvas",
+   "kind": "baked",
+   "family": "fabric",
+   "tile": [
+    0.25,
+    0.25
+   ],
+   "res": 1024,
+   "tintable": true,
+   "directional": false,
+   "desc": "Heavy cotton canvas, plain weave, slight slub and creasing. Tintable (off-white base). Awnings, market stall covers, sacks, tarps, banners. Optional stripes: mat('canvas', '#a33', stripe=0.12, tint2='#eee4cf') paints stripes across U. special = sun-fade.",
+   "grime": {
+    "color": "#3a3128",
+    "rough": 0.95
+   },
+   "wear": {
+    "color": "#d9d2c0",
+    "rough": 0.9,
+    "metal": 0
+   },
+   "special": {
+    "kind": "fade",
+    "color": "#d8d2c4",
+    "rough": 0.9
+   },
+   "preview": [
+    0.6013,
+    0.5501,
+    0.4321
+   ]
+  },
+  {
+   "name": "burlap",
+   "kind": "baked",
+   "family": "fabric",
+   "tile": [
+    0.15,
+    0.15
+   ],
+   "res": 1024,
+   "tintable": true,
+   "directional": false,
+   "desc": "Coarse open-weave jute sacking, hairy. Sacks, wrapped bundles, root balls. Tintable.",
+   "grime": {
+    "color": "#3a3128",
+    "rough": 0.95
+   },
+   "wear": {
+    "color": "#b8b0a2",
+    "rough": 0.5,
+    "metal": 0.0
+   },
+   "special": {
+    "kind": "fade",
+    "color": "#d8d2c4",
+    "rough": 0.9
+   },
+   "preview": [
+    0.2693,
+    0.1923,
+    0.0955
+   ]
+  },
+  {
+   "name": "rope",
+   "kind": "baked",
+   "family": "fabric",
+   "tile": [
+    0.06,
+    0.03
+   ],
+   "res": 1024,
+   "tintable": true,
+   "directional": true,
+   "desc": "Three-strand twisted hemp rope: U runs ALONG the rope (sweep() gives this), strands spiral. Lashings, well ropes, mooring coils. Tintable.",
+   "grime": {
+    "color": "#3a3128",
+    "rough": 0.95
+   },
+   "wear": {
+    "color": "#b8b0a2",
+    "rough": 0.5,
+    "metal": 0.0
+   },
+   "special": {
+    "kind": "none"
+   },
+   "preview": [
+    0.2974,
+    0.2244,
+    0.1183
+   ]
+  },
+  {
+   "name": "leather",
+   "kind": "baked",
+   "family": "fabric",
+   "tile": [
+    0.4,
+    0.4
+   ],
+   "res": 1024,
+   "tintable": true,
+   "directional": false,
+   "desc": "Worn vegetable-tanned leather: fine pebbled grain, creases, darkened handling. Tintable (#7a4a2a tan default look, #2a1c14 dark). Straps, luggage, bellows, book spines, seats. wear = pale scuffs.",
+   "grime": {
+    "color": "#3a3128",
+    "rough": 0.95
+   },
+   "wear": {
+    "color": "#c79a6b",
+    "rough": 0.5,
+    "metal": 0
+   },
+   "special": {
+    "kind": "none"
+   },
+   "preview": [
+    0.158,
+    0.071,
+    0.033
+   ]
+  },
+  {
+   "name": "paper",
+   "kind": "baked",
+   "family": "fabric",
+   "tile": [
+    0.5,
+    0.5
+   ],
+   "res": 1024,
+   "tintable": true,
+   "directional": false,
+   "desc": "Aged laid paper / parchment: fibres, foxing, soft creases. Tintable (cream base). Posters, notices, lantern shades, labels, maps. special = damp stains.",
+   "grime": {
+    "color": "#3a3128",
+    "rough": 0.95
+   },
+   "wear": {
+    "color": "#b8b0a2",
+    "rough": 0.5,
+    "metal": 0.0
+   },
+   "special": {
+    "kind": "moss",
+    "color": "#8a7a4f",
+    "rough": 0.95
+   },
+   "preview": [
+    0.6052,
+    0.548,
+    0.408
+   ]
+  },
+  {
+   "name": "terracotta",
+   "kind": "baked",
+   "family": "ceramic",
+   "tile": [
+    0.5,
+    0.5
+   ],
+   "res": 1024,
+   "tintable": true,
+   "directional": false,
+   "desc": "Unglazed fired clay: orange-buff, throwing lines, lime bloom, small chips. Tintable. Flower pots, chimney pots, individually modelled roof tiles, ridge tiles, urns. special = moss/algae.",
+   "grime": {
+    "color": "#3a3128",
+    "rough": 0.95
+   },
+   "wear": {
+    "color": "#d89b72",
+    "rough": 0.7,
+    "metal": 0
+   },
+   "special": {
+    "kind": "moss",
+    "color": "#46531f",
+    "rough": 1.0
+   },
+   "preview": [
+    0.452,
+    0.205,
+    0.103
+   ]
+  },
+  {
+   "name": "ceramic_glazed",
+   "kind": "baked",
+   "family": "ceramic",
+   "tile": [
+    0.4,
+    0.4
+   ],
+   "res": 1024,
+   "tintable": true,
+   "directional": false,
+   "desc": "Glossy glazed ceramic / enamel with fine crazing and pooled glaze. Tintable (white base). Tiles, jugs, crockery, enamel signs, glazed pots, insulators. wear = chipped to biscuit clay.",
+   "grime": {
+    "color": "#3a3128",
+    "rough": 0.95
+   },
+   "wear": {
+    "color": "#c4a07a",
+    "rough": 0.8,
+    "metal": 0
+   },
+   "special": {
+    "kind": "none"
+   },
+   "preview": [
+    0.6852,
+    0.6606,
+    0.585
+   ]
+  },
+  {
+   "name": "chalkboard",
+   "kind": "baked",
+   "family": "misc",
+   "tile": [
+    0.8,
+    0.8
+   ],
+   "res": 1024,
+   "tintable": true,
+   "directional": false,
+   "desc": "Black slate chalkboard with wiped chalk dust smears and ghosted writing. Cafe menu boards, A-frames. Tintable (dark green boards).",
+   "grime": {
+    "color": "#3a3128",
+    "rough": 0.95
+   },
+   "wear": {
+    "color": "#9aa0a0",
+    "rough": 0.8,
+    "metal": 0
+   },
+   "special": {
+    "kind": "none"
+   },
+   "preview": [
+    0.0595,
+    0.0609,
+    0.0598
+   ]
+  },
+  {
+   "name": "wax",
+   "kind": "baked",
+   "family": "misc",
+   "tile": [
+    0.3,
+    0.3
+   ],
+   "res": 1024,
+   "tintable": true,
+   "directional": false,
+   "desc": "Candle wax / tallow: soft translucent ivory with drips. Tintable. Candles, seals.",
+   "grime": {
+    "color": "#3a3128",
+    "rough": 0.95
+   },
+   "wear": {
+    "color": "#b8b0a2",
+    "rough": 0.5,
+    "metal": 0.0
+   },
+   "special": {
+    "kind": "none"
+   },
+   "sss": true,
+   "preview": [
+    0.7,
+    0.627,
+    0.4516
+   ]
+  },
+  {
+   "name": "moss",
+   "kind": "baked",
+   "family": "plant",
+   "tile": [
+    0.5,
+    0.5
+   ],
+   "res": 1024,
+   "tintable": false,
+   "directional": false,
+   "desc": "Dense cushion moss, deep green to yellow-green. Use as a solid material on modelled moss clumps / tufts between stones.",
+   "grime": {
+    "color": "#3a3128",
+    "rough": 0.95
+   },
+   "wear": {
+    "color": "#b8b0a2",
+    "rough": 0.5,
+    "metal": 0.0
+   },
+   "special": {
+    "kind": "none"
+   },
+   "preview": [
+    0.0667,
+    0.0967,
+    0.0156
+   ]
+  },
+  {
+   "name": "hedge",
+   "kind": "baked",
+   "family": "plant",
+   "tile": [
+    0.6,
+    0.6
+   ],
+   "res": 1024,
+   "tintable": true,
+   "directional": false,
+   "desc": "Dense small-leaf foliage surface (box / privet): layered tiny leaves with dark gaps. For clipped hedge volumes, topiary shells, dense ivy masses, far tree canopies. Tintable (autumn / bluish).",
+   "grime": {
+    "color": "#3a3128",
+    "rough": 0.95
+   },
+   "wear": {
+    "color": "#b8b0a2",
+    "rough": 0.5,
+    "metal": 0.0
+   },
+   "special": {
+    "kind": "none"
+   },
+   "preview": [
+    0.0427,
+    0.0773,
+    0.0146
+   ]
+  },
+  {
+   "name": "leaf",
+   "kind": "baked",
+   "family": "plant",
+   "tile": [
+    0.25,
+    0.25
+   ],
+   "res": 1024,
+   "tintable": true,
+   "directional": false,
+   "desc": "Single broad leaf blade: midrib, veins, slight gloss; the albedo is a generic green blade filling the tile - map each modelled leaf / petal quad to the whole tile or model leaf outlines in geometry. Tintable (greens, autumn colours, petals: any flower colour).",
+   "grime": {
+    "color": "#3a3128",
+    "rough": 0.95
+   },
+   "wear": {
+    "color": "#b8b0a2",
+    "rough": 0.5,
+    "metal": 0.0
+   },
+   "special": {
+    "kind": "none"
+   },
+   "sss": true,
+   "preview": [
+    0.0579,
+    0.1156,
+    0.0224
+   ]
+  },
+  {
+   "name": "plain",
+   "kind": "special",
+   "family": "special",
+   "tintable": true,
+   "desc": "Matte neutral surface in the tint colour with fine micro-roughness. LAST RESORT for things with no better library material (rubber, bone, plastic-like bakelite). Assets made mostly of 'plain' are rejected.",
+   "tile": [
+    1,
+    1
+   ],
+   "preview": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  {
+   "name": "metal_plain",
+   "kind": "special",
+   "family": "special",
+   "tintable": true,
+   "desc": "Clean metal in the tint colour (gold leaf #d4a84b, chrome #dddddd, tin, gunmetal). params: rough (default 0.35).",
+   "tile": [
+    1,
+    1
+   ],
+   "preview": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  {
+   "name": "glass_clear",
+   "kind": "special",
+   "family": "special",
+   "tintable": true,
+   "desc": "Clear window / bottle glass, thin, slightly wavy, reflective. Tint = glass colour (#ffffff clear, #9fd6c0 bottle green, #7a4a1e amber). params: opacity (default 0.25), rough.",
+   "tile": [
+    1,
+    1
+   ],
+   "preview": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  {
+   "name": "glass_frosted",
+   "kind": "special",
+   "family": "special",
+   "tintable": true,
+   "desc": "Frosted / etched glass: bright diffusing surface. Lamp globes and shades. Tint = colour; params: glow (emissive strength if lit from inside, 0 = unlit), opacity.",
+   "tile": [
+    1,
+    1
+   ],
+   "preview": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  {
+   "name": "glass_lantern",
+   "kind": "special",
+   "family": "special",
+   "tintable": true,
+   "desc": "Old seeded lantern glass, faint amber, lit from within (subtle glow so the panes read warm at night). params: glow (default 1.2), opacity (default 0.35).",
+   "tile": [
+    1,
+    1
+   ],
+   "preview": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  {
+   "name": "glass_stained",
+   "kind": "special",
+   "family": "special",
+   "tintable": true,
+   "desc": "Stained glass panel glowing from interior light; tint = glass colour per piece (use several mats). params: glow (default 2).",
+   "tile": [
+    1,
+    1
+   ],
+   "preview": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  {
+   "name": "window_lit",
+   "kind": "special",
+   "family": "special",
+   "tintable": true,
+   "desc": "Glazing of an OCCUPIED room at night: warm interior seen through slightly wavy glass with a faked room depth (parallax), curtains and soft variation per pane. Tint = interior light colour (default #ffc37a). params: glow (default 3), curtain (0..1 how drawn the curtains are). Put behind modelled glazing bars.",
+   "tile": [
+    1,
+    1
+   ],
+   "preview": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  {
+   "name": "window_dark",
+   "kind": "special",
+   "family": "special",
+   "tintable": true,
+   "desc": "Glazing of a dark room: near-black, glossy, reflects the lantern light and sky, faint curtain shapes. For unlit windows (mix lit and dark ones!).",
+   "tile": [
+    1,
+    1
+   ],
+   "preview": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  {
+   "name": "emissive",
+   "kind": "special",
+   "family": "special",
+   "tintable": true,
+   "desc": "Self-luminous surface: flames, gas mantles, bulb filaments, glowing embers, lit signs. Tint = colour (#ffb45e flame, #ffd9a0 mantle, #fff1d0 bulb). params: glow (2 = dim ember, 8 = lantern flame, 20+ = dazzling bulb). Always pair with a light() socket.",
+   "tile": [
+    1,
+    1
+   ],
+   "preview": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  {
+   "name": "neon",
+   "kind": "special",
+   "family": "special",
+   "tintable": true,
+   "desc": "Neon / glass tube lettering: saturated emissive core with soft falloff. Tint = gas colour (#ff3b6b, #37e0ff, #ffd24a). params: glow (default 10).",
+   "tile": [
+    1,
+    1
+   ],
+   "preview": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  {
+   "name": "water",
+   "kind": "special",
+   "family": "special",
+   "tintable": true,
+   "desc": "Moving water surface: animated ripples, reflective, slightly green-dark. Fountain basins, troughs, puddles, canal. params: flow (ripple speed, default 1), tint for depth colour, opacity.",
+   "tile": [
+    1,
+    1
+   ],
+   "preview": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  {
+   "name": "water_fall",
+   "kind": "special",
+   "family": "special",
+   "tintable": true,
+   "desc": "Falling / jetting water sheet or stream: streaky, semi-opaque white-blue, scrolls along +U. Fountain jets and spill sheets, gargoyle spouts. params: flow.",
+   "tile": [
+    1,
+    1
+   ],
+   "preview": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  }
+ ]
+}

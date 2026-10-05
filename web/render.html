@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>tsq render service</title>
+<style>html,body{margin:0;background:#111;color:#ccc;font:12px monospace}canvas{display:block}</style>
+<script type="importmap">
+{ "imports": {
+	"three": "./node_modules/three/build/three.webgpu.js",
+	"three/webgpu": "./node_modules/three/build/three.webgpu.js",
+	"three/tsl": "./node_modules/three/build/three.tsl.js",
+	"three/addons/": "./node_modules/three/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<canvas id="gl" width="800" height="600"></canvas>
+<pre id="log"></pre>
+<script>
+window.__log = [];
+const _push = ( k, a ) => { try { window.__log.push( k + ': ' + [ ...a ].map( ( x ) => ( x && x.stack ) ? x.stack : ( typeof x === 'object' ? JSON.stringify( x ) : String( x ) ) ).join( ' ' ) ); if ( window.__log.length > 400 ) window.__log.shift(); } catch ( e ) {} };
+for ( const k of [ 'error', 'warn' ] ) { const o = console[ k ].bind( console ); console[ k ] = ( ...a ) => { _push( k, a ); o( ...a ); }; }
+window.addEventListener( 'error', ( e ) => _push( 'onerror', [ e.message, e.filename + ':' + e.lineno ] ) );
+window.addEventListener( 'unhandledrejection', ( e ) => _push( 'rejection', [ e.reason ] ) );
+</script>
+<script type="module" src="./render.js"></script>
+</body>
+</html>

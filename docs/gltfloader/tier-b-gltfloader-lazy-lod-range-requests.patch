@@ -1,0 +1,1775 @@
+From 078fd885cf0c542af8328361c69f334d8083d04a Mon Sep 17 00:00:00 2001
+From: Johnathon Selstad <makeshifted@gmail.com>
+Date: Mon, 5 Oct 2026 13:04:54 -0700
+Subject: [PATCH] GLTFLoader: Add setLazyLOD() and setRangeRequests().
+
+`setLazyLOD( true )` loads only the coarsest level of each `MSFT_lod`
+node before `onLoad()`. The other levels are loaded when `LOD.update()`
+asks for them, the nearest ones first and three at the same time, and
+the nearest loaded level is rendered until then.
+
+`setRangeRequests( true )` loads binary files with HTTP range requests,
+so that the buffer views of levels that are not needed are not
+downloaded. The first request is for the first 64 KiB of the file. A
+JSON chunk that is longer is read from one open-ended request, which is
+cancelled when the bytes that arrive are not needed anymore. The ranges
+that are asked for in the same tick are sorted and merged. If the
+server answers 200 instead of 206, the file is read once, as it
+arrives, and each range is resolved as soon as its bytes are in.
+
+`GLTFParser.loadBufferRange()` is what the meshopt extension now reads
+its source bytes with, which lets compressed buffer views be fetched
+individually as well.
+
+Both options are off by default.
+
+Co-Authored-By: Claude Code <noreply@anthropic.com>
+---
+ examples/jsm/loaders/GLTFLoader.js           | 1109 ++++++++++++++++--
+ test/unit/addons/loaders/GLTFLoader.tests.js |  421 +++++++
+ 2 files changed, 1458 insertions(+), 72 deletions(-)
+
+diff --git a/examples/jsm/loaders/GLTFLoader.js b/examples/jsm/loaders/GLTFLoader.js
+index c8ee7fe..60e915a 100644
+--- a/examples/jsm/loaders/GLTFLoader.js
++++ b/examples/jsm/loaders/GLTFLoader.js
+@@ -144,6 +144,9 @@ class GLTFLoader extends Loader {
+ 		this.ktx2Loader = null;
+ 		this.meshoptDecoder = null;
+ 
++		this.lazyLOD = false;
++		this.rangeRequests = false;
++
+ 		this.pluginCallbacks = [];
+ 
+ 		this.register( function ( parser ) {
+@@ -325,14 +328,7 @@ class GLTFLoader extends Loader {
+ 
+ 		};
+ 
+-		const loader = new FileLoader( this.manager );
+-
+-		loader.setPath( this.path );
+-		loader.setResponseType( 'arraybuffer' );
+-		loader.setRequestHeader( this.requestHeader );
+-		loader.setWithCredentials( this.withCredentials );
+-
+-		loader.load( url, function ( data ) {
++		const _onLoad = function ( data ) {
+ 
+ 			try {
+ 
+@@ -350,7 +346,23 @@ class GLTFLoader extends Loader {
+ 
+ 			}
+ 
+-		}, onProgress, _onError );
++		};
++
++		if ( this.rangeRequests === true ) {
++
++			new GLTFBinaryRangeExtension( this, url ).load().then( _onLoad, _onError );
++			return;
++
++		}
++
++		const loader = new FileLoader( this.manager );
++
++		loader.setPath( this.path );
++		loader.setResponseType( 'arraybuffer' );
++		loader.setRequestHeader( this.requestHeader );
++		loader.setWithCredentials( this.withCredentials );
++
++		loader.load( url, _onLoad, onProgress, _onError );
+ 
+ 	}
+ 
+@@ -396,6 +408,41 @@ class GLTFLoader extends Loader {
+ 
+ 	}
+ 
++	/**
++	 * Defines whether the levels of detail of `MSFT_lod` nodes are loaded on demand.
++	 * If enabled, only the coarsest level of each of these nodes is loaded before `onLoad()`
++	 * is executed. The other levels are loaded when they are needed for rendering, and the
++	 * nearest level that is already loaded is rendered until then. The loaders and decoders
++	 * of this loader, like {@link GLTFLoader#setDRACOLoader}, are used for as long as levels
++	 * are loaded and must not be disposed before.
++	 *
++	 * @param {boolean} value - Whether to load levels of detail on demand or not.
++	 * @return {GLTFLoader} A reference to this loader.
++	 */
++	setLazyLOD( value ) {
++
++		this.lazyLOD = value;
++		return this;
++
++	}
++
++	/**
++	 * Defines whether binary glTF files are loaded with HTTP range requests. If enabled,
++	 * {@link GLTFLoader#load} only fetches the parts of a `.glb` file that are needed,
++	 * which are not all of them when used with {@link GLTFLoader#setLazyLOD}. The whole
++	 * file is loaded if the server doesn't support range requests. `onProgress()` is
++	 * not executed.
++	 *
++	 * @param {boolean} value - Whether to load binary glTF files with range requests or not.
++	 * @return {GLTFLoader} A reference to this loader.
++	 */
++	setRangeRequests( value ) {
++
++		this.rangeRequests = value;
++		return this;
++
++	}
++
+ 	/**
+ 	 * Registers a plugin callback. This API is internally used to implement the various
+ 	 * glTF extensions but can also used by third-party code to add additional logic
+@@ -453,6 +500,11 @@ class GLTFLoader extends Loader {
+ 
+ 			json = JSON.parse( data );
+ 
++		} else if ( data instanceof GLTFBinaryRangeExtension ) {
++
++			extensions[ EXTENSIONS.KHR_BINARY_GLTF ] = data;
++			json = JSON.parse( data.content );
++
+ 		} else if ( data instanceof ArrayBuffer ) {
+ 
+ 			const magic = textDecoder.decode( new Uint8Array( data, 0, 4 ) );
+@@ -498,7 +550,8 @@ class GLTFLoader extends Loader {
+ 			requestHeader: this.requestHeader,
+ 			manager: this.manager,
+ 			ktx2Loader: this.ktx2Loader,
+-			meshoptDecoder: this.meshoptDecoder
++			meshoptDecoder: this.meshoptDecoder,
++			lazyLOD: this.lazyLOD
+ 
+ 		} );
+ 
+@@ -1675,7 +1728,10 @@ class GLTFMeshoptCompression {
+ 
+ 			const extensionDef = bufferView.extensions[ this.name ];
+ 
+-			const buffer = this.parser.getDependency( 'buffer', extensionDef.buffer );
++			const byteOffset = extensionDef.byteOffset || 0;
++			const byteLength = extensionDef.byteLength || 0;
++
++			const buffer = this.parser.loadBufferRange( extensionDef.buffer, byteOffset, byteLength );
+ 			const decoder = this.parser.options.meshoptDecoder;
+ 
+ 			if ( ! decoder || ! decoder.supported ) {
+@@ -1693,16 +1749,11 @@ class GLTFMeshoptCompression {
+ 
+ 			}
+ 
+-			return buffer.then( function ( res ) {
+-
+-				const byteOffset = extensionDef.byteOffset || 0;
+-				const byteLength = extensionDef.byteLength || 0;
++			return buffer.then( function ( source ) {
+ 
+ 				const count = extensionDef.count;
+ 				const stride = extensionDef.byteStride;
+ 
+-				const source = new Uint8Array( res, byteOffset, byteLength );
+-
+ 				if ( decoder.decodeGltfBufferAsync ) {
+ 
+ 					return decoder.decodeGltfBufferAsync( count, stride, source, extensionDef.mode, extensionDef.filter ).then( function ( res ) {
+@@ -1935,6 +1986,9 @@ class GLTFMeshGpuInstancing {
+  * levels are the nodes (or, for material LODs, clones of the node with the materials) the extension
+  * lists. The distances are derived from the optional `MSFT_screencoverage` extras.
+  *
++ * With {@link GLTFLoader#setLazyLOD} only the coarsest level with a mesh is loaded with the file,
++ * and the other levels when the `LOD` needs them, the nearest ones first.
++ *
+  * @private
+  */
+ class GLTFLodExtension {
+@@ -1944,32 +1998,56 @@ class GLTFLodExtension {
+ 		this.name = EXTENSIONS.MSFT_LOD;
+ 		this.parser = parser;
+ 
++		// The lazy LODs with a level that has to be loaded.
++		this._waiting = new Set();
++		this._loading = 0;
++		this._scheduled = false;
++
+ 	}
+ 
+ 	loadNode( nodeIndex ) {
+ 
++		const scope = this;
+ 		const parser = this.parser;
+ 		const nodeDef = parser.json.nodes[ nodeIndex ];
+ 		const ids = this._getIds( nodeDef );
+ 
+ 		if ( ids === null ) return this._loadMaterialLOD( nodeIndex );
+ 
+-		const bounds = this._getBounds( [ nodeIndex, ...ids ] );
++		const nodeIndices = [ nodeIndex, ...ids ];
++		const bounds = this._getBounds( nodeIndices );
+ 
+ 		if ( bounds === null ) return null;
+ 
+-		// Material LODs only apply to the node level they are defined for.
+-		const pending = [ this._loadMaterialLOD( nodeIndex ) || parser.loadNode( nodeIndex ) ];
++		const levels = [];
+ 
+-		for ( let i = 0, il = ids.length; i < il; i ++ ) {
++		const loadLevel = function ( i ) {
+ 
+-			pending.push( parser.getDependency( 'node', ids[ i ] ) );
++			if ( levels[ i ] === undefined ) {
++
++				// Material LODs only apply to the node level they are defined for.
++				levels[ i ] = i === 0 ? scope._loadMaterialLOD( nodeIndex ) || parser.loadNode( nodeIndex ) : parser.getDependency( 'node', ids[ i - 1 ] );
++
++			}
++
++			return levels[ i ];
++
++		};
++
++		const states = parser.options.lazyLOD === true ? this._getLevelStates( nodeIndices ) : null;
++		const pending = [];
++
++		for ( let i = 0, il = nodeIndices.length; i < il; i ++ ) {
++
++			pending.push( states !== null && states[ i ] === LOD_LEVEL_DEFERRED ? null : loadLevel( i ) );
+ 
+ 		}
+ 
+-		return Promise.all( pending ).then( function ( levels ) {
++		return Promise.all( pending ).then( function ( objects ) {
+ 
+-			return createLOD( levels, bounds, nodeDef.extras );
++			const lod = states !== null ? new GLTFLazyLOD( scope, loadLevel, states ) : new LOD();
++
++			return createLOD( objects, bounds, nodeDef.extras, lod );
+ 
+ 		} );
+ 
+@@ -2023,6 +2101,120 @@ class GLTFLodExtension {
+ 
+ 	}
+ 
++	// Returns the states of the levels of a lazy LOD: the coarsest level with a mesh and the levels
++	// without a mesh are loaded with the file. Returns null if all levels have to be loaded with it.
++	_getLevelStates( nodeIndices ) {
++
++		const states = [];
++
++		let coarsest = - 1;
++
++		for ( let i = 0, il = nodeIndices.length; i < il; i ++ ) {
++
++			const content = { mesh: false, dynamic: false };
++
++			this._getContent( nodeIndices[ i ], content );
++
++			// Animations and skins refer to nodes, which have to exist when the file is loaded.
++			if ( content.dynamic === true ) return null;
++
++			if ( content.mesh === true ) coarsest = i;
++
++			states.push( content.mesh === true ? LOD_LEVEL_DEFERRED : LOD_LEVEL_LOADED );
++
++		}
++
++		if ( coarsest !== - 1 ) states[ coarsest ] = LOD_LEVEL_LOADED;
++
++		return states.indexOf( LOD_LEVEL_DEFERRED ) !== - 1 ? states : null;
++
++	}
++
++	_getContent( nodeIndex, content ) {
++
++		const nodeDef = this.parser.json.nodes[ nodeIndex ];
++		const children = nodeDef.children || [];
++
++		if ( nodeDef.mesh !== undefined ) content.mesh = true;
++
++		if ( nodeDef.skin !== undefined || nodeDef.isBone === true || this._isAnimated( nodeIndex ) ) content.dynamic = true;
++
++		for ( let i = 0, il = children.length; i < il; i ++ ) {
++
++			this._getContent( children[ i ], content );
++
++		}
++
++	}
++
++	// Called by a lazy LOD in each update in which it can't render the level it needs.
++	_requestLevel( lod ) {
++
++		const scope = this;
++
++		this._waiting.add( lod );
++
++		if ( this._scheduled === false ) {
++
++			this._scheduled = true;
++
++			// The LODs are updated while a frame is rendered. The nearest
++			// one is only known when all of them have been updated.
++
++			Promise.resolve().then( function () {
++
++				scope._scheduled = false;
++				scope._loadLevels();
++
++			} );
++
++		}
++
++	}
++
++	_loadLevels() {
++
++		const scope = this;
++		const waiting = this._waiting;
++
++		const onLoad = function () {
++
++			scope._loading --;
++			scope._loadLevels();
++
++		};
++
++		while ( this._loading < LOD_MAX_LOADING ) {
++
++			let next = null;
++
++			for ( const lod of waiting ) {
++
++				if ( lod._wanted === - 1 || lod.parent === null ) {
++
++					// The level is not needed anymore.
++					waiting.delete( lod );
++
++				} else if ( next === null || lod._distance < next._distance ) {
++
++					next = lod;
++
++				}
++
++			}
++
++			if ( next === null ) break;
++
++			waiting.delete( next );
++
++			this._loading ++;
++
++			next._load( next._wanted ).then( onLoad );
++
++		}
++
++	}
++
+ 	_getIds( def ) {
+ 
+ 		const extensionDef = def && def.extensions && def.extensions[ this.name ];
+@@ -2255,10 +2447,9 @@ class GLTFLodExtension {
+ // tan( fov / 2 ) ^ 2 * coverage ) ). Without MSFT_screencoverage each level covers a quarter of the previous one.
+ const LOD_COVERAGE_TO_DISTANCE = 1.42539;
+ 
+-function createLOD( objects, bounds, extras ) {
++function createLOD( objects, bounds, extras, lod = new LOD() ) {
+ 
+ 	const coverages = extras && Array.isArray( extras.MSFT_screencoverage ) ? extras.MSFT_screencoverage : [];
+-	const lod = new LOD();
+ 
+ 	lod.position.copy( bounds.center );
+ 
+@@ -2281,7 +2472,7 @@ function createLOD( objects, bounds, extras ) {
+ 		const level = new Group();
+ 		level.position.copy( bounds.center ).negate();
+ 
+-		if ( i < il ) level.add( objects[ i ] );
++		if ( i < il && objects[ i ] !== null ) level.add( objects[ i ] );
+ 
+ 		lod.addLevel( level, distance );
+ 
+@@ -2291,6 +2482,138 @@ function createLOD( objects, bounds, extras ) {
+ 
+ }
+ 
++const LOD_LEVEL_LOADED = 0;
++const LOD_LEVEL_DEFERRED = 1;
++const LOD_LEVEL_LOADING = 2;
++const LOD_LEVEL_FAILED = 3;
++
++// The number of levels that are loaded at the same time, the nearest ones first. Large levels share
++// the connection, so that more of them at once aren't loaded sooner but delay the nearest ones. Small
++// levels wait for the round trip of their request, so that fewer of them at once take longer.
++const LOD_MAX_LOADING = 3;
++
++const _cameraPosition = new Vector3();
++const _lodPosition = new Vector3();
++
++/**
++ * A LOD with levels that are loaded when they are needed. Until then the nearest
++ * level that is loaded is rendered instead, a coarser one if there is one.
++ *
++ * @private
++ */
++class GLTFLazyLOD extends LOD {
++
++	constructor( extension = null, loadLevel = null, states = [] ) {
++
++		super();
++
++		this._extension = extension;
++		this._loadLevel = loadLevel;
++		this._states = states;
++
++		// The level that has to be loaded, and how far away the camera is.
++		this._wanted = - 1;
++		this._distance = 0;
++
++	}
++
++	copy( source ) {
++
++		super.copy( source );
++
++		this._extension = source._extension;
++		this._loadLevel = source._loadLevel;
++
++		// A level is only added to the LODs that requested it.
++		this._states = source._states.map( function ( state ) {
++
++			return state === LOD_LEVEL_LOADING ? LOD_LEVEL_DEFERRED : state;
++
++		} );
++
++		return this;
++
++	}
++
++	update( camera ) {
++
++		super.update( camera );
++
++		const levels = this.levels;
++		const states = this._states;
++		const wanted = this._currentLevel;
++
++		this._wanted = - 1;
++
++		if ( states[ wanted ] === undefined || states[ wanted ] === LOD_LEVEL_LOADED ) return;
++
++		let current = wanted;
++
++		for ( let i = wanted + 1, il = states.length; i < il && current === wanted; i ++ ) {
++
++			if ( states[ i ] === LOD_LEVEL_LOADED ) current = i;
++
++		}
++
++		for ( let i = wanted - 1; i >= 0 && current === wanted; i -- ) {
++
++			if ( states[ i ] === LOD_LEVEL_LOADED ) current = i;
++
++		}
++
++		levels[ wanted ].object.visible = false;
++		levels[ current ].object.visible = true;
++
++		this._currentLevel = current;
++
++		if ( states[ wanted ] === LOD_LEVEL_DEFERRED ) {
++
++			_cameraPosition.setFromMatrixPosition( camera.matrixWorld );
++			_lodPosition.setFromMatrixPosition( this.matrixWorld );
++
++			this._wanted = wanted;
++			this._distance = _cameraPosition.distanceTo( _lodPosition ) / camera.zoom;
++
++			this._extension._requestLevel( this );
++
++		}
++
++	}
++
++	// Loads a level. The returned promise is never rejected: without the level the LOD renders another one.
++	_load( index ) {
++
++		const scope = this;
++		const states = this._states;
++
++		states[ index ] = LOD_LEVEL_LOADING;
++
++		return new Promise( function ( resolve ) {
++
++			resolve( scope._loadLevel( index ) );
++
++		} ).then( function ( object ) {
++
++			const level = scope.levels[ index ].object;
++
++			// The object already has a parent if this LOD is a clone, or has been cloned.
++			level.add( object.parent === null ? object : clone( object ) );
++			level.updateMatrixWorld( true );
++
++			states[ index ] = LOD_LEVEL_LOADED;
++
++		} ).catch( function ( error ) {
++
++			states[ index ] = LOD_LEVEL_FAILED;
++
++			console.error( 'THREE.GLTFLoader: Couldn\'t load a level of detail.', error );
++
++		} );
++
++	}
++
++}
++
+ function getNodeMatrix( nodeDef ) {
+ 
+ 	const matrix = new Matrix4();
+@@ -2377,84 +2700,671 @@ class GLTFBinaryExtension {
+ 
+ }
+ 
++// The number of bytes at the start of the file that are requested first, to get the JSON chunk.
++const BINARY_RANGE_HEAD_LENGTH = 65536;
++
++// Ranges that are not further apart than this number of bytes are loaded with a single request.
++const BINARY_RANGE_MERGE_GAP = 16384;
++
+ /**
+- * DRACO Mesh Compression Extension
+- *
+- * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_draco_mesh_compression
++ * Loads a binary glTF file with HTTP range requests: the start of the file with the
++ * JSON chunk first, and then the parts of the BIN chunk that are needed. The file is
++ * read as it arrives if the server answers with all of it.
+  *
+  * @private
+  */
+-class GLTFDracoMeshCompressionExtension {
++class GLTFBinaryRangeExtension {
+ 
+-	constructor( json, dracoLoader ) {
++	constructor( loader, url ) {
+ 
+-		if ( ! dracoLoader ) {
++		this.name = EXTENSIONS.KHR_BINARY_GLTF;
++		this.content = null;
++		this.body = null;
+ 
+-			throw new Error( 'THREE.GLTFLoader: No DRACOLoader instance provided.' );
++		this.bodyOffset = 0;
++		this.bodyLength = 0;
+ 
+-		}
++		this.url = loader.manager.resolveURL( loader.path + url );
++		this.manager = loader.manager;
++		this.requestHeader = loader.requestHeader;
++		this.withCredentials = loader.withCredentials;
+ 
+-		this.name = EXTENSIONS.KHR_DRACO_MESH_COMPRESSION;
+-		this.json = json;
+-		this.dracoLoader = dracoLoader;
+-		this.dracoLoader.preload();
++		// The bytes that have been read from the start of the file, in an array that can be longer.
++		// This is the whole file if the server doesn't support range requests.
++		this.bytes = new Uint8Array( 0 );
++		this.byteLength = 0;
++		this.complete = false;
+ 
+-	}
++		// The ranges that are read from the start of the file, while it is read up to an end.
++		this.reading = false;
++		this.partial = false;
++		this.readEnd = 0;
++		this.waiting = [];
+ 
+-	decodePrimitive( primitive, parser ) {
++		// The ranges that are requested in the next tick.
++		this.pending = [];
+ 
+-		const json = this.json;
+-		const dracoLoader = this.dracoLoader;
+-		const bufferViewIndex = primitive.extensions[ this.name ].bufferView;
+-		const gltfAttributeMap = primitive.extensions[ this.name ].attributes;
+-		const threeAttributeMap = {};
+-		const attributeNormalizedMap = {};
+-		const attributeTypeMap = {};
++		// Resolves when the whole file has been read in place of a range.
++		this.whole = null;
+ 
+-		for ( const attributeName in gltfAttributeMap ) {
++	}
+ 
+-			const threeAttributeName = ATTRIBUTES[ attributeName ] || attributeName.toLowerCase();
++	// Resolves with this extension when the JSON chunk has been read, or with the whole file
++	// if it isn't a binary glTF file.
++	load() {
+ 
+-			threeAttributeMap[ threeAttributeName ] = gltfAttributeMap[ attributeName ];
++		const scope = this;
+ 
+-		}
++		return new Promise( function ( resolve, reject ) {
+ 
+-		for ( const attributeName in primitive.attributes ) {
++			scope._read( 0, BINARY_RANGE_HEAD_LENGTH, resolve ).catch( reject );
+ 
+-			const threeAttributeName = ATTRIBUTES[ attributeName ] || attributeName.toLowerCase();
++		} );
+ 
+-			if ( gltfAttributeMap[ attributeName ] !== undefined ) {
++	}
+ 
+-				const accessorDef = json.accessors[ primitive.attributes[ attributeName ] ];
+-				const componentType = WEBGL_COMPONENT_TYPES[ accessorDef.componentType ];
++	// Loads bytes of the BIN chunk. The returned array can be a part of a larger buffer and must not be modified.
++	loadRange( byteOffset, byteLength ) {
+ 
+-				attributeTypeMap[ threeAttributeName ] = componentType.name;
+-				attributeNormalizedMap[ threeAttributeName ] = accessorDef.normalized === true;
++		const scope = this;
++		const start = this.bodyOffset + byteOffset;
++		const end = start + byteLength;
+ 
+-			}
++		if ( end <= this.byteLength || this.complete === true ) {
++
++			return Promise.resolve( this.bytes.subarray( start, end ) );
+ 
+ 		}
+ 
+-		return parser.getDependency( 'bufferView', bufferViewIndex ).then( function ( bufferView ) {
++		return new Promise( function ( resolve, reject ) {
+ 
+-			return new Promise( function ( resolve, reject ) {
++			scope._request( { start: start, end: end, resolve: resolve, reject: reject } );
+ 
+-				dracoLoader.decodeDracoFile( bufferView, function ( geometry ) {
++		} );
+ 
+-					for ( const attributeName in geometry.attributes ) {
++	}
+ 
+-						const attribute = geometry.attributes[ attributeName ];
+-						const normalized = attributeNormalizedMap[ attributeName ];
++	// Reads the file from the bytes that have been read up to the given end, or for as long as the bytes
++	// are needed if there is no end. The JSON chunk is passed to onLoad when it has been read.
++	_read( start, end, onLoad ) {
+ 
+-						if ( normalized !== undefined ) attribute.normalized = normalized;
++		const scope = this;
+ 
+-					}
++		return this._track( this._fetch( start, end ).then( function ( response ) {
+ 
+-					resolve( geometry );
++			if ( response === null ) {
+ 
+-				}, threeAttributeMap, attributeTypeMap, LinearSRGBColorSpace, reject );
++				// The file ends with the bytes that have been read.
+ 
+-			} );
++				scope.complete = true;
++
++				return onLoad( scope._parseHeader( true ) );
++
++			}
++
++			const partial = response.status === 206;
++
++			let reader = null;
++			let loaded = false;
++			let cancelled = false;
++
++			if ( partial === false ) {
++
++				// The server answers with the whole file, which is used as it arrives.
++
++				console.warn( 'THREE.GLTFLoader: The server doesn\'t support range requests, the whole file is loaded.' );
++
++				scope.bytes = new Uint8Array( Number( response.headers.get( 'Content-Length' ) ) || 0 );
++				scope.byteLength = 0;
++
++			}
++
++			const onChunk = function ( result ) {
++
++				if ( result.done === true ) return;
++
++				scope._append( result.value );
++
++				if ( loaded === true ) return onBytes();
++
++				const data = scope._parseHeader( false );
++
++				if ( data === null ) return reader.read().then( onChunk );
++
++				loaded = true;
++
++				onLoad( data );
++
++				// The parser requests the bytes it needs first before the next task.
++
++				return new Promise( function ( resolve ) {
++
++					setTimeout( resolve, 0 );
++
++				} ).then( onBytes );
++
++			};
++
++			const onBytes = function () {
++
++				scope._resolveWaiting();
++
++				if ( partial === true && end === Infinity && scope.waiting.length === 0 && scope.pending.length === 0 ) {
++
++					// The bytes that follow are not needed.
++
++					cancelled = true;
++
++					return reader.cancel();
++
++				}
++
++				return reader.read().then( onChunk );
++
++			};
++
++			const onEnd = function ( error ) {
++
++				const waiting = scope.waiting;
++
++				// The file has been read to its end if the answer is shorter than the request.
++				scope.bytes = scope.bytes.subarray( 0, scope.byteLength );
++				scope.complete = error === null && cancelled === false && ( partial === false || scope.byteLength < end );
++				scope.reading = false;
++				scope.waiting = [];
++
++				for ( let i = 0, il = waiting.length; i < il; i ++ ) {
++
++					if ( error !== null ) {
++
++						waiting[ i ].reject( error );
++
++					} else {
++
++						scope._request( waiting[ i ] );
++
++					}
++
++				}
++
++				if ( error !== null ) {
++
++					if ( reader !== null ) reader.cancel().catch( function () {} );
++
++					throw error;
++
++				}
++
++				if ( loaded === true ) return;
++
++				const data = scope._parseHeader( scope.complete );
++
++				if ( data !== null ) return onLoad( data );
++
++				// The rest of the JSON chunk is read with the bytes that follow it, which saves a request
++				// for a file that continues with the data of its coarsest levels of detail.
++
++				return scope._read( scope.byteLength, Infinity, onLoad );
++
++			};
++
++			if ( response.body === undefined || response.body === null || response.body.getReader === undefined ) {
++
++				// The response can't be read in parts.
++
++				return response.arrayBuffer().then( function ( buffer ) {
++
++					scope._append( new Uint8Array( buffer ) );
++
++					return onEnd( null );
++
++				} );
++
++			}
++
++			reader = response.body.getReader();
++
++			scope.reading = true;
++			scope.partial = partial;
++			scope.readEnd = partial === true ? end : Infinity;
++
++			return reader.read().then( onChunk ).then( function () {
++
++				scope._resolveWaiting();
++
++				return onEnd( null );
++
++			}, onEnd );
++
++		} ) );
++
++	}
++
++	_append( chunk ) {
++
++		const byteLength = this.byteLength + chunk.byteLength;
++
++		if ( byteLength > this.bytes.byteLength ) {
++
++			const bytes = new Uint8Array( Math.max( byteLength, 2 * this.bytes.byteLength ) );
++
++			bytes.set( this.bytes.subarray( 0, this.byteLength ), 0 );
++
++			this.bytes = bytes;
++
++		}
++
++		this.bytes.set( chunk, this.byteLength );
++		this.byteLength = byteLength;
++
++	}
++
++	// Returns this extension if the JSON chunk has been read, the file if it isn't a binary glTF
++	// file and has been read, and null otherwise.
++	_parseHeader( complete ) {
++
++		const bytes = this.bytes;
++		const byteLength = this.byteLength;
++		const textDecoder = new TextDecoder();
++
++		if ( byteLength >= 20 && textDecoder.decode( bytes.subarray( 0, 4 ) ) === BINARY_EXTENSION_HEADER_MAGIC ) {
++
++			const headerView = new DataView( bytes.buffer, bytes.byteOffset, 20 );
++
++			if ( headerView.getUint32( 4, true ) < 2.0 ) {
++
++				throw new Error( 'THREE.GLTFLoader: Legacy binary file detected.' );
++
++			} else if ( headerView.getUint32( 16, true ) !== BINARY_EXTENSION_CHUNK_TYPES.JSON ) {
++
++				throw new Error( 'THREE.GLTFLoader: JSON content not found.' );
++
++			}
++
++			// The JSON chunk is followed by the header of the BIN chunk, which has eight bytes.
++			const bodyOffset = BINARY_EXTENSION_HEADER_LENGTH + 8 + headerView.getUint32( 12, true ) + 8;
++
++			if ( byteLength < Math.min( bodyOffset, headerView.getUint32( 8, true ) ) ) {
++
++				if ( complete === false ) return null;
++
++				throw new Error( 'THREE.GLTFLoader: Failed to load the JSON content of "' + this.url + '".' );
++
++			}
++
++			this.content = textDecoder.decode( bytes.subarray( BINARY_EXTENSION_HEADER_LENGTH + 8, bodyOffset - 8 ) );
++
++			if ( byteLength >= bodyOffset ) {
++
++				const chunkView = new DataView( bytes.buffer, bytes.byteOffset + bodyOffset - 8, 8 );
++
++				if ( chunkView.getUint32( 4, true ) === BINARY_EXTENSION_CHUNK_TYPES.BIN ) {
++
++					this.bodyOffset = bodyOffset;
++					this.bodyLength = chunkView.getUint32( 0, true );
++
++				}
++
++			}
++
++			return this;
++
++		}
++
++		if ( complete === false ) return null;
++
++		return bytes.byteLength === bytes.buffer.byteLength ? bytes.buffer : bytes.slice().buffer;
++
++	}
++
++	_resolveWaiting() {
++
++		const waiting = this.waiting;
++
++		for ( let i = waiting.length - 1; i >= 0; i -- ) {
++
++			const range = waiting[ i ];
++
++			if ( range.end <= this.byteLength ) {
++
++				waiting.splice( i, 1 );
++
++				range.resolve( this.bytes.subarray( range.start, range.end ) );
++
++			}
++
++		}
++
++	}
++
++	// Loads a range, with the other ranges that are requested in the same tick.
++	_request( range ) {
++
++		const scope = this;
++
++		if ( this.pending.length === 0 ) {
++
++			Promise.resolve().then( function () {
++
++				scope._loadPending();
++
++			} );
++
++		}
++
++		this.pending.push( range );
++
++	}
++
++	_loadPending() {
++
++		const scope = this;
++
++		const pending = this.pending.sort( function ( a, b ) {
++
++			return a.start - b.start;
++
++		} );
++
++		this.pending = [];
++
++		// The end of the bytes that are going to be read from the start of the file.
++		let reach = Math.max( this.byteLength, this.readEnd === Infinity ? 0 : this.readEnd );
++
++		for ( let i = 0, il = this.waiting.length; i < il; i ++ ) {
++
++			reach = Math.max( reach, this.waiting[ i ].end );
++
++		}
++
++		for ( let i = 0, il = pending.length; i < il; ) {
++
++			const start = pending[ i ].start;
++
++			let end = pending[ i ].end;
++			let j = i + 1;
++
++			while ( j < il && pending[ j ].start <= end + BINARY_RANGE_MERGE_GAP ) {
++
++				end = Math.max( end, pending[ j ].end );
++				j ++;
++
++			}
++
++			const ranges = pending.slice( i, j );
++
++			i = j;
++
++			if ( end <= this.byteLength || this.complete === true ) {
++
++				for ( let k = 0, kl = ranges.length; k < kl; k ++ ) {
++
++					ranges[ k ].resolve( this.bytes.subarray( ranges[ k ].start, ranges[ k ].end ) );
++
++				}
++
++			} else if ( this.whole !== null ) {
++
++				this._resolveWhole( ranges );
++
++			} else if ( this.reading === true && ( this.partial === false || start <= reach + BINARY_RANGE_MERGE_GAP ) ) {
++
++				// The ranges follow the bytes that are read from the start of the file.
++
++				for ( let k = 0, kl = ranges.length; k < kl; k ++ ) {
++
++					this.waiting.push( ranges[ k ] );
++
++				}
++
++				reach = Math.max( reach, end );
++
++			} else {
++
++				// The first bytes of the ranges can have been read from the start of the file.
++
++				const head = this.bytes.subarray( Math.min( start, this.byteLength ), this.byteLength );
++
++				this._track( this._fetch( start + head.byteLength, end ).then( function ( response ) {
++
++					if ( response.status !== 206 ) {
++
++						// The server answers with the whole file. It can answer other requests
++						// that have been sent with it as well, and only one of the answers is read.
++
++						if ( scope.whole === null ) {
++
++							console.warn( 'THREE.GLTFLoader: The server doesn\'t support range requests, the whole file is loaded.' );
++
++							scope.whole = response.arrayBuffer().then( function ( buffer ) {
++
++								scope.bytes = new Uint8Array( buffer );
++								scope.byteLength = buffer.byteLength;
++								scope.complete = true;
++
++							} );
++
++							scope.whole.catch( function () {
++
++								scope.whole = null;
++
++							} );
++
++						} else if ( response.body ) {
++
++							response.body.cancel().catch( function () {} );
++
++						}
++
++						return scope._resolveWhole( ranges );
++
++					}
++
++					return response.arrayBuffer().then( function ( buffer ) {
++
++						let bytes = new Uint8Array( buffer );
++
++						if ( head.byteLength > 0 ) {
++
++							const rest = bytes;
++
++							bytes = new Uint8Array( head.byteLength + rest.byteLength );
++							bytes.set( head, 0 );
++							bytes.set( rest, head.byteLength );
++
++						}
++
++						if ( bytes.byteLength !== end - start ) {
++
++							throw new Error( 'THREE.GLTFLoader: Failed to load bytes ' + start + ' to ' + end + ' of "' + scope.url + '".' );
++
++						}
++
++						for ( let k = 0, kl = ranges.length; k < kl; k ++ ) {
++
++							ranges[ k ].resolve( bytes.subarray( ranges[ k ].start - start, ranges[ k ].end - start ) );
++
++						}
++
++					} );
++
++				} ) ).catch( function ( error ) {
++
++					for ( let k = 0, kl = ranges.length; k < kl; k ++ ) {
++
++						ranges[ k ].reject( error );
++
++					}
++
++				} );
++
++			}
++
++		}
++
++	}
++
++	// Resolves ranges when the whole file, which is being read in place of a range, has been read.
++	_resolveWhole( ranges ) {
++
++		const scope = this;
++
++		return this.whole.then( function () {
++
++			for ( let i = 0, il = ranges.length; i < il; i ++ ) {
++
++				ranges[ i ].resolve( scope.bytes.subarray( ranges[ i ].start, ranges[ i ].end ) );
++
++			}
++
++		}, function ( error ) {
++
++			for ( let i = 0, il = ranges.length; i < il; i ++ ) {
++
++				ranges[ i ].reject( error );
++
++			}
++
++		} );
++
++	}
++
++	// Requests the bytes from start to end. The response is null if the
++	// file has no bytes from start on and is requested up to its end.
++	_fetch( start, end ) {
++
++		const headers = new Headers( this.requestHeader );
++		headers.set( 'Range', 'bytes=' + start + '-' + ( end === Infinity ? '' : end - 1 ) );
++
++		const request = new Request( this.url, {
++			headers: headers,
++			credentials: this.withCredentials ? 'include' : 'same-origin',
++			signal: this.manager.abortController.signal
++		} );
++
++		return fetch( request ).then( function ( response ) {
++
++			if ( response.status === 416 && start > 0 && end === Infinity ) return null;
++
++			// Like in FileLoader, a response without a status is one of a protocol other than HTTP.
++
++			if ( response.status !== 200 && response.status !== 206 && response.status !== 0 ) {
++
++				throw new Error( `THREE.GLTFLoader: fetch for "${response.url}" responded with ${response.status}: ${response.statusText}` );
++
++			}
++
++			return response;
++
++		} );
++
++	}
++
++	// Reports a request to the loading manager.
++	_track( promise ) {
++
++		const url = this.url;
++		const manager = this.manager;
++
++		manager.itemStart( url );
++
++		return promise.then( function ( value ) {
++
++			manager.itemEnd( url );
++
++			return value;
++
++		}, function ( error ) {
++
++			manager.itemError( url );
++			manager.itemEnd( url );
++
++			throw error;
++
++		} );
++
++	}
++
++}
++
++/**
++ * DRACO Mesh Compression Extension
++ *
++ * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_draco_mesh_compression
++ *
++ * @private
++ */
++class GLTFDracoMeshCompressionExtension {
++
++	constructor( json, dracoLoader ) {
++
++		if ( ! dracoLoader ) {
++
++			throw new Error( 'THREE.GLTFLoader: No DRACOLoader instance provided.' );
++
++		}
++
++		this.name = EXTENSIONS.KHR_DRACO_MESH_COMPRESSION;
++		this.json = json;
++		this.dracoLoader = dracoLoader;
++		this.dracoLoader.preload();
++
++	}
++
++	decodePrimitive( primitive, parser ) {
++
++		const json = this.json;
++		const dracoLoader = this.dracoLoader;
++		const bufferViewIndex = primitive.extensions[ this.name ].bufferView;
++		const gltfAttributeMap = primitive.extensions[ this.name ].attributes;
++		const threeAttributeMap = {};
++		const attributeNormalizedMap = {};
++		const attributeTypeMap = {};
++
++		for ( const attributeName in gltfAttributeMap ) {
++
++			const threeAttributeName = ATTRIBUTES[ attributeName ] || attributeName.toLowerCase();
++
++			threeAttributeMap[ threeAttributeName ] = gltfAttributeMap[ attributeName ];
++
++		}
++
++		for ( const attributeName in primitive.attributes ) {
++
++			const threeAttributeName = ATTRIBUTES[ attributeName ] || attributeName.toLowerCase();
++
++			if ( gltfAttributeMap[ attributeName ] !== undefined ) {
++
++				const accessorDef = json.accessors[ primitive.attributes[ attributeName ] ];
++				const componentType = WEBGL_COMPONENT_TYPES[ accessorDef.componentType ];
++
++				attributeTypeMap[ threeAttributeName ] = componentType.name;
++				attributeNormalizedMap[ threeAttributeName ] = accessorDef.normalized === true;
++
++			}
++
++		}
++
++		return parser.getDependency( 'bufferView', bufferViewIndex ).then( function ( bufferView ) {
++
++			return new Promise( function ( resolve, reject ) {
++
++				dracoLoader.decodeDracoFile( bufferView, function ( geometry ) {
++
++					for ( const attributeName in geometry.attributes ) {
++
++						const attribute = geometry.attributes[ attributeName ];
++						const normalized = attributeNormalizedMap[ attributeName ];
++
++						if ( normalized !== undefined ) attribute.normalized = normalized;
++
++					}
++
++					resolve( geometry );
++
++				}, threeAttributeMap, attributeTypeMap, LinearSRGBColorSpace, reject );
++
++			} );
+ 
+ 		} );
+ 
+@@ -3518,7 +4428,19 @@ class GLTFParser {
+ 		// If present, GLB container is required to be the first buffer.
+ 		if ( bufferDef.uri === undefined && bufferIndex === 0 ) {
+ 
+-			return Promise.resolve( this.extensions[ EXTENSIONS.KHR_BINARY_GLTF ].body );
++			const binary = this.extensions[ EXTENSIONS.KHR_BINARY_GLTF ];
++
++			if ( binary instanceof GLTFBinaryRangeExtension ) {
++
++				return binary.loadRange( 0, binary.bodyLength ).then( function ( array ) {
++
++					return array.slice().buffer;
++
++				} );
++
++			}
++
++			return Promise.resolve( binary.body );
+ 
+ 		}
+ 
+@@ -3547,6 +4469,16 @@ class GLTFParser {
+ 
+ 		const bufferViewDef = this.json.bufferViews[ bufferViewIndex ];
+ 
++		if ( this._getBinaryRange( bufferViewDef.buffer ) !== null ) {
++
++			return this.loadBufferRange( bufferViewDef.buffer, bufferViewDef.byteOffset || 0, bufferViewDef.byteLength || 0 ).then( function ( array ) {
++
++				return array.slice().buffer;
++
++			} );
++
++		}
++
+ 		return this.getDependency( 'buffer', bufferViewDef.buffer ).then( function ( buffer ) {
+ 
+ 			const byteLength = bufferViewDef.byteLength || 0;
+@@ -3557,6 +4489,39 @@ class GLTFParser {
+ 
+ 	}
+ 
++	/**
++	 * Loads a part of a buffer. Unlike `getDependency( 'buffer' )` this doesn't load the
++	 * whole buffer if the file is loaded with range requests.
++	 *
++	 * @private
++	 * @param {number} bufferIndex
++	 * @param {number} byteOffset
++	 * @param {number} byteLength
++	 * @return {Promise<Uint8Array>}
++	 */
++	loadBufferRange( bufferIndex, byteOffset, byteLength ) {
++
++		const binary = this._getBinaryRange( bufferIndex );
++
++		if ( binary !== null ) return binary.loadRange( byteOffset, byteLength );
++
++		return this.getDependency( 'buffer', bufferIndex ).then( function ( buffer ) {
++
++			return new Uint8Array( buffer, byteOffset, byteLength );
++
++		} );
++
++	}
++
++	// Returns the binary extension if the buffer is the BIN chunk of a file that is loaded with range requests.
++	_getBinaryRange( bufferIndex ) {
++
++		const binary = this.extensions[ EXTENSIONS.KHR_BINARY_GLTF ];
++
++		return bufferIndex === 0 && this.json.buffers[ 0 ].uri === undefined && binary instanceof GLTFBinaryRangeExtension ? binary : null;
++
++	}
++
+ 	/**
+ 	 * Specification: https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#accessors
+ 	 *
+diff --git a/test/unit/addons/loaders/GLTFLoader.tests.js b/test/unit/addons/loaders/GLTFLoader.tests.js
+index f2c3c84..d5f8011 100644
+--- a/test/unit/addons/loaders/GLTFLoader.tests.js
++++ b/test/unit/addons/loaders/GLTFLoader.tests.js
+@@ -1,3 +1,5 @@
++import { BufferAttribute, BufferGeometry, PerspectiveCamera } from 'three';
++
+ import { GLTFLoader } from '../../../../examples/jsm/loaders/GLTFLoader.js';
+ import { GLTFGaussianSplatLoaderExtension } from '../../../../examples/jsm/loaders/GLTFGaussianSplatLoaderExtension.js';
+ import { unpackSphericalHarmonicsBand } from '../utils/GaussianSplatTestUtils.js';
+@@ -158,6 +160,161 @@ function createLodGLTF() {
+ 
+ }
+ 
++// The same LOD in a binary file, with a second mesh for the node 'High' that doesn't
++// fit into the first range request. The meshes can be the input of a Draco decoder,
++// and the JSON chunk can have a minimum length.
++function createLodGLB( draco = false, length = 0 ) {
++
++	const json = createLodGLTF();
++	const low = new Float32Array( [ 0, 0, 0, 2, 0, 0, 0, 2, 0 ] );
++	const high = new Float32Array( 3 * 30000 );
++	const body = new Uint8Array( low.byteLength + high.byteLength );
++
++	high.set( low );
++	body.set( new Uint8Array( low.buffer ), 0 );
++	body.set( new Uint8Array( high.buffer ), low.byteLength );
++
++	json.nodes[ 0 ].mesh = 1;
++	json.meshes.push( { primitives: [ { attributes: { POSITION: 1 } } ] } );
++	json.accessors.push( { bufferView: 1, componentType: FLOAT, count: 30000, type: 'VEC3', min: [ 0, 0, 0 ], max: [ 2, 2, 0 ] } );
++	json.bufferViews.push( { buffer: 0, byteOffset: low.byteLength, byteLength: high.byteLength } );
++	json.buffers = [ { byteLength: body.byteLength } ];
++
++	if ( draco === true ) {
++
++		for ( let i = 0; i < 2; i ++ ) {
++
++			json.meshes[ i ].primitives[ 0 ].extensions = { KHR_draco_mesh_compression: { bufferView: i, attributes: { POSITION: 0 } } };
++			delete json.accessors[ i ].bufferView;
++
++		}
++
++		json.extensionsUsed.push( 'KHR_draco_mesh_compression' );
++		json.extensionsRequired = [ 'KHR_draco_mesh_compression' ];
++
++	}
++
++	let text = JSON.stringify( json );
++
++	text = text.padEnd( length );
++
++	while ( text.length % 4 !== 0 ) text += ' ';
++
++	const content = new TextEncoder().encode( text );
++	const glb = new Uint8Array( 28 + content.byteLength + body.byteLength );
++	const view = new DataView( glb.buffer );
++
++	view.setUint32( 0, 0x46546C67, true );
++	view.setUint32( 4, 2, true );
++	view.setUint32( 8, glb.byteLength, true );
++	view.setUint32( 12, content.byteLength, true );
++	view.setUint32( 16, 0x4E4F534A, true );
++	glb.set( content, 20 );
++	view.setUint32( 20 + content.byteLength, body.byteLength, true );
++	view.setUint32( 24 + content.byteLength, 0x004E4942, true );
++	glb.set( body, 28 + content.byteLength );
++
++	return glb.buffer;
++
++}
++
++// A server for the file: the answers are read in chunks, and only as far as they are asked for.
++function createRangeServer( glb, ranges ) {
++
++	const server = { ranges: ranges, requests: [], read: [], cancelled: [] };
++
++	server.fetch = async ( request ) => {
++
++		const ranges = server.ranges;
++		const range = /^bytes=(\d+)-(\d*)$/.exec( request.headers.get( 'Range' ) );
++		const index = server.requests.push( range[ 0 ] ) - 1;
++		const end = ranges === true && range[ 2 ] !== '' ? Number( range[ 2 ] ) + 1 : glb.byteLength;
++
++		let offset = ranges === true ? Number( range[ 1 ] ) : 0;
++
++		server.read[ index ] = 0;
++		server.cancelled[ index ] = false;
++
++		if ( offset >= glb.byteLength ) return new Response( null, { status: 416 } );
++
++		const body = new ReadableStream( {
++
++			pull( controller ) {
++
++				const chunk = new Uint8Array( glb.slice( offset, Math.min( offset + 256, end ) ) );
++
++				offset += chunk.byteLength;
++				server.read[ index ] += chunk.byteLength;
++
++				controller.enqueue( chunk );
++
++				if ( offset >= end ) controller.close();
++
++			},
++
++			cancel() {
++
++				server.cancelled[ index ] = true;
++
++			}
++
++		}, { highWaterMark: 0 } );
++
++		return new Response( body, { status: ranges === true ? 206 : 200 } );
++
++	};
++
++	return server;
++
++}
++
++// A decoder in place of DRACOLoader: it decodes when it is told to, and the data are the vertices.
++function createDecoder() {
++
++	const decoder = { buffers: [], tasks: [] };
++
++	decoder.preload = () => {};
++
++	decoder.decodeDracoFile = ( buffer, onLoad ) => {
++
++		decoder.buffers.push( buffer );
++		decoder.tasks.push( () => {
++
++			const geometry = new BufferGeometry();
++			geometry.setAttribute( 'position', new BufferAttribute( new Float32Array( buffer ), 3 ) );
++
++			onLoad( geometry );
++
++		} );
++
++	};
++
++	return decoder;
++
++}
++
++async function waitFor( test ) {
++
++	for ( let i = 0; i < 200 && test() === false; i ++ ) {
++
++		await new Promise( ( resolve ) => setTimeout( resolve, 5 ) );
++
++	}
++
++}
++
++function getLevelNames( lod ) {
++
++	return lod.levels.map( ( level ) => level.object.children.map( ( child ) => child.name ) );
++
++}
++
++function waitForLevel( lod, index ) {
++
++	return waitFor( () => lod.levels[ index ].object.children.length > 0 );
++
++}
++
+ export default QUnit.module( 'Addons', () => {
+ 
+ 	QUnit.module( 'Loaders', () => {
+@@ -284,6 +441,270 @@ export default QUnit.module( 'Addons', () => {
+ 
+ 			} );
+ 
++			QUnit.test( 'loads the levels of MSFT_lod nodes on demand with setLazyLOD', async ( assert ) => {
++
++				const gltf = await new GLTFLoader().setLazyLOD( true ).parseAsync( JSON.stringify( createLodGLTF() ), '' );
++				const lod = gltf.scene.children[ 0 ];
++				const camera = new PerspectiveCamera();
++
++				assert.deepEqual( getLevelNames( lod ), [[], [ 'Low' ], []], 'loads the coarsest level' );
++
++				camera.position.set( 2, 1, 1 );
++				camera.updateMatrixWorld();
++				lod.update( camera );
++
++				assert.strictEqual( lod.getCurrentLevel(), 1, 'renders the coarsest level while the level is loaded' );
++				assert.deepEqual( lod.levels.map( ( level ) => level.object.visible ), [ false, true, false ], 'shows the coarsest level' );
++
++				await waitForLevel( lod, 0 );
++				lod.update( camera );
++
++				assert.deepEqual( getLevelNames( lod ), [[ 'High' ], [ 'Low' ], []], 'loads the level that is needed' );
++				assert.strictEqual( lod.getCurrentLevel(), 0, 'renders the level' );
++				assert.strictEqual( gltf.parser.associations.get( gltf.scene.getObjectByName( 'High' ) ).nodes, 0, 'adds the association of the node' );
++
++			} );
++
++			QUnit.test( 'loads binary files with range requests with setRangeRequests', async ( assert ) => {
++
++				const glb = createLodGLB();
++				const fetch = globalThis.fetch;
++				const server = createRangeServer( glb, true );
++
++				globalThis.fetch = server.fetch;
++
++				try {
++
++					const gltf = await new GLTFLoader().setLazyLOD( true ).setRangeRequests( true ).loadAsync( 'lod.glb' );
++					const lod = gltf.scene.children[ 0 ];
++					const camera = new PerspectiveCamera();
++
++					assert.deepEqual( server.requests, [ 'bytes=0-65535' ], 'requests the start of the file' );
++					assert.deepEqual( getLevelNames( lod ), [[], [ 'Low' ], []], 'loads the coarsest level' );
++
++					camera.position.set( 2, 1, 1 );
++					camera.updateMatrixWorld();
++					lod.update( camera );
++
++					await waitForLevel( lod, 0 );
++
++					assert.deepEqual( server.requests, [ 'bytes=0-65535', 'bytes=65536-' + ( glb.byteLength - 1 ) ], 'requests the rest of the file for the other level' );
++					assert.strictEqual( gltf.scene.getObjectByName( 'High' ).geometry.attributes.position.count, 30000, 'loads the other level' );
++					assert.deepEqual( Array.from( gltf.scene.getObjectByName( 'High' ).geometry.attributes.position.array.slice( 0, 9 ) ), [ 0, 0, 0, 2, 0, 0, 0, 2, 0 ], 'joins the ranges' );
++
++				} finally {
++
++					globalThis.fetch = fetch;
++
++				}
++
++			} );
++
++			QUnit.test( 'reads a long JSON chunk with the bytes that follow it', async ( assert ) => {
++
++				const glb = createLodGLB( false, 70000 );
++				const fetch = globalThis.fetch;
++				const server = createRangeServer( glb, true );
++
++				globalThis.fetch = server.fetch;
++
++				try {
++
++					const gltf = await new GLTFLoader().setLazyLOD( true ).setRangeRequests( true ).loadAsync( 'lod.glb' );
++					const lod = gltf.scene.children[ 0 ];
++					const camera = new PerspectiveCamera();
++
++					assert.deepEqual( server.requests, [ 'bytes=0-65535', 'bytes=65536-' ], 'requests the file from the end of its start' );
++					assert.deepEqual( getLevelNames( lod ), [[], [ 'Low' ], []], 'loads the coarsest level' );
++
++					await waitFor( () => server.cancelled[ 1 ] );
++
++					const read = server.read[ 0 ] + server.read[ 1 ];
++
++					assert.ok( server.cancelled[ 1 ] === true && read < 70000 + 8192, 'cancels the request after the bytes of the coarsest level' );
++
++					camera.position.set( 2, 1, 1 );
++					camera.updateMatrixWorld();
++					lod.update( camera );
++
++					await waitForLevel( lod, 0 );
++
++					assert.strictEqual( server.requests[ 2 ], 'bytes=' + read + '-' + ( glb.byteLength - 1 ), 'requests the bytes of the other level that have not been read' );
++					assert.deepEqual( Array.from( gltf.scene.getObjectByName( 'High' ).geometry.attributes.position.array.slice( 0, 9 ) ), [ 0, 0, 0, 2, 0, 0, 0, 2, 0 ], 'joins the ranges' );
++
++				} finally {
++
++					globalThis.fetch = fetch;
++
++				}
++
++			} );
++
++			QUnit.test( 'reads the whole binary file if the server does not support range requests', async ( assert ) => {
++
++				const glb = createLodGLB();
++				const fetch = globalThis.fetch;
++				const warn = console.warn;
++				const server = createRangeServer( glb, false );
++
++				globalThis.fetch = server.fetch;
++				console.warn = () => {};
++
++				try {
++
++					const gltf = await new GLTFLoader().setLazyLOD( true ).setRangeRequests( true ).loadAsync( 'lod.glb' );
++					const lod = gltf.scene.children[ 0 ];
++					const camera = new PerspectiveCamera();
++
++					assert.deepEqual( getLevelNames( lod ), [[], [ 'Low' ], []], 'loads the coarsest level' );
++
++					camera.position.set( 2, 1, 1 );
++					camera.updateMatrixWorld();
++					lod.update( camera );
++
++					await waitForLevel( lod, 0 );
++
++					assert.deepEqual( server.requests, [ 'bytes=0-65535' ], 'requests the file once' );
++					assert.ok( server.cancelled[ 0 ] === false && server.read[ 0 ] === glb.byteLength, 'reads the file to its end' );
++					assert.strictEqual( gltf.scene.getObjectByName( 'High' ).geometry.attributes.position.count, 30000, 'loads the other level' );
++
++				} finally {
++
++					globalThis.fetch = fetch;
++					console.warn = warn;
++
++				}
++
++			} );
++
++			QUnit.test( 'reads the whole binary file once if the server stops supporting range requests', async ( assert ) => {
++
++				const glb = createLodGLB();
++				const fetch = globalThis.fetch;
++				const warn = console.warn;
++				const server = createRangeServer( glb, true );
++
++				globalThis.fetch = server.fetch;
++				console.warn = () => {};
++
++				try {
++
++					const gltf = await new GLTFLoader().setLazyLOD( true ).setRangeRequests( true ).loadAsync( 'lod.glb' );
++
++					server.ranges = false;
++
++					// Two ranges that are too far apart for a single request.
++
++					const arrays = await Promise.all( [ gltf.parser.loadBufferRange( 0, 100000, 12 ), gltf.parser.loadBufferRange( 0, 200000, 12 ) ] );
++
++					assert.strictEqual( server.requests.length, 3, 'requests the ranges' );
++					assert.deepEqual( server.read.slice( 1 ), [ glb.byteLength, 0 ], 'reads the file once' );
++					assert.deepEqual( server.cancelled.slice( 1 ), [ false, true ], 'cancels the other answer' );
++					assert.deepEqual( arrays.map( ( array ) => array.byteLength ), [ 12, 12 ], 'loads the ranges' );
++
++					await gltf.parser.loadBufferRange( 0, 300000, 12 );
++
++					assert.strictEqual( server.requests.length, 3, 'requests nothing after that' );
++
++				} finally {
++
++					globalThis.fetch = fetch;
++					console.warn = warn;
++
++				}
++
++			} );
++
++			QUnit.test( 'reads a file that ends with the first range request', async ( assert ) => {
++
++				const gltf = new TextEncoder().encode( JSON.stringify( createLodGLTF() ).padEnd( 65536 ) );
++				const fetch = globalThis.fetch;
++				const server = createRangeServer( gltf.buffer, true );
++
++				// The buffer of the file is a data URI.
++				globalThis.fetch = ( request ) => request.headers.has( 'Range' ) ? server.fetch( request ) : fetch( request );
++
++				try {
++
++					const result = await new GLTFLoader().setRangeRequests( true ).loadAsync( 'lod.gltf' );
++
++					assert.deepEqual( server.requests, [ 'bytes=0-65535', 'bytes=65536-' ], 'requests the bytes that follow' );
++					assert.ok( result.scene.children[ 0 ].isLOD, 'loads the file' );
++
++				} finally {
++
++					globalThis.fetch = fetch;
++
++				}
++
++			} );
++
++			QUnit.test( 'decodes the Draco data of a level when the level is needed', async ( assert ) => {
++
++				const glb = createLodGLB( true );
++				const fetch = globalThis.fetch;
++				const server = createRangeServer( glb, true );
++				const decoder = createDecoder();
++
++				globalThis.fetch = server.fetch;
++
++				try {
++
++					const loading = new GLTFLoader().setDRACOLoader( decoder ).setLazyLOD( true ).setRangeRequests( true ).loadAsync( 'lod.glb' );
++
++					await waitFor( () => decoder.tasks.length > 0 );
++
++					assert.deepEqual( decoder.buffers.map( ( buffer ) => buffer.byteLength ), [ 36 ], 'decodes the coarsest level only' );
++					assert.deepEqual( Array.from( new Float32Array( decoder.buffers[ 0 ] ) ), [ 0, 0, 0, 2, 0, 0, 0, 2, 0 ], 'passes the bytes of the buffer view to the decoder' );
++
++					decoder.tasks[ 0 ]();
++
++					const gltf = await loading;
++					const lod = gltf.scene.children[ 0 ];
++					const camera = new PerspectiveCamera();
++
++					camera.position.set( 2, 1, 1 );
++					camera.updateMatrixWorld();
++					lod.update( camera );
++
++					await waitFor( () => decoder.tasks.length > 1 );
++
++					assert.strictEqual( decoder.buffers[ 1 ].byteLength, 360000, 'decodes the level that is needed' );
++					assert.strictEqual( server.requests.length, 2, 'requests the bytes of the level' );
++
++					// The camera moves away and the LOD is removed before the level is decoded.
++
++					camera.position.set( 2, 1, 100 );
++					camera.updateMatrixWorld();
++					lod.update( camera );
++					gltf.scene.remove( lod );
++
++					assert.deepEqual( getLevelNames( lod ), [[], [ 'Low' ], []], 'has no level that is being decoded' );
++					assert.strictEqual( lod.getCurrentLevel(), 2, 'renders the level that is needed now' );
++
++					decoder.tasks[ 1 ]();
++
++					await waitForLevel( lod, 0 );
++
++					assert.deepEqual( getLevelNames( lod ), [[ 'High' ], [ 'Low' ], []], 'adds the level when it is decoded' );
++					assert.deepEqual( lod.levels.map( ( level ) => level.object.visible ), [ false, false, true ], 'does not show a level that is not needed anymore' );
++
++					camera.position.set( 2, 1, 1 );
++					camera.updateMatrixWorld();
++					gltf.scene.add( lod );
++					lod.update( camera );
++
++					assert.strictEqual( lod.getCurrentLevel(), 0, 'renders the level when it is needed again' );
++					assert.strictEqual( decoder.tasks.length, 2, 'decodes a level once' );
++
++				} finally {
++
++					globalThis.fetch = fetch;
++
++				}
++
++			} );
++
+ 		} );
+ 
+ 	} );
+-- 
+2.55.0
+

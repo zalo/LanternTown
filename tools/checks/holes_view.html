@@ -1,0 +1,33 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<script type="importmap">{ "imports": { "three": "./node_modules/three/build/three.module.js", "three/addons/": "./node_modules/three/examples/jsm/" } }</script></head>
+<body style="margin:0;background:#222"><script type="module">
+// Holes of the levels as the street sees them (docs/LOD.md rule g): back faces culled (two-sided materials stay
+// two-sided), magenta behind. tools/serve.py does not serve tools/: copy this file into web/ while you use it
+// (http://localhost:8765/<name>.html?files=...) and delete the copy afterwards.
+//   ?files=<path under out/>,...   one panel each, in order     &labels=a|b|...     &cols=3
+//   &cam=x,y,z,dx,dy,dz            glTF axes (y up, the front of an asset looks along +z)     &fov=62  &w=1000 &h=700
+// -> window.__out = { url: JPEG data URL of the sheet, tris: [...] }
+import * as THREE from 'three'; import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+const Q = new URLSearchParams( location.search ), W = + ( Q.get( 'w' ) || 1000 ), H = + ( Q.get( 'h' ) || 700 );
+const renderer = new THREE.WebGLRenderer( { antialias: true, preserveDrawingBuffer: true } ); renderer.setSize( W, H );
+const cam = new THREE.PerspectiveCamera( + ( Q.get( 'fov' ) || 62 ), W / H, 0.05, 500 );
+const c = ( Q.get( 'cam' ) || '-0.5,1.65,4.5,0.622,0.05,-0.783' ).split( ',' ).map( Number );
+cam.position.set( c[ 0 ], c[ 1 ], c[ 2 ] ); cam.lookAt( c[ 0 ] + c[ 3 ], c[ 1 ] + c[ 4 ], c[ 2 ] + c[ 5 ] );
+const files = Q.get( 'files' ).split( ',' ), labels = ( Q.get( 'labels' ) || '' ).split( '|' ), cols = + ( Q.get( 'cols' ) || 3 );
+const sheet = document.createElement( 'canvas' ); sheet.width = cols * W; sheet.height = Math.ceil( files.length / cols ) * H;
+const ctx = sheet.getContext( '2d' ); ctx.fillStyle = '#222'; ctx.fillRect( 0, 0, sheet.width, sheet.height ); document.body.append( sheet );
+const hue = ( s ) => { let h = 0; for ( const ch of s ) h = ( h * 31 + ch.charCodeAt( 0 ) ) >>> 0; return new THREE.Color().setHSL( ( 30 + h % 190 ) / 360, 0.3, 0.42 + ( ( h >> 9 ) % 20 ) / 100 ); };
+const tris = [];
+for ( let i = 0; i < files.length; i ++ ) {
+	if ( files[ i ] === '-' ) continue;
+	const g = await new GLTFLoader().loadAsync( './out/' + files[ i ] ); const scene = new THREE.Scene(); scene.background = new THREE.Color( 0xff00ff );
+	let n = 0; g.scene.traverse( ( o ) => { if ( o.isMesh ) { n += ( o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count ) / 3;
+		const name = ( o.material.name || '' ).replace( /~.*/, '' );      // the look is not the point: one flat tone per material, lit from the camera
+		o.material = new THREE.MeshLambertMaterial( { color: hue( name ), side: o.material.side } ); } } );
+	scene.add( g.scene ); scene.add( new THREE.AmbientLight( 0xffffff, 1.6 ) ); const l = new THREE.DirectionalLight( 0xffffff, 2.2 ); l.position.copy( cam.position ).add( new THREE.Vector3( - 2, 3, 1 ) ); scene.add( l );
+	renderer.render( scene, cam ); const x = ( i % cols ) * W, y = Math.floor( i / cols ) * H; ctx.drawImage( renderer.domElement, x, y );
+	ctx.font = '26px sans-serif'; ctx.fillStyle = '#000'; ctx.fillRect( x, y, ctx.measureText( ( labels[ i ] || files[ i ] ) + '  ' + n + ' tris' ).width + 24, 40 );
+	ctx.fillStyle = '#fff'; ctx.fillText( ( labels[ i ] || files[ i ] ) + '  ' + n + ' tris', x + 12, y + 29 ); tris.push( n );
+}
+window.__out = { tris, url: sheet.toDataURL( 'image/jpeg', 0.9 ) };
+</script></body></html>

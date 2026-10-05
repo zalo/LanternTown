@@ -1,0 +1,2045 @@
+{
+ "assets": [
+  {
+   "id": "lantern_head",
+   "category": "lighting",
+   "name": "Gas lantern head",
+   "class": "component",
+   "mount": "ground",
+   "tier": 0,
+   "brief": "Four-sided tapered glazed gas lantern head (exemplar).",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "lamp_post_gas",
+   "category": "lighting",
+   "name": "Gas lamp post",
+   "class": "street_furniture",
+   "mount": "ground",
+   "tier": 0,
+   "brief": "Cast-iron gas lamp post, 1-3 lanterns (exemplar).",
+   "deps": [
+    "lantern_head"
+   ],
+   "ref": "plaza"
+  },
+  {
+   "id": "wall_lantern",
+   "category": "lighting",
+   "name": "Wall lantern on scroll bracket",
+   "class": "component",
+   "mount": "wall",
+   "tier": 1,
+   "brief": "Wrought-iron wall bracket (back plate bolted to the wall, S-scroll or swan-neck arm, stay bar) carrying a glazed lantern, either standing on the arm or hanging from it. As on the gate arch and shopfronts of the reference. Params: reach, bracket style (scroll / swan / gallows), lantern roof style, paint, intensity. Compose the lantern with use(\"lantern_head\").",
+   "deps": [
+    "lantern_head"
+   ],
+   "ref": "gate"
+  },
+  {
+   "id": "hanging_lantern",
+   "category": "lighting",
+   "name": "Hanging chain lantern",
+   "class": "component",
+   "mount": "hang",
+   "tier": 1,
+   "brief": "Lantern hanging from a ceiling rose / hook on a chain (use chain()), for archways, the canal tunnel and timber galleries. Cylindrical or hexagonal cage style distinct from lantern_head: turned cap, pierced gallery, glass cylinder, drip finial. The lantern body is a 'swing' part. Params: drop length, style (hex / cylinder / globe), metal (iron / brass / copper), glass tint, intensity.",
+   "deps": [],
+   "ref": "canal"
+  },
+  {
+   "id": "ground_lantern",
+   "category": "lighting",
+   "name": "Stone ground lantern",
+   "class": "prop",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Squat ground lantern as flanking the monument steps: dressed stone base and shaft, iron or bronze cage with four glazed openings, capped roof with finial; 0.6-1.1 m tall, warm glow at knee height. Params: height, plan (square / octagonal), cap style, material (stone / bronze), intensity, moss.",
+   "deps": [],
+   "ref": "monument"
+  },
+  {
+   "id": "festoon_lights",
+   "category": "lighting",
+   "name": "Festoon string lights",
+   "class": "component",
+   "mount": "hang",
+   "tier": 1,
+   "brief": "A catenary string of festoon bulbs between two fixing points (origin = first point; span and drop are params): twisted cable, bulb holders, clear or coloured bulbs with emissive filaments, a few light sockets spread along it (not one per bulb: 1 per ~1.5 m). Params: span, sag, bulb count, bulb colours (warm / multicolour), bulb size. 'swing' not needed. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: span): Origin at the first fixing point, the second fixing point is at (span, 0, 0); span 2-14 m.",
+   "deps": [],
+   "ref": "cafe",
+   "contract": [
+    "span"
+   ]
+  },
+  {
+   "id": "paper_lantern",
+   "category": "lighting",
+   "name": "Paper lantern",
+   "class": "prop_small",
+   "mount": "hang",
+   "tier": 1,
+   "brief": "Hanging paper / cloth lantern: ribbed bamboo-hoop paper shade (globe, barrel or gourd profile via lathe with rib ridges), wooden top and bottom rings, cord and tassel, glowing from inside (glass_frosted or paper with glow), 'swing' part. Params: shape, diameter, colour (cream / red / amber), tassel, intensity.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "table_lantern",
+   "category": "lighting",
+   "name": "Table candle lantern",
+   "class": "prop_small",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Small table-top candle lantern / hurricane lamp as on the cafe tables: brass or tin base, glass chimney or four small panes, carry ring, wax candle with flame (fx flame + emissive), drips. 0.2-0.35 m tall. Params: style (hurricane / box / jar), metal, height, intensity.",
+   "deps": [],
+   "ref": "cafe"
+  },
+  {
+   "id": "neon_sign_vertical",
+   "category": "lighting",
+   "name": "Vertical neon hotel sign",
+   "class": "component",
+   "mount": "wall",
+   "tier": 1,
+   "brief": "Vertical projecting neon sign as the HOTEL sign with crown on the reference: painted sheet-metal box with rolled edges and rivets, two wall brackets with stays, big channel letters stacked vertically with neon tubes (mat 'neon') on both faces, a neon emblem on top (crown / star / none), cabling, bulbs optional. Params: text, letter height, tube colour, box colour, emblem, bulbs border. Lights in the tube colour.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "neon_glyph",
+   "category": "lighting",
+   "name": "Neon emblem sign",
+   "class": "component",
+   "mount": "wall",
+   "tier": 1,
+   "brief": "Wall-mounted neon emblem on a dark backing panel or open frame: fleur-de-lis, star, crescent moon, cup, arrow or key outlined in one or two neon tube colours (tubes = swept round rods with standoffs and end caps, transformer box, cable). As the neon fleur-de-lis on the reference cafe. Params: glyph, size, colours, backing (panel / frame / none).",
+   "deps": [],
+   "ref": "cafe"
+  },
+  {
+   "id": "lamp_post_globe",
+   "category": "lighting",
+   "name": "Electric globe lamp post",
+   "class": "street_furniture",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Ornate electric street lamp: fluted cast-iron column on a stepped base, branching arms carrying 1, 3 or 5 frosted glass globes (glass_frosted with glow) with gallery collars and finials. Distinct from the gas lamp post: rounder, more Parisian. Params: height, globes (1 / 3 / 5), globe diameter, paint, intensity.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "wall_sconce_candle",
+   "category": "lighting",
+   "name": "Candle wall sconce",
+   "class": "prop_small",
+   "mount": "wall",
+   "tier": 1,
+   "brief": "Wrought-iron or brass wall sconce with a reflector back plate and 1-3 candles in drip pans on curled arms, wax drips, flames (fx). For passages, the cafe gallery and interiors of arches. Params: arms, metal, reflector shape (oval / shield / none), candle height.",
+   "deps": [],
+   "ref": "cafe"
+  },
+  {
+   "id": "marquee_sign",
+   "category": "lighting",
+   "name": "Bulb-bordered marquee sign",
+   "class": "component",
+   "mount": "wall",
+   "tier": 1,
+   "brief": "Painted fascia sign board with a border of small emissive bulbs and raised lettering (text param), scrolled top pediment, as a theatre / shop marquee. Bulbs: instanced, emissive; a few light sockets. Params: text, width, height, board colour, letter colour, bulb spacing, pediment style.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "brazier",
+   "category": "lighting",
+   "name": "Iron fire brazier",
+   "class": "prop",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Wrought-iron fire basket on three legs with glowing coals / logs (emissive embers, fx flame + smoke), ash pan, soot. A night watchman's brazier for the gate. Params: diameter, height, style (basket / bowl), fuel (coal / logs), intensity.",
+   "deps": [],
+   "ref": "gate"
+  },
+  {
+   "id": "bench_park",
+   "category": "street",
+   "name": "Cast-iron and timber park bench",
+   "class": "furniture",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Victorian park bench as in the plaza: two or three ornate cast-iron end frames (scrolled arm, curved back, splayed feet) joined by timber seat and back slats with dome bolts; slats slightly uneven and worn. Params: length, slats, frame style (scroll / serpent / plain), paint, wood tone, wear.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "bench_stone",
+   "category": "street",
+   "name": "Stone bench",
+   "class": "furniture",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Dressed stone bench: thick slab seat on two carved scroll or lion-paw supports, optional backrest slab with panel moulding; chipped arrises, moss in the joints, worn seat. Params: length, back (bool), support style, stone tint, moss.",
+   "deps": [],
+   "ref": "monument"
+  },
+  {
+   "id": "bollard",
+   "category": "street",
+   "name": "Cast-iron bollard",
+   "class": "prop_small",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Cast-iron street bollard: stepped base, fluted or plain tapering shaft, moulded neck and cap (cannon / ball / acorn), optional chain eyes. Params: height, style, cap, paint, rust.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "chain_barrier",
+   "category": "street",
+   "name": "Post and chain barrier",
+   "class": "prop",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "A run of 2-6 short posts (stone or iron) linked by sagging iron chain (chain() along catenary()). Origin at the run centre; the run is along X. Params: posts, spacing, post material (stone / iron), post height, chain sag. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: length): The run lies along X and spans exactly x in [-length/2, +length/2] (origin at its centre on the ground); any `length` in the stated range must work, and ends must be clean so runs butt together. length 1.5-10 m (posts at both ends).",
+   "deps": [],
+   "ref": "monument",
+   "contract": [
+    "length"
+   ]
+  },
+  {
+   "id": "litter_bin",
+   "category": "street",
+   "name": "Cast-iron litter bin",
+   "class": "prop",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Victorian litter bin: slatted or cast panelled drum on feet with a hooded or open top, crest badge, hinge and latch, inner zinc liner visible. Params: style (slatted / panelled), height, paint, gilt details.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "post_box",
+   "category": "street",
+   "name": "Pillar post box",
+   "class": "prop",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Cast-iron pillar letter box: plinth, cylindrical or hexagonal body, door with hinges, lock and collection plate, letter slot with hood, moulded cap with beaded rim and finial. Painted (red / blue / green) with chips and rust at the base. Params: plan (round / hex), height, paint, cap style, text on the plate.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "water_pump",
+   "category": "street",
+   "name": "Cast-iron hand pump and trough",
+   "class": "prop",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Village hand water pump: fluted iron body, long curved handle on a pivot (a 'swing'-less static part is fine), spout with bucket hook, stone or timber trough below with water (mat 'water'), wet staining. Params: height, trough (stone / wood / none), paint.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "fire_hydrant",
+   "category": "street",
+   "name": "Fire hydrant standpipe",
+   "class": "prop_small",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Old cast-iron hydrant / standpipe: flanged base with bolts, barrel, two capped outlets with chains, pentagon operating nut, dome cap. Chipped red or green paint, rust runs. Params: height, outlets, paint.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "signpost_finger",
+   "category": "street",
+   "name": "Finger signpost",
+   "class": "street_furniture",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Cast-iron finger post: fluted column on a base, 2-4 pointing finger boards with raised lettering (text params, e.g. 'First District', 'Hotel', 'Canal', 'Gate') at different heights and bearings, ball or pineapple finial. Params: height, arms, texts, paint, letter colour.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "street_clock",
+   "category": "street",
+   "name": "Street clock on a post",
+   "class": "street_furniture",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Pedestal street clock: ornate iron column on a panelled base, two-faced drum clock head with glazed, softly lit dials (roman numerals as raised / painted marks, hands), scroll brackets and crest. Params: height, dial diameter, time (hour), paint, lit.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "notice_board",
+   "category": "street",
+   "name": "Notice board with posters",
+   "class": "prop",
+   "mount": "wall_ground",
+   "tier": 1,
+   "brief": "Timber notice board on two posts with a small pitched cap (lead or shingle), boards covered in overlapping pinned paper posters and notices (paper material, tinted, curled corners, some torn). Params: width, posters count, mount (freestanding posts / wall), roof (bool), poster palette seed.",
+   "deps": [],
+   "ref": "gate"
+  },
+  {
+   "id": "drain_cover",
+   "category": "street",
+   "name": "Manhole and drain covers",
+   "class": "prop_small",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Cast-iron manhole cover / gully grate set flush in a stone or iron frame: raised chequer or radial pattern, lifting keyholes, founder's lettering ring, rust and polish. Sits 0-10 mm proud of the paving. Params: shape (round / square / gully grate), size, pattern, text.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "tree_grate",
+   "category": "street",
+   "name": "Tree pit grate and guard",
+   "class": "prop",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Cast-iron tree grate in four segments with radial slots around a central hole plus a hooped wrought-iron tree guard (vertical bars, two rings, flared top). Params: grate size, shape (square / round), guard (bool), guard height, paint.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "hand_cart",
+   "category": "street",
+   "name": "Vendor hand cart",
+   "class": "furniture",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Two-wheeled wooden costermonger's barrow: spoked wheels with iron tyres, plank bed with side rails, shafts / handles, prop legs, loaded with crates of produce or flowers; optional striped canvas canopy on four poles. Params: length, load (fruit / flowers / sacks / empty), canopy (bool), paint.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "market_stall",
+   "category": "street",
+   "name": "Market stall with awning",
+   "class": "structure",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Timber-framed market stall: trestle counter with drape, back shelves, sloping striped canvas awning on poles with scalloped valance and guy ropes, hanging produce / goods, a hanging lantern. Params: width, depth, canvas colours, goods (fruit / bread / flowers / trinkets), valance style.",
+   "deps": [],
+   "ref": "cafe"
+  },
+  {
+   "id": "planter_urn",
+   "category": "street",
+   "name": "Stone urn planter",
+   "class": "prop",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Classical carved stone urn on a pedestal: gadrooned bowl, egg-and-dart rim, handles optional, square plinth; planted with a clipped shrub or trailing flowers (hedge / leaf materials, flower blobs as small tinted meshes). Params: height, bowl style, planting (topiary / flowers / fern / empty), stone tint, moss.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "planter_box",
+   "category": "street",
+   "name": "Timber planter box",
+   "class": "prop",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Panelled wooden planter (Versailles tub): corner posts with ball finials, framed plank panels, iron bands, soil, planted with a small tree, topiary cone or flowers. Params: size, paint, planting, finials (bool).",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "flower_pots",
+   "category": "street",
+   "name": "Terracotta pot cluster",
+   "class": "prop",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "A cluster of 3-7 terracotta pots and a trough of different sizes (lathe with rolled rims, drainage saucers), some glazed, with flowering plants, herbs and a trailing ivy; one broken or tipped. Params: count, spread, flower colours, glazed ratio.",
+   "deps": [],
+   "ref": "cafe"
+  },
+  {
+   "id": "barrel",
+   "category": "street",
+   "name": "Oak barrel",
+   "class": "prop",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Coopered oak barrel: individual bulged staves with gaps, iron hoops with rivets, head with chime, bung and tap; variants standing, on its side on a cradle, half-barrel planter, or with a plank top as a table (as on the reference cafe terrace). Params: height, pose (stand / side / half / table), hoops, wood tone, rust.",
+   "deps": [],
+   "ref": "cafe"
+  },
+  {
+   "id": "crate_stack",
+   "category": "street",
+   "name": "Wooden crates",
+   "class": "prop",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Stack of 2-6 slatted wooden shipping crates and boxes of varying size, nailed battens, rope handles, stencilled marks, a lid ajar with straw; skewed stacking from the seed. Params: count, base size, stencil text, straw (bool), wood tone.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "sack_pile",
+   "category": "street",
+   "name": "Grain sack pile",
+   "class": "prop",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Pile of 3-8 filled burlap sacks (soft sagging shapes: subdivided, slumped, tied necks with rope, stitched seams), one open showing grain or coffee beans. Params: count, sack size, pile style (heap / leaning / stacked), contents.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "luggage_stack",
+   "category": "street",
+   "name": "Trunks and suitcases",
+   "class": "prop",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Stack of travel luggage as outside the 'Luggage' shop: steamer trunk with timber slats, brass corners and locks, leather suitcases with straps, buckles and handles, a hat box and a carpet bag on top; labels. Params: pieces, palette (tan / oxblood / green), stack style, wear.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "cafe_table",
+   "category": "street",
+   "name": "Cafe table",
+   "class": "furniture",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Round bistro table: cast-iron tripod pedestal base with scrolled feet, marble or timber top with brass rim; optional tablecloth (draped, folds), with a param-driven table setting (cups, saucers, bottle, small vase). Params: diameter, top (marble / wood / cloth), base style, setting (none / coffee / wine).",
+   "deps": [],
+   "ref": "cafe"
+  },
+  {
+   "id": "cafe_chair",
+   "category": "street",
+   "name": "Cafe chair",
+   "class": "furniture",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Bentwood / wrought-iron bistro chair: curved back hoop, round cane or slatted seat, splayed legs with a stretcher ring; variant folding slatted park chair. Thin elegant members with real thickness. Params: style (bentwood / iron / folding), seat (cane / wood), paint or wood tone.",
+   "deps": [],
+   "ref": "cafe"
+  },
+  {
+   "id": "parasol",
+   "category": "street",
+   "name": "Cafe parasol",
+   "class": "furniture",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Large canvas market parasol: timber pole in a cast-iron base, hub with spreading ribs, octagonal canopy panels with scalloped valance and stitched seams (slight sag between ribs), vent cap, tie cord. Params: diameter, height, canvas colours (plain / striped), open amount, valance.",
+   "deps": [],
+   "ref": "cafe"
+  },
+  {
+   "id": "menu_board",
+   "category": "street",
+   "name": "A-frame menu board",
+   "class": "prop_small",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Hinged timber A-frame pavement sign with chalkboard panels: chalk lettering (text params as thin raised 'chalk' text), decorative chalk border, brass hinges, chain stay, scuffed feet. Params: height, title text, lines of text, frame paint.",
+   "deps": [],
+   "ref": "cafe"
+  },
+  {
+   "id": "well_stone",
+   "category": "street",
+   "name": "Stone well with roof",
+   "class": "structure",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Round stone draw-well: coursed curb of individual stone blocks, two timber posts carrying a small shingled or tiled roof, windlass with crank handle and coiled rope, hanging bucket, dark water down inside (allow_below_ground). Moss and wet staining. Params: diameter, roof (shingle / tile / none), posts (timber / iron arch), bucket.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "bicycle",
+   "category": "street",
+   "name": "Old bicycle",
+   "class": "prop",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Vintage roadster bicycle leaning on its stand: diamond tube frame, spoked wheels (thin spokes, tyres, rims), mudguards, chain guard, sprung leather saddle, rod brakes, front wicker basket, small oil lamp. Params: frame paint, basket (bool), lean angle, wheel size.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "wheelbarrow",
+   "category": "street",
+   "name": "Wooden wheelbarrow",
+   "class": "prop",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Timber wheelbarrow with iron-tyred spoked wheel, tapering plank tray, turned handles and legs with iron straps; loaded with soil and plants, logs or empty. Params: load, wood tone, paint, wear.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "ladder",
+   "category": "street",
+   "name": "Wooden ladder",
+   "class": "prop_small",
+   "mount": "wall_ground",
+   "tier": 1,
+   "brief": "A lamplighter's wooden ladder leaning against a wall: two tapering stiles, round rungs through-tenoned, iron tie rods, worn rung centres, rope lashing. Params: length, rungs, lean angle, style (straight / tapering / step-ladder A-frame).",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "bucket_set",
+   "category": "street",
+   "name": "Buckets, watering can and broom",
+   "class": "prop_small",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Small cluster: coopered wooden bucket with rope handle, galvanised zinc bucket with wire bail, a zinc watering can with rose, and a besom broom leaning (param which items). Water in one bucket. Params: items, arrangement seed.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "milk_churns",
+   "category": "street",
+   "name": "Milk churns",
+   "class": "prop_small",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Two or three steel / zinc milk churns: tapered shoulders, mushroom lids, riveted side handles, dents, stamped numbers. Params: count, height, finish (zinc / painted), dents.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "birdbath_sundial",
+   "category": "street",
+   "name": "Sundial / birdbath pedestal",
+   "class": "prop",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Carved stone baluster pedestal carrying either a bronze sundial plate with gnomon and engraved hour lines or a shallow birdbath bowl with water. Lichen and weathering. Params: top (sundial / birdbath), height, baluster style, moss.",
+   "deps": [],
+   "ref": "monument"
+  },
+  {
+   "id": "pigeons",
+   "category": "street",
+   "name": "Pigeons",
+   "class": "prop_small",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "A small group of 2-7 feral pigeons pecking / standing / roosting: smooth organic bodies (subsurf surfaces), folded wings, tail, beak, legs; grey-blue with iridescent neck, a white one. Poses and placement from the seed. Params: count, spread, poses.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "cat",
+   "category": "street",
+   "name": "Sitting cat",
+   "class": "prop_small",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "A domestic cat, sitting upright or loafing or curled asleep (pose param): convincing organic form with ears, tail wrapped round, subtle fur break-up via material choice and tint (black, ginger tabby, grey). Params: pose, coat colour, size.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "rowboat",
+   "category": "street",
+   "name": "Canal rowing boat",
+   "class": "furniture",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Clinker-built wooden rowing skiff moored on the canal: overlapping strakes, ribs, thwarts, rowlocks, oars laid inside, bow ring with rope, bilge water, flaking paint and algae line. Origin on the waterline. Params: length, paint, cargo (empty / crates / lantern), oars. allow_below_ground.",
+   "deps": [],
+   "ref": "canal"
+  },
+  {
+   "id": "mooring_post",
+   "category": "street",
+   "name": "Mooring post and ring",
+   "class": "prop_small",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Canal-side mooring: stout tarred timber pile with iron cap band and rope coil wrapped round it, or a cast-iron mushroom bollard; plus an iron ring on a wall staple variant. Params: kind (pile / bollard / ring), height, rope (bool).",
+   "deps": [],
+   "ref": "canal"
+  },
+  {
+   "id": "cellar_hatch",
+   "category": "street",
+   "name": "Pavement cellar hatch",
+   "class": "prop",
+   "mount": "wall_ground",
+   "tier": 1,
+   "brief": "Sloping double-leaf timber cellar doors set against a wall base on a stone kerb: ledged planks, strap hinges, ring pulls, padlock and hasp; one leaf can be propped open showing dark steps. Params: width, open (0..1), paint, wear.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "newspaper_kiosk",
+   "category": "street",
+   "name": "Newspaper kiosk",
+   "class": "structure",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Small octagonal street kiosk: panelled timber base, glazed lit upper with serving hatch and shelf of papers, onion or tent roof in zinc / copper with finial and a frieze sign (text param), poster panels. Warm interior light. Params: diameter, roof style, paint, sign text.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "hanging_sign",
+   "category": "decor",
+   "name": "Hanging shop sign on bracket",
+   "class": "component",
+   "mount": "wall",
+   "tier": 1,
+   "brief": "Projecting wrought-iron scroll bracket with a hanging sign ('swing' part on two chain links or hooks): shaped timber board with painted / raised emblem and lettering, or a cut-out iron silhouette. As the coffee-cup sign on the reference cafe. Params: emblem (cup / boot / key / suitcase / scissors / bottle / book / star), board shape (shield / oval / rect / cutout), text, colours, reach. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: text): Wall plane y = 0; origin where the bracket meets the wall; the bracket projects towards -Y.",
+   "deps": [],
+   "ref": "cafe",
+   "contract": [
+    "text"
+   ]
+  },
+  {
+   "id": "fascia_sign",
+   "category": "decor",
+   "name": "Painted fascia sign board",
+   "class": "component",
+   "mount": "wall",
+   "tier": 1,
+   "brief": "Long painted timber shop fascia with moulded frame, console ends and gilded raised lettering (text param: 'Luggage', 'Items', 'Accessories', 'Dress Suit'...), optional swan-neck sign lamps above washing it with light. Params: text, width, height, board colour, letter colour / gilt, lamps (0-3), frame style. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, height, text): Wall plane y = 0; origin at the bottom centre.",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "width",
+    "height",
+    "text"
+   ]
+  },
+  {
+   "id": "banner_crown",
+   "category": "decor",
+   "name": "Hanging banner with crest",
+   "class": "component",
+   "mount": "wall",
+   "tier": 1,
+   "brief": "Tall cloth banner hanging from a horizontal pole on wall brackets, as the navy banners with gold crowns beside the gate: hemmed fabric with folds and a swallow-tail or pointed bottom, fringe, appliqu\u00e9 emblem (crown / star / fleur / key) in gold, cords with tassels; the cloth is a 'flutter' part. Params: width, drop, cloth colour, emblem, bottom shape.",
+   "deps": [],
+   "ref": "gate"
+  },
+  {
+   "id": "bunting",
+   "category": "decor",
+   "name": "Bunting string",
+   "class": "component",
+   "mount": "hang",
+   "tier": 1,
+   "brief": "A string of triangular or swallow-tail cloth pennants on a rope between two points (origin first point; span, sag params), alternating colours from a palette, slight random twist and curl, 'flutter' part. Params: span, sag, flag size, palette, shape. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: span): Origin at the first fixing point, the second fixing point is at (span, 0, 0); span 2-14 m.",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "span"
+   ]
+  },
+  {
+   "id": "wall_posters",
+   "category": "decor",
+   "name": "Pasted wall posters",
+   "class": "prop_small",
+   "mount": "wall",
+   "tier": 1,
+   "brief": "A group of 2-6 paper bills pasted and pinned on a wall, overlapping, with curled and torn corners, different sizes and tints, simple printed blocks (thin dark rectangles / rules / a big emblem shape as raised 0.3 mm 'ink' geometry) and a headline (text param). Params: count, spread, palette, headline, tattered amount.",
+   "deps": [],
+   "ref": "gate"
+  },
+  {
+   "id": "wall_clock",
+   "category": "decor",
+   "name": "Bracket wall clock",
+   "class": "component",
+   "mount": "wall",
+   "tier": 1,
+   "brief": "Double-sided drum clock projecting from a wall on an ornate iron bracket: glazed softly lit dial with numerals and hands, moulded case, crest and drop finial. Params: dial diameter, time, case paint, gilt, lit.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "weathervane",
+   "category": "decor",
+   "name": "Weather vane",
+   "class": "prop_small",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Roof-top weather vane: iron spindle with ball collars, cardinal arms with cut letters N E S W, and a pivoting 'spin' part with a cut silhouette (rooster / arrow / ship / star / cat) in gilded copper sheet with real thickness. Origin at the spindle foot. Params: motif, height, gilt (bool), verdigris.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "awning",
+   "category": "decor",
+   "name": "Striped shop awning",
+   "class": "component",
+   "mount": "wall",
+   "tier": 1,
+   "brief": "Retractable canvas shop awning: roller box on the wall, two folding iron arms, front bar, striped canvas with slight sag and a scalloped valance with optional lettering. Params: width, projection, pitch, stripe colours, valance text, scallop style. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, projection): Wall plane y = 0, origin at the centre of the top fixing rail.",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "width",
+    "projection"
+   ]
+  },
+  {
+   "id": "flag_wall",
+   "category": "decor",
+   "name": "Wall flag on angled pole",
+   "class": "component",
+   "mount": "wall",
+   "tier": 1,
+   "brief": "Flag on a pole set at 45 degrees in a wall socket bracket: turned pole with gilt ball finial, halyard, draped cloth with deep folds and an emblem; 'flutter' part. Params: pole length, flag size, colours, emblem, pattern (plain / bicolour / quartered).",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "plaque",
+   "category": "decor",
+   "name": "Inscribed wall plaque",
+   "class": "prop_small",
+   "mount": "wall",
+   "tier": 1,
+   "brief": "Stone or bronze wall plaque with moulded frame, engraved multi-line inscription (text params) and a small emblem, four rosette fixings; water staining below. As the inscription under the monument star. Params: width, height, material (bronze / stone / marble), lines of text, emblem.",
+   "deps": [],
+   "ref": "monument"
+  },
+  {
+   "id": "crest_cartouche",
+   "category": "decor",
+   "name": "Heraldic crest cartouche",
+   "class": "prop",
+   "mount": "wall",
+   "tier": 1,
+   "brief": "Carved heraldic cartouche for above doors and on the gate: shield with a charge (crown / key / star / lion-ish simple form), scrolled strapwork surround, ribbon with motto text, optional gilding and paint. Params: size, charge, material (stone / painted wood / bronze), motto.",
+   "deps": [],
+   "ref": "gate"
+  },
+  {
+   "id": "window_box",
+   "category": "decor",
+   "name": "Flower window box",
+   "class": "prop_small",
+   "mount": "wall",
+   "tier": 1,
+   "brief": "Timber or wrought-iron window box on two brackets, packed with flowers and trailing foliage (clustered small leaf cards with thickness or blobs in leaf / hedge materials, flower heads in tinted ceramic_glazed / plain) spilling over the front. Params: width, box style (plank / iron basket / terracotta trough), flower colours, fullness. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width): Wall plane y = 0; origin at the centre of the back top edge (hangs below a sill).",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "width"
+   ]
+  },
+  {
+   "id": "hanging_basket",
+   "category": "decor",
+   "name": "Hanging flower basket",
+   "class": "prop_small",
+   "mount": "hang",
+   "tier": 1,
+   "brief": "Wire or wicker hanging basket on three chains from a hook, moss-lined, overflowing with flowers and long trailing ivy strands; 'swing' part. Params: diameter, chain length, flower colours, trailing length.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "ivy_patch",
+   "category": "decor",
+   "name": "Climbing ivy patch",
+   "class": "vegetation",
+   "mount": "wall_ground",
+   "tier": 1,
+   "brief": "Ivy climbing a wall from the ground: branching stems (swept, bark) spreading by a seeded growth walk over the wall plane y=0, dense overlapping leaf blades (leaf material, small bent quads with thickness feel, varied size and tint) projecting 3-12 cm. Params: width, height, density, leaf size, autumn tint amount.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "shop_mannequin",
+   "category": "decor",
+   "name": "Dress mannequin display",
+   "class": "prop",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Tailor's dress form on a turned wooden tripod stand wearing a garment: jester / harlequin diamond-pattern suit with ruff, or a tailcoat, or a gown (param), as the jester on the reference 'Dress Suit' shop. Cloth with folds, buttons, stitched seams. Params: outfit, colours, height.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "statue_figure",
+   "category": "decor",
+   "name": "Bronze statue on pedestal",
+   "class": "structure",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Civic bronze statue on a stone pedestal with moulded cap and base and an inscription panel: a robed / cloaked standing figure holding a lantern or star aloft, built from smooth organic forms (subsurf) with heavy drapery - stylised but dignified; verdigris streaks, pigeon-worn head. Params: pose (lantern / star / book), pedestal height, inscription, verdigris.",
+   "deps": [],
+   "ref": "monument"
+  },
+  {
+   "id": "window_casement",
+   "category": "arch",
+   "name": "Mullioned casement window",
+   "class": "component",
+   "mount": "wall",
+   "tier": 1,
+   "brief": "Timber casement window as on every house of the reference: frame and sill, 2-3 lights divided by mullions, small leaded or glazing-bar panes (window_lit or window_dark per 'lit' param, each pane slightly different via separate quads), stone or timber lintel, projecting sill, optional plank shutters with strap hinges and iron stays, optional curtain. Origin: centre of the sill line on the wall plane; the frame sits 0.1 m into the wall (provide a reveal box so it works stuck onto a flat wall). Params: width, height, lights, pane grid, lit, shutters, shutter paint, frame paint, head (flat / arched). CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, height): Outer frame size; origin at the bottom centre of the frame on the wall plane (y = 0); nothing but the frame depth goes behind y = 0. A `lit` bool param.",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "width",
+    "height"
+   ]
+  },
+  {
+   "id": "window_sash",
+   "category": "arch",
+   "name": "Sash window with surround",
+   "class": "component",
+   "mount": "wall",
+   "tier": 1,
+   "brief": "Tall Georgian sash window: boxed frame, two sashes with glazing bars (six-over-six etc.), meeting rail, stone surround with keystone or moulded architrave and bracketed sill, optional small wrought-iron sill guard. window_lit / window_dark. Params: width, height, panes, lit, surround (stone / timber / plain), guard (bool), curtain colour. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, height): Outer frame size; origin at the bottom centre of the frame on the wall plane (y = 0). A `lit` bool param.",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "width",
+    "height"
+   ]
+  },
+  {
+   "id": "window_oriel",
+   "category": "arch",
+   "name": "Oriel bay window",
+   "class": "component",
+   "mount": "wall",
+   "tier": 1,
+   "brief": "Projecting timber oriel bay on carved brackets: three-sided or curved glazed bay with leaded lights (lit), moulded sill and cornice, small lead or tiled roof, pendant drops. Warm light spilling out (light socket in front). Params: width, height, plan (canted / bowed / box), roof (lead / tile), lit, paint. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, height): Origin at the bottom centre of the oriel's window band on the wall plane; corbelling extends below. A `lit` bool param.",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "width",
+    "height"
+   ]
+  },
+  {
+   "id": "window_stained_arch",
+   "category": "arch",
+   "name": "Arched stained-glass window",
+   "class": "component",
+   "mount": "wall",
+   "tier": 1,
+   "brief": "Pointed or round-arched stone window with tracery and stained glass (glass_stained in several tints laid out as lead-came panels: diamond quarries with a central emblem - star / crown / heart), stone hood mould and sill; glows from within with a coloured light socket. As on the clock-tower hall of the reference. Params: width, height, arch (pointed / round), tracery (single / twin / rose), palette, emblem. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, height): Outer size; origin at the bottom centre on the wall plane.",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "width",
+    "height"
+   ]
+  },
+  {
+   "id": "window_round",
+   "category": "arch",
+   "name": "Round oculus window",
+   "class": "component",
+   "mount": "wall",
+   "tier": 1,
+   "brief": "Circular window: moulded stone or timber ring, radial glazing bars or a quatrefoil, lit glass, optional keystones at the quarters. For gables and towers. Params: diameter, bars (radial / quatrefoil / cross), surround, lit. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: diameter): Origin at the centre of the window on the wall plane.",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "diameter"
+   ]
+  },
+  {
+   "id": "shop_window",
+   "category": "arch",
+   "name": "Shopfront display window",
+   "class": "component",
+   "mount": "wall_ground",
+   "tier": 1,
+   "brief": "A complete traditional shopfront bay: panelled timber stall-riser, big display window divided by slender turned mullions with a transom of small panes above, pilasters with console brackets, fascia space, lit interior display (window_lit glass plus a shelf of simple goods silhouettes just behind the glass) and strong warm light spill onto the pavement (light sockets). Origin at the pavement centre on the wall plane. Params: width, height, bays, paint, goods (luggage / hats / bottles / books / cakes), lit. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, height): Outer size of the shopfront window unit; origin at the bottom centre on the wall plane.",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "width",
+    "height"
+   ]
+  },
+  {
+   "id": "door_plank",
+   "category": "arch",
+   "name": "Arched plank door",
+   "class": "component",
+   "mount": "wall_ground",
+   "tier": 1,
+   "brief": "Heavy ledged oak plank door in a stone or timber frame: vertical boards with V-joints, wrought strap hinges with scrolled ends, ring handle, studs in rows, small barred grille, worn threshold step; flat or arched head. Origin at the threshold centre on the wall plane. Params: width, height, head (flat / round / pointed), frame (stone / timber), wood tone or paint, studs, ajar angle. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, height): Outer frame size; origin at the bottom centre (threshold) on the wall plane.",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "width",
+    "height"
+   ]
+  },
+  {
+   "id": "door_shop",
+   "category": "arch",
+   "name": "Glazed shop door",
+   "class": "component",
+   "mount": "wall_ground",
+   "tier": 1,
+   "brief": "Panelled and half-glazed shop door with a rectangular lit fanlight / transom above, brass handle, letter plate and kick plate, bell on a spring bracket, 'OPEN' sign card behind the glass (text param), recessed in panelled reveals with one stone step. Params: width, height, paint, glazing bars, sign text, lit. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, height): Outer frame size; origin at the bottom centre (threshold) on the wall plane.",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "width",
+    "height"
+   ]
+  },
+  {
+   "id": "door_double_hall",
+   "category": "arch",
+   "name": "Grand double door",
+   "class": "component",
+   "mount": "wall_ground",
+   "tier": 1,
+   "brief": "Tall double-leaf panelled civic door in a stone doorcase: pilasters or engaged columns, entablature / pediment or arched fanlight with radiating bars (lit), bronze lion-ring handles, studded panels, two stone steps. For the hall / hotel entrance. Params: width, height, doorcase (pediment / arched / flat hood), paint, steps. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, height): Outer frame size; origin at the bottom centre (threshold) on the wall plane.",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "width",
+    "height"
+   ]
+  },
+  {
+   "id": "dormer",
+   "category": "arch",
+   "name": "Roof dormer",
+   "class": "component",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Roof dormer window sitting on a roof slope (origin at the centre of its base on the roof surface; param roof pitch cuts the cheeks to fit): timber front with small lit casement, tiled or lead gabled / hipped / shed roof with ridge and bargeboards, lead flashing cheeks. Dense lit dormers are a signature of the reference skyline. Params: width, height, roof (gable / hip / shed / eyebrow), pitch, lit, cladding (tile / lead / plaster). Built for a roof of `pitch` degrees: geometry extends back to meet the slope. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, height, pitch): Sits on a roof slope of `pitch` degrees: origin at the centre of the dormer's front base on the roof surface; the cheeks and roof run back (+Y) into the slope.",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "width",
+    "height",
+    "pitch"
+   ]
+  },
+  {
+   "id": "chimney",
+   "category": "arch",
+   "name": "Chimney stack with pots",
+   "class": "component",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Brick or stone chimney stack (origin at the centre of its base; it will be sunk into a roof): corbelled oversailing courses, lead flashing apron, 1-4 terracotta pots of different designs (plain roll-top, louvred, crown / castellated), soot staining, optional smoke fx socket. Individual bricks need not be modelled (brick material) but corners / caps must have real profile. Params: width, depth, height, material (brick_red / brick_ochre / stone), pots, lean, soot. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: height, width): Origin at the centre of the stack base; height = from base to the top of the pots' collar.",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "height",
+    "width"
+   ]
+  },
+  {
+   "id": "balcony_iron",
+   "category": "arch",
+   "name": "Wrought-iron balcony",
+   "class": "component",
+   "mount": "wall",
+   "tier": 1,
+   "brief": "Small projecting balcony: stone or timber deck slab on two scrolled iron brackets, wrought-iron railing with repeating scroll / lyre panels between square posts, moulded handrail, optional flower pots. Origin: centre of the deck's wall edge at floor level. Params: width, depth, pattern (scroll / lyre / bars / hearts), paint, pots. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, projection): Wall plane y = 0; origin at the centre of the floor's back edge.",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "width",
+    "projection"
+   ]
+  },
+  {
+   "id": "balcony_timber",
+   "category": "arch",
+   "name": "Timber gallery balcony",
+   "class": "component",
+   "mount": "wall",
+   "tier": 1,
+   "brief": "Jettied timber gallery as over the reference cafe: heavy chamfered beams on carved brackets, plank deck, turned or flat-sawn baluster rail, posts carrying a lean-to tiled pentice roof (optional). Params: width, depth, balusters (turned / splat / cross), roof (bool), wood tone. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, projection): Wall plane y = 0; origin at the centre of the floor's back edge.",
+   "deps": [],
+   "ref": "cafe",
+   "contract": [
+    "width",
+    "projection"
+   ]
+  },
+  {
+   "id": "drainpipe",
+   "category": "arch",
+   "name": "Gutter and downpipe",
+   "class": "component",
+   "mount": "wall",
+   "tier": 1,
+   "brief": "Cast-iron rainwater downpipe: ornate hopper head with date / crest, round or square pipe in socketed lengths with eared collars bolted to the wall, swan-neck offset at the top, shoe at the bottom discharging over a stone gully; rust streaks and green staining. Origin at the top fixing; pipe runs down by 'drop' param. Params: drop, section (round / square), hopper style, paint, offset. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: height): Wall plane y = 0; origin at ground; hopper head at z = height.",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "height"
+   ]
+  },
+  {
+   "id": "roof_finial",
+   "category": "arch",
+   "name": "Roof finials and ridge cresting",
+   "class": "prop_small",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Roof ornaments: a turned terracotta / lead / iron finial (ball-and-spike, fleur-de-lis, pineapple, star-topped) and a run of pierced ridge cresting (param mode finial / cresting / both, cresting length). Origin at the base on the ridge. Params: mode, height, material, cresting length, motif.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "timber_frame_bay",
+   "category": "arch",
+   "name": "Half-timbered wall bay",
+   "class": "component",
+   "mount": "wall_ground",
+   "tier": 1,
+   "brief": "One bay of half-timbered wall, the signature house wall of the reference: oak sill beam, posts, rails, studs and curved or diagonal braces (param pattern: close-studding / square panels / herringbone / St-Andrew's cross / curved braces) pegged at the joints with slightly proud pegs, lime-plaster infill panels set 15-25 mm back and slightly pillowed, optional jetty bressummer with carved brackets at the top. Origin bottom centre on the wall plane; thickness 0.2 m behind y=0 not needed (front face only + returns). Params: width, height, pattern, plaster tint, timber tone, jetty (bool), irregularity. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, height): A wall panel of one storey: spans x in [-width/2, width/2], z in [0, height], front face at y = 0, ~0.15-0.2 m thick towards +Y. Optional `opening_w` / `opening_h` / `opening_sill` params leave a framed hole for a window.",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "width",
+    "height"
+   ]
+  },
+  {
+   "id": "stone_arch",
+   "category": "arch",
+   "name": "Stone archway surround",
+   "class": "component",
+   "mount": "wall_ground",
+   "tier": 1,
+   "brief": "Dressed stone arch for a passage or gate opening: individually modelled voussoirs with a carved keystone, impost mouldings, jamb blocks with chamfered arrises and quoins, optional hood mould and wheel-guard stones at the feet. The opening itself is empty. Origin ground centre on the wall plane. Params: opening width, opening height, arch (round / segmental / pointed), depth, keystone emblem, moss. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, height, depth): width / height = the CLEAR opening; wall plane y = 0 at the front face, the arch runs back to y = +depth.",
+   "deps": [],
+   "ref": "gate",
+   "contract": [
+    "width",
+    "height",
+    "depth"
+   ]
+  },
+  {
+   "id": "buttress",
+   "category": "arch",
+   "name": "Stone buttress",
+   "class": "component",
+   "mount": "wall_ground",
+   "tier": 1,
+   "brief": "Stepped stone wall buttress with weathered offsets (sloping set-backs with drip mouldings), ashlar quoins, plinth course, mossy tops. Params: height, width, projection, stages, moss. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: height, width, depth): Wall plane y = 0, projects to -Y.",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "height",
+    "width",
+    "depth"
+   ]
+  },
+  {
+   "id": "column",
+   "category": "arch",
+   "name": "Stone column / pilaster",
+   "class": "component",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Classical stone column or square pier with moulded base (plinth, torus, scotia), plain or fluted shaft with entasis and a capital (Tuscan / foliate / cushion); pilaster mode = half-depth against a wall. Chips and staining. Params: height, diameter, order, fluted, mode (column / pier / pilaster). CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: height, diameter): Centred, base at z = 0, top of the capital at z = height.",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "height",
+    "diameter"
+   ]
+  },
+  {
+   "id": "corbel_bracket",
+   "category": "arch",
+   "name": "Carved timber bracket",
+   "class": "prop_small",
+   "mount": "wall",
+   "tier": 1,
+   "brief": "Carved oak jetty bracket / console: curved knee brace with chamfer stops, pendant drop, scroll or grotesque-free leaf carving on the face, pegged to post and beam. Params: height, projection, style (curved / scroll / plain strut), carving depth.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "porch_canopy",
+   "category": "arch",
+   "name": "Door porch canopy",
+   "class": "component",
+   "mount": "wall",
+   "tier": 1,
+   "brief": "Small canopy over a doorway: timber hood on two carved brackets with a lead, tile or shingle roof (gabled, flat or swept), bargeboards / fretwork valance, optional hanging lantern hook socket. Params: width, projection, roof (gable / flat / swept), covering (tile / lead / shingle), paint. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, projection): Wall plane y = 0; origin at ground below the centre.",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "width",
+    "projection"
+   ]
+  },
+  {
+   "id": "door_steps",
+   "category": "arch",
+   "name": "Door stoop steps",
+   "class": "component",
+   "mount": "wall_ground",
+   "tier": 1,
+   "brief": "Short flight of 2-5 worn stone steps up to a door with a landing, side cheek walls or simple wrought-iron handrails with scrolled ends and a boot scraper. Tread centres dished, joints mossy. Origin ground centre at the wall. Params: steps, width, rail (iron / stone cheek / none), stone tint. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, steps): Origin at ground on the wall plane (y = 0), steps descend towards -Y. Top landing at z = steps x ~0.17 m.",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "width",
+    "steps"
+   ]
+  },
+  {
+   "id": "external_stair",
+   "category": "arch",
+   "name": "Timber external staircase",
+   "class": "structure",
+   "mount": "wall_ground",
+   "tier": 1,
+   "brief": "Open timber staircase running up along a wall to a first-floor landing / gallery: stringers, plank treads, newel posts with caps, balustrade with turned or flat balusters, landing on posts with braces; optional lean-to roof. Params: rise (floor height), width, direction (left / right), balusters, roof (bool), wood tone. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: rise): Wall plane at y = 0, stair in front of it (-Y); landing floor at z = rise.",
+   "deps": [],
+   "ref": "cafe",
+   "contract": [
+    "rise"
+   ]
+  },
+  {
+   "id": "roof_gable",
+   "category": "arch",
+   "name": "Tiled gable roof module",
+   "class": "component",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "A complete pitched roof for a rectangular plan (origin at the centre of the wall-plate rectangle, z = eaves): clay-tile or slate slopes with slightly wavy courses (tile material + real edge profile: thick eaves course, verge undercloak, half-round ridge tiles as modelled pieces), bargeboards or parapet gables, exposed rafter feet / moulded eaves cornice, gutters. Options: gable / hip / half-hip / gambrel, sagging ridge amount. Exposes sockets for dormers and chimneys on the slopes. Params: width, depth, pitch, type, overhang, covering (roof_tile_clay / roof_slate / wood_shingle), sag. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, depth, pitch): A complete pitched roof for a rectangular plan: origin at the centre of the plan at eaves level (z = 0); ridge along X by default (`ridge` param 'x' | 'y'); width along X, depth along Y measured at the wall faces (eaves overhang beyond).",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "width",
+    "depth",
+    "pitch"
+   ]
+  },
+  {
+   "id": "turret_roof",
+   "category": "arch",
+   "name": "Conical turret roof / spire",
+   "class": "component",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Conical, pyramidal or bell-cast spire roof for towers and turrets as the red clock-tower spire: tile / slate / copper covering with swept eaves, moulded eaves cornice, optional lucarnes (tiny dormers), ball-and-spike finial with a weathervane socket. Origin at the centre of the eaves ring. Params: radius, height, sides (4 / 6 / 8 / round), bellcast, covering, lucarnes. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: diameter, height): Origin at the centre at eaves level.",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "diameter",
+    "height"
+   ]
+  },
+  {
+   "id": "wall_stone_run",
+   "category": "arch",
+   "name": "Stone wall segment",
+   "class": "component",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "A run of free-standing or retaining stone wall along X (origin at the centre of its base): rubble or ashlar face (material) with individually modelled coping stones, plinth course, weep holes, optional end pier; top irregular, moss on the coping, damp at the base. Params: length, height, thickness, facing (rubble / ashlar / brick), coping (flat / saddle / half-round), pier ends. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: length, height, thickness): The run lies along X and spans exactly x in [-length/2, +length/2] (origin at its centre on the ground); any `length` in the stated range must work, and ends must be clean so runs butt together. length 1-14 m.",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "length",
+    "height",
+    "thickness"
+   ]
+  },
+  {
+   "id": "balustrade",
+   "category": "plaza",
+   "name": "Stone balustrade run",
+   "class": "structure",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Classical stone balustrade along X as on the retaining walls and stair sides of the reference plaza: plinth rail, turned bulbous balusters (lathe, instanced with tiny random rotations), moulded handrail coping, square piers with panelled faces and ball or urn caps at the ends / every N balusters. Chipped, lichen on top. Params: length, height, pier spacing, baluster style (vase / double / square), cap (ball / urn / flat), stone tint. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: length, height): The run lies along X and spans exactly x in [-length/2, +length/2] (origin at its centre on the ground); any `length` in the stated range must work, and ends must be clean so runs butt together. length 1-12 m. Handrail top at z = height.",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "length",
+    "height"
+   ]
+  },
+  {
+   "id": "stairs_plaza",
+   "category": "plaza",
+   "name": "Wide plaza stairs",
+   "class": "structure",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "The broad stone staircase connecting two plaza levels (reference centre): 6-14 individually modelled steps with nosings and dished worn centres, solid stepped cheek walls with coping and end piers for lamp posts (sockets), optional central landing and central handrail in iron. Origin at the centre of the bottom step's front edge; stairs rise toward +Y. Params: width, rise (total height), steps, landing (bool), cheek style (stepped / raked), flare (wider at the bottom). CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, rise): width 2-10 m, rise 0.5-3.5 m. Origin at the centre of the bottom step's front edge (z = 0); the flight rises towards +Y and the top tread / landing is flush at exactly z = rise at the back of the bounding box (max Y). Nothing projects behind the top edge.",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "width",
+    "rise"
+   ]
+  },
+  {
+   "id": "retaining_wall",
+   "category": "plaza",
+   "name": "Terrace retaining wall",
+   "class": "structure",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Retaining wall of the upper terrace along X: battered ashlar / rubble face with plinth, string course, relieving arches or buttress piers at intervals, drain spouts with stains, a coping to carry a balustrade (socket line along the top). Origin at the base centre, earth side toward +Y. Params: length, height, facing, pier spacing, arches (bool), moss. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: length, height): The run lies along X and spans exactly x in [-length/2, +length/2] (origin at its centre on the ground); any `length` in the stated range must work, and ends must be clean so runs butt together. length 2-16 m, height 0.6-3.5 m. The visible face is the plane y = 0 facing -Y (a plinth / batter may project <= 0.2 m to -Y); the wall body and coping extend to +Y (the earth side) by 0.45-0.7 m; the flat top of the coping is at exactly z = height (the upper terrace paving meets it and a balustrade stands on it).",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "length",
+    "height"
+   ]
+  },
+  {
+   "id": "iron_railing",
+   "category": "plaza",
+   "name": "Wrought-iron railing run",
+   "class": "component",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Railing along X: square bars with forged spear / fleur finials through two flat rails, heavier standards with urn finials and back stays every ~1.8 m, on a low stone kerb (optional). As on the canal side of the reference. Params: length, height, bar spacing, finial (spear / fleur / ball), kerb (bool), paint, rust. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: length, height): The run lies along X and spans exactly x in [-length/2, +length/2] (origin at its centre on the ground); any `length` in the stated range must work, and ends must be clean so runs butt together. length 1-12 m.",
+   "deps": [],
+   "ref": "canal",
+   "contract": [
+    "length",
+    "height"
+   ]
+  },
+  {
+   "id": "iron_gate",
+   "category": "plaza",
+   "name": "Wrought-iron gate with piers",
+   "class": "structure",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Pair of wrought-iron gates hung on stone piers with ball caps: scrollwork panels, dog bars, arched overthrow with a lantern and crest, latch; leaves open by an angle param. Params: opening width, height, pier style, overthrow (bool), open angle, paint. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, height): width = clear opening between the piers; centred, gate line along X.",
+   "deps": [
+    "lantern_head"
+   ],
+   "ref": "gate",
+   "contract": [
+    "width",
+    "height"
+   ]
+  },
+  {
+   "id": "gate_pier",
+   "category": "plaza",
+   "name": "Stone gate pier",
+   "class": "structure",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Tall dressed stone pier: plinth, rusticated or panelled shaft of individually cut blocks, cornice cap and a finial (ball, urn, pineapple or a lantern socket). Params: height, width, shaft (rusticated / panelled / plain), finial, moss. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: height, width): Centred on the origin.",
+   "deps": [],
+   "ref": "gate",
+   "contract": [
+    "height",
+    "width"
+   ]
+  },
+  {
+   "id": "fountain_tiered",
+   "category": "plaza",
+   "name": "Tiered plaza fountain",
+   "class": "landmark",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "The plaza's central fountain: octagonal or round stone basin with moulded rim and panelled sides on a stepped kerb, water surface (mat 'water'), central baluster stem with two or three scalloped bowls of diminishing size, a finial spout, water sheets falling between tiers (mat 'water_fall' strips), lion-mask side spouts, submerged warm lights / small lanterns on the rim (light sockets). Wet, mossy, limescale. Params: basin diameter, tiers, plan (round / octagon / quatrefoil), spouts, stone tint, lit. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: diameter): diameter = outer diameter of the basin kerb (2.5-7 m); centred on the origin.",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "diameter"
+   ]
+  },
+  {
+   "id": "wall_fountain",
+   "category": "plaza",
+   "name": "Wall fountain with mask spout",
+   "class": "structure",
+   "mount": "wall_ground",
+   "tier": 1,
+   "brief": "Wall-mounted drinking fountain: carved stone back panel with arched niche and a bronze lion / green-man-ish mask spouting a water stream (water_fall) into a semicircular stone trough with water, overflow staining, moss. Params: width, height, mask style, basin shape, moss.",
+   "deps": [],
+   "ref": "monument"
+  },
+  {
+   "id": "bridge_stone",
+   "category": "plaza",
+   "name": "Stone canal bridge",
+   "class": "landmark",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Single-arch humpback stone bridge over the canal as in the reference canal panel: segmental arch ring of voussoirs with keystone, rubble spandrels, string course, cobbled deck rising over the arch, parapet walls with coping or iron railings, lamp sockets on end piers, wet and mossy near the waterline. Origin at deck centre level with the banks (z=0); the arch and abutments extend below (allow_below_ground). Span along X (bridge crosses along X, canal runs along Y). Params: span, width, rise, parapet (stone / railing), water depth below. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: span, width, rise): Crosses along X: abutments at x = +-span/2 where the deck meets z = 0; deck `width` along Y; the crown of the deck is `rise` (0.3-1.2 m) above z = 0. span 4-10 m.",
+   "deps": [],
+   "ref": "canal",
+   "contract": [
+    "span",
+    "width",
+    "rise"
+   ]
+  },
+  {
+   "id": "canal_wall",
+   "category": "plaza",
+   "name": "Canal quay wall segment",
+   "class": "structure",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Segment of canal edge along X: coping kerb at pavement level (z = 0), ashlar / rubble wall dropping to the water (below ground), algae and damp tide line, iron mooring rings, a ladder or narrow stone steps down (param), optional culvert outfall with grate. The water plane itself is separate. Origin on the coping edge centre; water side toward -Y. allow_below_ground. Params: length, depth, feature (none / ladder / steps / outfall), rings, moss. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: length, depth): The run lies along X and spans exactly x in [-length/2, +length/2] (origin at its centre on the ground); any `length` in the stated range must work, and ends must be clean so runs butt together. length 2-16 m. The water is on the -Y side: the visible wall face is in the plane y = 0 facing -Y and drops from the coping top (z = 0, quay level) to z = -depth (1-3 m); the coping and wall body extend to +Y (<= 0.6 m); the coping nosing may overhang -Y by <= 0.08 m.",
+   "deps": [],
+   "ref": "canal",
+   "contract": [
+    "length",
+    "depth"
+   ]
+  },
+  {
+   "id": "tunnel_mouth",
+   "category": "plaza",
+   "name": "Canal tunnel mouth",
+   "class": "structure",
+   "mount": "wall_ground",
+   "tier": 1,
+   "brief": "Arched tunnel portal where the canal disappears under buildings: horseshoe / round stone arch ring with keystone, rusticated face wall, a short barrel vault receding into darkness (2-4 m, closed black at the end), a towpath ledge inside and one hanging lantern lighting the vault warmly from within (as the lantern-lit tunnel of the reference). allow_below_ground. Params: width, height, arch, depth, lantern (bool), moss. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, height): width / height = clear opening; portal face at y = 0 facing -Y, vault receding to +Y; z = 0 is the quay level and the water channel is cut down below it (allow_below_ground).",
+   "deps": [
+    "hanging_lantern"
+   ],
+   "ref": "canal",
+   "contract": [
+    "width",
+    "height"
+   ]
+  },
+  {
+   "id": "pergola",
+   "category": "plaza",
+   "name": "Timber pergola / arbour",
+   "class": "structure",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Garden pergola over a path or bench: four to eight chamfered posts on stone pads, beams with shaped ends, cross rafters, diagonal braces, climbing vine with leaves over the top and hanging lantern sockets. Params: length, width, height, bays, vine density, wood tone / paint. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: length, width, height): Centred on the origin, length along X.",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "length",
+    "width",
+    "height"
+   ]
+  },
+  {
+   "id": "bandstand",
+   "category": "plaza",
+   "name": "Octagonal bandstand",
+   "class": "landmark",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Victorian park bandstand: octagonal stone plinth with steps, slender cast-iron columns with ornate spandrel brackets, wrought railing, a swept zinc / copper tent roof with cresting and finial, timber boarded soffit with a central hanging lantern and festoon bulbs along the eaves. Params: diameter, columns, roof covering, paint, lit. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: diameter): diameter 4-8 m, centred.",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "diameter"
+   ]
+  },
+  {
+   "id": "paving_patch",
+   "category": "plaza",
+   "name": "Paving feature patch",
+   "class": "ground",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Decorative ground inlay for plaza centres and thresholds, almost flat (0-30 mm relief): radial / fan-pattern cobble rosette or a compass star made from individually laid setts and flag segments (real separate stones with joints, slightly uneven), kerb ring. Params: diameter, pattern (rosette / compass / concentric / herringbone square), stone tints, unevenness. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: diameter): diameter 2-12 m, centred on the origin, top surface within 0-30 mm of z = 0.",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "diameter"
+   ]
+  },
+  {
+   "id": "kerb_gutter",
+   "category": "plaza",
+   "name": "Kerb and gutter run",
+   "class": "ground",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "A straight (or quarter-circle, param) run of granite kerb stones with a three-row sett gutter channel and an occasional gully grate; kerb stones individually cut, slightly misaligned, worn. Along X. Params: length, kerb height, curve radius (0 = straight), grate (bool). CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: length): The run lies along X and spans exactly x in [-length/2, +length/2] (origin at its centre on the ground); any `length` in the stated range must work, and ends must be clean so runs butt together. length 1-12 m (straight mode).",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "length"
+   ]
+  },
+  {
+   "id": "tree_plane",
+   "category": "veg",
+   "name": "Street plane tree",
+   "class": "vegetation",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Mature deciduous street tree 7-11 m: recursive branching trunk and limbs (swept tapered branches with bark, natural asymmetry, flared root buttress), crown built from many small leaf-cluster cards / blobs (leaf / hedge materials, tint variation, enough density to read as foliage and catch lantern light from below). Must not look like a lollipop or a cloud of flat planes. Params: height, crown width, branchiness, leaf density, season tint (summer / autumn), lean.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "tree_ornamental",
+   "category": "veg",
+   "name": "Small ornamental tree",
+   "class": "vegetation",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Small flowering / clipped tree 3-5 m for plaza corners: slender trunk with stake and tie, rounded or vase crown, blossom option (pink / white tinted clusters among the leaves). Params: height, crown shape (round / vase / weeping), blossom colour & amount.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "tree_cypress",
+   "category": "veg",
+   "name": "Columnar cypress",
+   "class": "vegetation",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Tall narrow Italian-cypress-like conifer 4-8 m: dense flame-shaped foliage volume built from many small overlapping tufts (hedge material, dark green, tint variation) with an irregular outline and a short visible trunk. Params: height, width, irregularity.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "topiary",
+   "category": "veg",
+   "name": "Clipped topiary in pot",
+   "class": "vegetation",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Box topiary - ball, cone, spiral or two-tier standard (param) - with slightly fuzzy clipped surface (hedge material on a displaced volume plus scattered leaf tufts), stem, in a terracotta or lead pot. Params: shape, height, pot style.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "hedge_run",
+   "category": "veg",
+   "name": "Clipped hedge run",
+   "class": "vegetation",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Run of clipped box / privet hedge along X with soft irregular faces (displaced, tufted edge so the silhouette is leafy, not a box), bare woody stems visible at the base, optional rounded ends or a low stone kerb. Params: length, height, width, top (flat / rounded / castellated), kerb. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: length, height): The run lies along X and spans exactly x in [-length/2, +length/2] (origin at its centre on the ground); any `length` in the stated range must work, and ends must be clean so runs butt together. length 1-10 m.",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "length",
+    "height"
+   ]
+  },
+  {
+   "id": "flower_bed",
+   "category": "veg",
+   "name": "Raised flower bed",
+   "class": "vegetation",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Stone-kerbed raised planting bed (rect or round): soil, a mass of low flowering plants in drifts of 2-3 colours, a few taller spikes and foliage clumps, built from many small leaf / petal meshes. Params: shape, size, kerb height, colour palette, density.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "pavement_weeds",
+   "category": "veg",
+   "name": "Weeds and moss tufts",
+   "class": "vegetation",
+   "mount": "ground",
+   "tier": 1,
+   "brief": "Small ground-level clutter: tufts of grass, dandelion rosettes and moss cushions as grow at wall bases and between cobbles; a scatter patch about 0.5-1.5 m across. Params: spread, count, kinds mix, dryness.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "vine_wisteria",
+   "category": "veg",
+   "name": "Wisteria on a wall",
+   "class": "vegetation",
+   "mount": "wall_ground",
+   "tier": 1,
+   "brief": "Old wisteria trained up a wall and along a wire: twisted woody trunk from the ground, long horizontal runners, leaves and hanging flower racemes (lilac / white) lit beautifully from below. Params: width, height, bloom amount, bloom colour.",
+   "deps": [],
+   "ref": "plaza"
+  },
+  {
+   "id": "house_timber",
+   "category": "building",
+   "name": "Half-timbered town house",
+   "class": "building",
+   "mount": "ground",
+   "tier": 2,
+   "brief": "The generic house of the square, fully parametric from width / depth / storeys / seed: stone or brick ground floor with a door and windows, one or two jettied half-timbered upper storeys (timber_frame_bay patterns) with lit and dark mullioned windows, steep clay-tile gable roof (gable to the street or eaves to the street) with dormers, chimneys, bargeboards; drainpipe, wall lantern, window boxes. Back and sides plainer but closed. Origin at the centre of the front wall at pavement level; the building extends to +Y. Params: width, depth, storeys, jetty, roof orientation, pattern, plaster tint, lit window ratio, shop (bool - ground floor shopfront). CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, depth, storeys): Front wall plane at y = 0 facing -Y, body from y = 0 to y = +depth, ground-floor walls span exactly x in [-width/2, +width/2] (eaves / jetties / signs may overhang by <= 0.7 m, steps and canopies project <= 1.6 m to -Y). Closed and presentable on ALL four sides (side and back walls get plain windows, drainpipes, a lit window or two) and roofed - it is seen from behind and above. Every width / depth / storeys in range must produce a sound building; `seed` re-rolls the detail. width 5-11, depth 6-11, storeys 2-3.",
+   "deps": [
+    "window_casement",
+    "window_sash",
+    "window_oriel",
+    "door_plank",
+    "door_shop",
+    "shop_window",
+    "dormer",
+    "chimney",
+    "roof_gable",
+    "timber_frame_bay",
+    "wall_lantern",
+    "hanging_sign",
+    "fascia_sign",
+    "window_box",
+    "drainpipe",
+    "balcony_iron",
+    "awning",
+    "door_steps"
+   ],
+   "ref": "plaza",
+   "contract": [
+    "width",
+    "depth",
+    "storeys"
+   ]
+  },
+  {
+   "id": "house_stone",
+   "category": "building",
+   "name": "Stone gabled house",
+   "class": "building",
+   "mount": "ground",
+   "tier": 2,
+   "brief": "Solid dressed-stone / brick town house, 2-3 storeys: quoins, string courses, sash or casement windows with stone surrounds, arched doorway up a few steps, parapet or eaves cornice, slate or tile roof with dormers and tall chimneys, iron balcony on the first floor. Params: width, depth, storeys, material (ashlar / brick_red / brick_ochre / plaster tint), roof type, lit ratio, balcony. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, depth, storeys): Front wall plane at y = 0 facing -Y, body from y = 0 to y = +depth, ground-floor walls span exactly x in [-width/2, +width/2] (eaves / jetties / signs may overhang by <= 0.7 m, steps and canopies project <= 1.6 m to -Y). Closed and presentable on ALL four sides (side and back walls get plain windows, drainpipes, a lit window or two) and roofed - it is seen from behind and above. Every width / depth / storeys in range must produce a sound building; `seed` re-rolls the detail. width 5-12, depth 6-11, storeys 2-3.",
+   "deps": [
+    "window_casement",
+    "window_sash",
+    "window_oriel",
+    "door_plank",
+    "door_shop",
+    "shop_window",
+    "dormer",
+    "chimney",
+    "roof_gable",
+    "timber_frame_bay",
+    "wall_lantern",
+    "hanging_sign",
+    "fascia_sign",
+    "window_box",
+    "drainpipe",
+    "balcony_iron",
+    "awning",
+    "door_steps"
+   ],
+   "ref": "plaza",
+   "contract": [
+    "width",
+    "depth",
+    "storeys"
+   ]
+  },
+  {
+   "id": "shop_luggage",
+   "category": "building",
+   "name": "Luggage shop",
+   "class": "building",
+   "mount": "ground",
+   "tier": 2,
+   "brief": "The 'Luggage' shop of the reference: narrow 2-3 storey building whose ground floor is a painted timber shopfront (shop_window + door_shop + fascia_sign text param 'Luggage'), awning or hanging suitcase sign, trunks stacked outside (luggage_stack), upper floors plaster / timber with lit windows, tiled roof with a dormer. Params: width, storeys, paint, sign text, goods. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, depth, storeys): Front wall plane at y = 0 facing -Y, body from y = 0 to y = +depth, ground-floor walls span exactly x in [-width/2, +width/2] (eaves / jetties / signs may overhang by <= 0.7 m, steps and canopies project <= 1.6 m to -Y). Closed and presentable on ALL four sides (side and back walls get plain windows, drainpipes, a lit window or two) and roofed - it is seen from behind and above. Every width / depth / storeys in range must produce a sound building; `seed` re-rolls the detail. width 5-8, depth 6-10, storeys 2-3.",
+   "deps": [
+    "window_casement",
+    "window_sash",
+    "window_oriel",
+    "door_plank",
+    "door_shop",
+    "shop_window",
+    "dormer",
+    "chimney",
+    "roof_gable",
+    "timber_frame_bay",
+    "wall_lantern",
+    "hanging_sign",
+    "fascia_sign",
+    "window_box",
+    "drainpipe",
+    "balcony_iron",
+    "awning",
+    "door_steps",
+    "luggage_stack"
+   ],
+   "ref": "plaza",
+   "contract": [
+    "width",
+    "depth",
+    "storeys"
+   ]
+  },
+  {
+   "id": "shop_tailor",
+   "category": "building",
+   "name": "Tailor's shop with harlequin facade",
+   "class": "building",
+   "mount": "ground",
+   "tier": 2,
+   "brief": "The 'Dress Suit' shop: upper facade in a pastel harlequin diamond pattern (individually modelled / inset coloured plaster lozenges or tiles in 3-4 pastel tints), big arched display window with a jester mannequin inside (shop_mannequin), ornate fascia sign, curved gable. Params: width, storeys, diamond palette, sign text, gable style. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, depth, storeys): Front wall plane at y = 0 facing -Y, body from y = 0 to y = +depth, ground-floor walls span exactly x in [-width/2, +width/2] (eaves / jetties / signs may overhang by <= 0.7 m, steps and canopies project <= 1.6 m to -Y). Closed and presentable on ALL four sides (side and back walls get plain windows, drainpipes, a lit window or two) and roofed - it is seen from behind and above. Every width / depth / storeys in range must produce a sound building; `seed` re-rolls the detail. width 6-9, depth 6-10, storeys 2-3.",
+   "deps": [
+    "window_casement",
+    "window_sash",
+    "window_oriel",
+    "door_plank",
+    "door_shop",
+    "shop_window",
+    "dormer",
+    "chimney",
+    "roof_gable",
+    "timber_frame_bay",
+    "wall_lantern",
+    "hanging_sign",
+    "fascia_sign",
+    "window_box",
+    "drainpipe",
+    "balcony_iron",
+    "awning",
+    "door_steps",
+    "shop_mannequin"
+   ],
+   "ref": "plaza",
+   "contract": [
+    "width",
+    "depth",
+    "storeys"
+   ]
+  },
+  {
+   "id": "shop_corner",
+   "category": "building",
+   "name": "Corner shop (Items / Accessories)",
+   "class": "building",
+   "mount": "ground",
+   "tier": 2,
+   "brief": "Corner building with shopfronts on two street faces and a chamfered corner entrance under a turret or oriel: fascia signs with text params ('Items', 'Accessories'), neon emblem, hanging sign, upper floors half-timbered, conical turret roof on the corner. Origin at the centre of the main front at pavement level. Params: width, depth, storeys, sign texts, paint, turret. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, depth, storeys): Front wall plane at y = 0 facing -Y, body from y = 0 to y = +depth, ground-floor walls span exactly x in [-width/2, +width/2] (eaves / jetties / signs may overhang by <= 0.7 m, steps and canopies project <= 1.6 m to -Y). Closed and presentable on ALL four sides (side and back walls get plain windows, drainpipes, a lit window or two) and roofed - it is seen from behind and above. Every width / depth / storeys in range must produce a sound building; `seed` re-rolls the detail. width 7-11, depth 7-11, storeys 2-3. The second shop face is the +X side (x = +width/2); the chamfered corner is at the front right (+X, -Y).",
+   "deps": [
+    "window_casement",
+    "window_sash",
+    "window_oriel",
+    "door_plank",
+    "door_shop",
+    "shop_window",
+    "dormer",
+    "chimney",
+    "roof_gable",
+    "timber_frame_bay",
+    "wall_lantern",
+    "hanging_sign",
+    "fascia_sign",
+    "window_box",
+    "drainpipe",
+    "balcony_iron",
+    "awning",
+    "door_steps",
+    "neon_glyph",
+    "turret_roof"
+   ],
+   "ref": "plaza",
+   "contract": [
+    "width",
+    "depth",
+    "storeys"
+   ]
+  },
+  {
+   "id": "cafe_gallery",
+   "category": "building",
+   "name": "Cafe under a timber gallery",
+   "class": "building",
+   "mount": "ground",
+   "tier": 2,
+   "brief": "The reference cafe: a building whose first floor is carried over the pavement on timber posts forming a covered terrace / gallery; under it a lit cafe front (shop_window, door), hanging coffee-cup sign, hanging lanterns, neon fleur-de-lis; barrels, tables, chairs, menu board and candle lanterns on the terrace (via use()). Upper storey half-timbered with a balustraded balcony and tiled roof. Params: width, depth, posts, storeys, sign text, terrace furniture count. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, depth, storeys, gallery_depth): Front wall plane at y = 0 facing -Y, body from y = 0 to y = +depth, ground-floor walls span exactly x in [-width/2, +width/2] (eaves / jetties / signs may overhang by <= 0.7 m, steps and canopies project <= 1.6 m to -Y). Closed and presentable on ALL four sides (side and back walls get plain windows, drainpipes, a lit window or two) and roofed - it is seen from behind and above. Every width / depth / storeys in range must produce a sound building; `seed` re-rolls the detail. width 8-14, depth 6-10. EXCEPTION to the projection limit: the upper floor and its posts project `gallery_depth` (2.5-4 m) in front of y = 0 forming the covered terrace; the terrace floor is the pavement (z = 0, walkable, >= 2.4 m clear headroom) - keep furniture to the sides so a 1.4 m path stays free.",
+   "deps": [
+    "window_casement",
+    "window_sash",
+    "window_oriel",
+    "door_plank",
+    "door_shop",
+    "shop_window",
+    "dormer",
+    "chimney",
+    "roof_gable",
+    "timber_frame_bay",
+    "wall_lantern",
+    "hanging_sign",
+    "fascia_sign",
+    "window_box",
+    "drainpipe",
+    "balcony_iron",
+    "awning",
+    "door_steps",
+    "balcony_timber",
+    "hanging_lantern",
+    "neon_glyph",
+    "cafe_table",
+    "cafe_chair",
+    "barrel",
+    "menu_board",
+    "table_lantern"
+   ],
+   "ref": "cafe",
+   "contract": [
+    "width",
+    "depth",
+    "storeys",
+    "gallery_depth"
+   ]
+  },
+  {
+   "id": "hotel",
+   "category": "building",
+   "name": "Hotel",
+   "class": "building",
+   "mount": "ground",
+   "tier": 2,
+   "brief": "The largest plain building of the square, 3-4 storeys: symmetrical stone / stucco front with rows of lit sash windows, iron balconies, grand double door under a glazed iron-and-glass canopy with marquee bulbs, the vertical neon HOTEL sign with crown on one corner, mansard or steep tiled roof with rows of dormers and chimneys. Params: width, depth, storeys, facade tint, sign text, lit ratio. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, depth, storeys): Front wall plane at y = 0 facing -Y, body from y = 0 to y = +depth, ground-floor walls span exactly x in [-width/2, +width/2] (eaves / jetties / signs may overhang by <= 0.7 m, steps and canopies project <= 1.6 m to -Y). Closed and presentable on ALL four sides (side and back walls get plain windows, drainpipes, a lit window or two) and roofed - it is seen from behind and above. Every width / depth / storeys in range must produce a sound building; `seed` re-rolls the detail. width 12-20, depth 8-12, storeys 3-4.",
+   "deps": [
+    "window_casement",
+    "window_sash",
+    "window_oriel",
+    "door_plank",
+    "door_shop",
+    "shop_window",
+    "dormer",
+    "chimney",
+    "roof_gable",
+    "timber_frame_bay",
+    "wall_lantern",
+    "hanging_sign",
+    "fascia_sign",
+    "window_box",
+    "drainpipe",
+    "balcony_iron",
+    "awning",
+    "door_steps",
+    "door_double_hall",
+    "neon_sign_vertical",
+    "marquee_sign"
+   ],
+   "ref": "plaza",
+   "contract": [
+    "width",
+    "depth",
+    "storeys"
+   ]
+  },
+  {
+   "id": "townhouse_narrow",
+   "category": "building",
+   "name": "Narrow pastel townhouse",
+   "class": "building",
+   "mount": "ground",
+   "tier": 2,
+   "brief": "Tall narrow rendered townhouse (3.5-5 m wide, 3-4 storeys) in a pastel limewash with a shaped Dutch / stepped / bell gable, sash windows with shutters, a hoist beam in the gable, steps to a raised door, cellar hatch. Row variety comes from params and seed. Params: width, storeys, gable (stepped / bell / neck / triangular), tint, shutters, lit ratio. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, depth, storeys): Front wall plane at y = 0 facing -Y, body from y = 0 to y = +depth, ground-floor walls span exactly x in [-width/2, +width/2] (eaves / jetties / signs may overhang by <= 0.7 m, steps and canopies project <= 1.6 m to -Y). Closed and presentable on ALL four sides (side and back walls get plain windows, drainpipes, a lit window or two) and roofed - it is seen from behind and above. Every width / depth / storeys in range must produce a sound building; `seed` re-rolls the detail. width 3.5-5.5, depth 7-10, storeys 3-4.",
+   "deps": [
+    "window_casement",
+    "window_sash",
+    "window_oriel",
+    "door_plank",
+    "door_shop",
+    "shop_window",
+    "dormer",
+    "chimney",
+    "roof_gable",
+    "timber_frame_bay",
+    "wall_lantern",
+    "hanging_sign",
+    "fascia_sign",
+    "window_box",
+    "drainpipe",
+    "balcony_iron",
+    "awning",
+    "door_steps",
+    "cellar_hatch"
+   ],
+   "ref": "plaza",
+   "contract": [
+    "width",
+    "depth",
+    "storeys"
+   ]
+  },
+  {
+   "id": "warehouse",
+   "category": "building",
+   "name": "Brick canal warehouse",
+   "class": "building",
+   "mount": "ground",
+   "tier": 2,
+   "brief": "Brick warehouse backing onto the canal: arched loading doors on each floor with a projecting timber hoist housing (lucam), cast iron-framed small-pane windows, stone string courses, slate roof, painted sign lettering on the brick (text param), a wall lantern over the door. Params: width, depth, storeys, brick, sign text, lit ratio. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, depth, storeys): Front wall plane at y = 0 facing -Y, body from y = 0 to y = +depth, ground-floor walls span exactly x in [-width/2, +width/2] (eaves / jetties / signs may overhang by <= 0.7 m, steps and canopies project <= 1.6 m to -Y). Closed and presentable on ALL four sides (side and back walls get plain windows, drainpipes, a lit window or two) and roofed - it is seen from behind and above. Every width / depth / storeys in range must produce a sound building; `seed` re-rolls the detail. width 8-16, depth 7-11, storeys 3-4.",
+   "deps": [
+    "window_casement",
+    "window_sash",
+    "window_oriel",
+    "door_plank",
+    "door_shop",
+    "shop_window",
+    "dormer",
+    "chimney",
+    "roof_gable",
+    "timber_frame_bay",
+    "wall_lantern",
+    "hanging_sign",
+    "fascia_sign",
+    "window_box",
+    "drainpipe",
+    "balcony_iron",
+    "awning",
+    "door_steps"
+   ],
+   "ref": "canal",
+   "contract": [
+    "width",
+    "depth",
+    "storeys"
+   ]
+  },
+  {
+   "id": "tower_house",
+   "category": "building",
+   "name": "Corner tower house",
+   "class": "building",
+   "mount": "ground",
+   "tier": 2,
+   "brief": "House with a round or octagonal corner stair turret rising a storey above the eaves, conical tile roof with weathervane, slit and small lit windows spiralling up the turret, main block half-timbered over stone. Params: width, depth, storeys, turret radius, turret plan, roof covering. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, depth, storeys): Front wall plane at y = 0 facing -Y, body from y = 0 to y = +depth, ground-floor walls span exactly x in [-width/2, +width/2] (eaves / jetties / signs may overhang by <= 0.7 m, steps and canopies project <= 1.6 m to -Y). Closed and presentable on ALL four sides (side and back walls get plain windows, drainpipes, a lit window or two) and roofed - it is seen from behind and above. Every width / depth / storeys in range must produce a sound building; `seed` re-rolls the detail. width 7-11, depth 7-10, storeys 2-3. The turret stands on the front-left corner (-X, -Y) and may bulge <= 1.2 m outside the plan.",
+   "deps": [
+    "window_casement",
+    "window_sash",
+    "window_oriel",
+    "door_plank",
+    "door_shop",
+    "shop_window",
+    "dormer",
+    "chimney",
+    "roof_gable",
+    "timber_frame_bay",
+    "wall_lantern",
+    "hanging_sign",
+    "fascia_sign",
+    "window_box",
+    "drainpipe",
+    "balcony_iron",
+    "awning",
+    "door_steps",
+    "turret_roof",
+    "weathervane"
+   ],
+   "ref": "plaza",
+   "contract": [
+    "width",
+    "depth",
+    "storeys"
+   ]
+  },
+  {
+   "id": "gate_arch_town",
+   "category": "building",
+   "name": "Town gate arch",
+   "class": "landmark",
+   "mount": "ground",
+   "tier": 2,
+   "brief": "The town gate of the reference: massive dressed-stone gateway with a wide round arch passage (walkable, >= 3 m wide, 4 m high), flanking buttressed piers, a parapet / small tiled gatehouse room above with lit windows, an arched sign board over the arch with raised gilded lettering (text param, default 'LANTERN SQUARE'), two wall lanterns flanking the arch, navy banners with gold crowns, posters on one pier, heavy timber doors folded open inside the passage. Origin at the centre of the passage at ground level; passage along Y. Params: width, passage width, height, sign text, banners (bool), gatehouse (bool). CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, depth, passage_width): Origin at the centre of the passage on the ground; passage axis along Y, the gate body spans x in [-width/2, +width/2] (8-13 m) and y in [-depth/2, +depth/2] (2.5-5 m); the passage is a clear walkable `passage_width` (3-4.5 m) wide and >= 4 m high with NOTHING on its floor; the sign and lanterns are on the -Y face (the approach side) and the +Y face is finished too.",
+   "deps": [
+    "stone_arch",
+    "wall_lantern",
+    "banner_crown",
+    "wall_posters",
+    "window_casement",
+    "roof_gable",
+    "crest_cartouche",
+    "buttress"
+   ],
+   "ref": "gate",
+   "contract": [
+    "width",
+    "depth",
+    "passage_width"
+   ]
+  },
+  {
+   "id": "clock_tower_hall",
+   "category": "building",
+   "name": "Clock-tower hall",
+   "class": "landmark",
+   "mount": "ground",
+   "tier": 2,
+   "brief": "The landmark at the head of the plaza: a civic hall with a tall square clock tower - stone base with a grand door up steps, big arched stained-glass windows, hall block with steep roof and dormers; the tower with corner buttresses / quoins, belfry louvres, four lit clock dials (hands from a time param), corbelled cornice and a tall red-tiled spire with lucarnes, finial and weathervane. 18-26 m to the spire tip. Params: width, depth, tower height, spire height, time, stone tint, roof covering. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, depth): Front (main door, tower) faces -Y with the front wall plane at y = 0 and the body to +Y; spans x in [-width/2, +width/2] (22-32 m), depth 10-16 m; the tower is centred on x = 0 at the front; entrance steps project <= 3 m to -Y. Closed on all sides.",
+   "deps": [
+    "window_stained_arch",
+    "door_double_hall",
+    "turret_roof",
+    "roof_gable",
+    "dormer",
+    "weathervane",
+    "buttress",
+    "door_steps",
+    "wall_lantern",
+    "window_round",
+    "chimney"
+   ],
+   "ref": "plaza",
+   "contract": [
+    "width",
+    "depth"
+   ]
+  },
+  {
+   "id": "castle_far",
+   "category": "building",
+   "name": "Far hilltop castle",
+   "class": "backdrop",
+   "mount": "ground",
+   "tier": 2,
+   "brief": "The glowing far landmark of the skyline: a distant hill-top castle / great church silhouette in the spirit of the reference board - a crag with woodland, curtain wall, keep, towers and spires, a few lit windows and a softly lit clock or rose - readable as a pale silhouette against a navy night sky from 150-300 m. Built to be placed far away at large scale, so it is cheap (<= 15k tris at LOD0), hazed, with no light sockets: everything is self-lit in baked moonlight tones plus emissive windows. Origin at ground centre, facing -Y. Params: style (castle / cathedral / citadel / ridge hamlet), floodlit, haze, lit_ratio, glow, lit_color, moon_az, seed.",
+   "deps": [],
+   "ref": "board"
+  },
+  {
+   "id": "civic_hall_grand",
+   "category": "building",
+   "name": "Grand civic hall with clock tower",
+   "class": "landmark",
+   "mount": "ground",
+   "tier": 2,
+   "brief": "The great hall that closes the second square (reference docs/ref/t2_hall.png): a LONG, PALE limestone civic range, clearly wider than tall, built at true size - never meant to be scaled by the town. From the ground up: (1) a projecting lower storey / undercroft of pale ashlar whose front is an arcade of pointed stained-glass arches (violet / blue glass, lit from inside) with a moulded plinth; its flat roof is a balustraded terrace (turned stone balusters, piers with small lanterns or urn finials) running the whole front; (2) set back behind the terrace, the tall upper hall storey: a regular row of slender arched stained-glass windows between pilaster buttresses, string course, corbelled eaves cornice, steep RED clay-tile roof with a few lucarnes and a ridge cresting; (3) rising through the front at the centre, a slender square clock tower of the same pale stone - tall arched louvred opening, a gilt-framed lit clock dial on each face (hands from a time param), small gablets over the dials, corner pinnacles, steep red-tiled spire with ball finial; (4) each end of the range finished by a polygonal or round end pavilion with a red conical roof and weathervane (param: none / one / both); (5) in front of the lower storey a gabled entrance porch pavilion of pale stone - pointed-arch double door up broad steps, a rose window in its gable, flanking pinnacles and two lanterns (param porch_offset moves it along the front; the picture has it right of the tower). Stone courses are 0.3-0.4 m high, quoins and mouldings sized for a real building; walls must READ pale and warm at night: wall-lantern / floodlight sockets wash the facade, windows glow strongly. 34-42 m to the spire tip. Params: width, depth, wing_storey_height, tower_height, spire_height, tower_offset, porch_offset, terrace_depth, end_pavilions, bays, time, stone tint, glass palette, roof covering, window_glow, dial_glow, lantern_intensity, moss. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, depth, tower_height, spire_height, terrace_depth): Front faces -Y. The UPPER hall storey's front wall plane is y = 0 and the body runs to y = +depth (10-16 m); the range spans x in [-width/2, +width/2] (30-44 m; end pavilions may bulge <= 2 m beyond). The lower arcade storey with its terrace projects `terrace_depth` (4-7 m) to -Y, the porch and its steps a further <= 5 m; nothing else projects. Tower centred on x = `tower_offset` (default 0). `tower_height` = ground to the top of the tower's masonry (20-28 m), `spire_height` 8-14 m. Closed on all sides (no walkable interior; the terrace is not walked on). Built at true scale: the town places it at scale 1.",
+   "deps": [
+    "window_stained_arch",
+    "door_double_hall",
+    "turret_roof",
+    "weathervane",
+    "door_steps",
+    "wall_lantern",
+    "window_round",
+    "column",
+    "roof_finial",
+    "buttress"
+   ],
+   "ref": "t2_hall",
+   "contract": [
+    "width",
+    "depth",
+    "tower_height",
+    "spire_height",
+    "terrace_depth"
+   ]
+  },
+  {
+   "id": "tower_keep_ornate",
+   "category": "building",
+   "name": "Ornate battlemented tower",
+   "class": "landmark",
+   "mount": "ground",
+   "tier": 2,
+   "brief": "The second tower of the second square (reference docs/ref/t2_tower.png): a free-standing square civic / guild tower in the ornate Gothic-revival manner, built at TRUE size (26-36 m high, 7-10 m square) - never meant to be scaled by the town. Warm cream coursed ashlar in 0.3-0.4 m courses with bands of darker red-brown stone or brick (polychrome banding) and dressed quoins; a battered plinth with a small pointed door; three or four stages divided by moulded string courses; on the show faces a tall two-light stained-glass lancet window in a gilt / pale moulded frame with tracery head (blue / violet / amber glass, strongly lit), smaller lit trefoil or slit windows and blind arcading on the other stages, a carved shield or clock-less roundel; at the top a corbel table of small arches carrying a machicolated, crenellated parapet (merlons with caps, some pierced), an octagonal bartizan / corner turret at each corner rising above the parapet with its own little battlements or stone caps, a low lead / tile roof and flagpole behind the parapet. Two or three 0.6 m wall lanterns on brackets and small uplight sockets so the upper stages read at night; pigeons optional. All four faces finished (it is seen from every side over the roofs). Params: width, height, stages, band colour / band count, bartizans (bool or style), parapet style, window glass palette, window_glow, lantern_intensity, stone tint, moss, flag (bool). CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, height): Origin at the centre of the square plan on the ground; the shaft spans x and y in [-width/2, +width/2] (7-10 m; plinth, corbel table and bartizans may project <= 1.2 m beyond); `height` = ground to the top of the merlons (26-36 m), bartizans / flagpole rise above it. The main show face (door, largest window) is -Y; all four faces are finished. Closed (no walkable interior). Built at true scale: the town places it at scale 1.",
+   "deps": [
+    "window_stained_arch",
+    "door_plank",
+    "wall_lantern",
+    "window_round",
+    "corbel_bracket",
+    "roof_finial",
+    "banner_crown"
+   ],
+   "ref": "t2_tower",
+   "contract": [
+    "width",
+    "height"
+   ]
+  },
+  {
+   "id": "monument_star",
+   "category": "building",
+   "name": "Star shrine monument",
+   "class": "landmark",
+   "mount": "wall_ground",
+   "tier": 2,
+   "brief": "The monument of the reference: a stone shrine wall with a large glowing stained-glass star set in a round traceried surround (glass_stained, strong coloured light), an inscription plaque beneath, two side cascades (water_fall) falling into flanking stone basins with water, broad shallow steps in front flanked by two ground lanterns, carved pilasters and a curved pediment. Params: width, height, star points, glass palette, inscription, water (bool). CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, height): Back wall plane at y = 0 facing -Y, width 6-10 m, steps and basins project <= 3.5 m to -Y.",
+   "deps": [
+    "ground_lantern",
+    "plaque",
+    "column"
+   ],
+   "ref": "monument",
+   "contract": [
+    "width",
+    "height"
+   ]
+  },
+  {
+   "id": "arcade_passage",
+   "category": "building",
+   "name": "Covered alley passage",
+   "class": "building",
+   "mount": "ground",
+   "tier": 2,
+   "brief": "A building bridging an alley: walkable stone-arched passage (>= 2.2 m wide) through the ground floor with a ribbed / beamed ceiling and a hanging lantern inside, lit rooms above with an oriel over the arch, tiled roof. Passage along Y through the origin. Params: width, depth, passage width, storeys, lit ratio. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: width, depth, passage_width, storeys): Origin at the centre of the passage on the ground; passage axis along Y; the building spans x in [-width/2, +width/2] (6-10 m) and y in [-depth/2, +depth/2] (6-11 m); clear walkable passage `passage_width` (2.4-3.5 m) wide, >= 2.8 m high, nothing on its floor. Both the -Y and +Y faces are full facades.",
+   "deps": [
+    "window_casement",
+    "window_sash",
+    "window_oriel",
+    "door_plank",
+    "door_shop",
+    "shop_window",
+    "dormer",
+    "chimney",
+    "roof_gable",
+    "timber_frame_bay",
+    "wall_lantern",
+    "hanging_sign",
+    "fascia_sign",
+    "window_box",
+    "drainpipe",
+    "balcony_iron",
+    "awning",
+    "door_steps",
+    "stone_arch",
+    "hanging_lantern"
+   ],
+   "ref": "canal",
+   "contract": [
+    "width",
+    "depth",
+    "passage_width",
+    "storeys"
+   ]
+  },
+  {
+   "id": "backdrop_row",
+   "category": "building",
+   "name": "Distant roofscape row",
+   "class": "backdrop",
+   "mount": "ground",
+   "tier": 2,
+   "brief": "Cheap far-background row of 3-7 simplified houses seen only over the rooftops: correct silhouettes (gables, chimneys, dormers, a spire), lit window quads, no fine detail, < 8k triangles total; staggered heights and depths from the seed. Along X. Params: length, count, height range, lit ratio. CONTRACT (the town generator / composing buildings rely on it - use exactly these PARAM names: length): The run lies along X and spans exactly x in [-length/2, +length/2] (origin at its centre on the ground); any `length` in the stated range must work, and ends must be clean so runs butt together. length 12-60 m.",
+   "deps": [],
+   "ref": "plaza",
+   "contract": [
+    "length"
+   ]
+  }
+ ]
+}

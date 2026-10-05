@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>GLTFLoader MSFT_lod: town chunks</title>
+<style>
+	html, body { margin: 0; height: 100%; overflow: hidden; background: #0b1020; color: #d8dbe0; font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+	canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+	#hud { position: fixed; left: 8px; top: 8px; max-width: calc(100vw - 16px); box-sizing: border-box; padding: 8px 10px; background: rgba(10, 13, 22, 0.78); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 6px; white-space: pre-wrap; pointer-events: none; }
+	#hud b { color: #fff; font-weight: 600; }
+	#hud .dim { color: #8d94a3; }
+	#hud .bad { color: #ff8f7a; }
+	#bar { position: fixed; left: 8px; bottom: 8px; right: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+	#bar a, #bar button { font: inherit; color: #d8dbe0; background: rgba(10, 13, 22, 0.78); border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 6px; padding: 7px 10px; text-decoration: none; cursor: pointer; }
+	#bar a.on, #bar button.on { border-color: #7fb4ff; color: #fff; }
+	#bar span { align-self: center; color: #8d94a3; }
+</style>
+<!-- relative URLs only: the page is also viewed through a proxy that puts a prefix in front of the path -->
+<script type="importmap">{ "imports": { "three": "../node_modules/three/build/three.module.js", "three/addons/": "../node_modules/three/examples/jsm/" } }</script>
+</head>
+<body>
+<div id="hud">loading ...</div>
+<div id="bar"></div>
+<script type="module" src="../engine/telemetry.js?page=gltflod"></script><!-- visitors report device, timings and logs back: engine/telemetry.js -->
+<script type="module">import( './main.js?v=' + Date.now().toString( 36 ) ); // a new URL every time: no browser or proxy may answer with an old build</script>
+</body>
+</html>

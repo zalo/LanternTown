@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>baked town: the portable glTF in stock three.js</title>
+<style>
+html, body { margin: 0; height: 100%; background: #05060a; color: #d8cfc0; font: 12px/1.45 system-ui, sans-serif; overflow: hidden; }
+canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+#hud { position: fixed; left: 8px; top: 8px; max-width: 520px; background: rgba(5,6,10,0.72); padding: 6px 9px; border-radius: 6px; white-space: pre-wrap; pointer-events: none; }
+#bar { position: fixed; left: 8px; bottom: 8px; right: 8px; background: rgba(5,6,10,0.72); padding: 6px 9px; border-radius: 6px; }
+a { color: #9cc4ff; margin-right: 10px; white-space: nowrap; } a.on { color: #ffcf8a; }
+</style>
+<script type="importmap">
+{ "imports": {
+	"three": "../node_modules/three/build/three.webgpu.js",
+	"three/webgpu": "../node_modules/three/build/three.webgpu.js",
+	"three/tsl": "../node_modules/three/build/three.tsl.js",
+	"three/addons/": "../node_modules/three/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="hud">loading ...</div>
+<div id="bar"></div>
+<script type="module" src="../engine/telemetry.js?page=bakeglb-view"></script><!-- visitors report device, timings and logs back: engine/telemetry.js -->
+<script type="module" src="./view.js"></script>
+</body>
+</html>

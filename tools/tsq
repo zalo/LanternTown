@@ -1,0 +1,442 @@
+#!/usr/bin/env python3
+"""tsq - town-square pipeline CLI (host side; stdlib only).
+
+  tools/tsq mat <name>[,<name>...] [--res N]     bake procedural material(s) -> out/mat/<name>/
+  tools/tsq mats                                 status table of all catalog materials
+  tools/tsq build <asset_id> [--variants a,b] [--params '{"k":v}' --name custom] [--lods] [--out DIR]
+                                                 build asset variants with Blender -> out/glb/<id>/
+                                                 (--lods: also the cheaper levels, as the town build does: prints
+                                                 tris + authored / decimated per level; the level files are kept
+                                                 only with --out DIR -> DIR/<id>/<variant>[.lod1|.lod2].glb)
+  tools/tsq lod <asset_id> [--variant v] [--auto] [--no-build] [--no-render] [--top N] [--timeout S]
+                                                 levels of detail (docs/LOD.md): builds lod 0 / 1 / 2 into out/lod/<id>/,
+                                                 prints tris + contract checks per level, renders the comparison
+                                                 sheet OLD decimated | NEW modelled -> out/renders/_lod/<id>.png
+                                                 (--auto: for an asset without META["lod"], toolkit scaling only)
+  tools/tsq render <asset_id> [--no-build] [--timeout S]
+                                                 build (unless --no-build) + render review sheets on the
+                                                 shared GPU -> out/renders/<id>/*.png
+  tools/tsq render-mat <name>[,<name>...]        in-engine material swatch -> out/renders/_mat/<name>.png
+  tools/tsq status                               render queue / daemon status
+  tools/tsq brief <asset_id>                     the catalogue brief for an asset
+  tools/tsq matlist [family|word]                compact table of library materials (name, tint, what it is for)
+  tools/tsq api <name>[,<name>...]               source of single toolkit functions (instead of reading tk/*.py)
+  tools/tsq assets                               asset ids that exist in assets/ (for use())
+"""
+import sys
+import os
+import json
+import time
+import glob
+import subprocess
+import shutil
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BLENDER = os.environ.get("TSQ_BLENDER") or os.environ.get("BLENDER") or shutil.which("blender") or os.path.expanduser("~/.local/bin/blender")
+QUEUE = os.path.join(ROOT, "out", "queue")
+
+
+def run_blender(script, args, timeout=1800):
+    # PYTHONHASHSEED only reaches Blender's python with --python-use-system-env: pinned so that set / dict order
+    # (and with it the reducer's and the generators' tie-breaks) is the same in every build
+    cmd = [BLENDER, "--background", "--factory-startup", "--python-use-system-env", "--python",
+           os.path.join(ROOT, "tools", script), "--"] + args
+    p = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, timeout=timeout, env=dict(os.environ, PYTHONHASHSEED="0"))
+    results = []
+    other = []
+    for line in p.stdout.splitlines():
+        if line.startswith("TSQ_RESULT "):
+            results.append(json.loads(line[11:]))
+        elif line.startswith(("WARN", "PRINT", "DBG")) or "Error" in line or "Traceback" in line:
+            other.append(line)
+    if not results:
+        tail = "\n".join((p.stdout + "\n" + p.stderr).splitlines()[-40:])
+        print("FAILED: Blender produced no result. Tail of output:\n" + tail)
+        sys.exit(2)
+    return results, other
+
+
+def opts(argv):
+    pos, kw = [], {}
+    i = 0
+    while i < len(argv):
+        a = argv[i]
+        if a.startswith("--"):
+            k = a[2:]
+            if i + 1 < len(argv) and not argv[i + 1].startswith("--"):
+                kw[k] = argv[i + 1]
+                i += 2
+            else:
+                kw[k] = True
+                i += 1
+        else:
+            pos.append(a)
+            i += 1
+    return pos, kw
+
+
+def cmd_mat(argv):
+    pos, kw = opts(argv)
+    if not pos:
+        print(__doc__)
+        return 1
+    names = ",".join(pos)
+    args = ["--mat", names]
+    if kw.get("res"):
+        args += ["--res", str(kw["res"])]
+    results, other = run_blender("bl_mat.py", args)
+    bad = 0
+    for r in results:
+        if r.get("ok"):
+            a = r["mean_albedo"]
+            print(f"OK   {r['name']}: res {r['res'][0]}x{r['res'][1]} tile {r['tile'][0]}x{r['tile'][1]} m, "
+                  f"height range {r['height_range'] * 1000:.1f} mm, mean albedo ({a[0]:.3f},{a[1]:.3f},{a[2]:.3f}), "
+                  f"rough {r['mean_rough']}, metal {r['mean_metal']}, {r['seconds']} s")
+            d = os.path.join("out", "mat", r["name"])
+            print(f"     look at: {d}/preview.png  {d}/far.png  {d}/sheet.png")
+            lum = 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2]
+            if r["mean_metal"] < 0.5 and (lum < 0.015 or lum > 0.8):
+                print(f"     WARN mean albedo luminance {lum:.3f} is outside the plausible 0.02-0.8 range")
+        else:
+            bad += 1
+            print(f"FAIL {r['name']}:\n{r.get('error', '')}")
+    for line in other:
+        print(line)
+    return 1 if bad else 0
+
+
+def cmd_mats(argv):
+    cat = json.load(open(os.path.join(ROOT, "docs", "materials.json")))["materials"]
+    for m in cat:
+        if m.get("kind") != "baked":
+            continue
+        src = os.path.exists(os.path.join(ROOT, "materials", m["name"] + ".py"))
+        mj = os.path.join(ROOT, "out", "mat", m["name"], "mat.json")
+        baked = ""
+        if os.path.exists(mj):
+            j = json.load(open(mj))
+            baked = f"baked {j['res'][0]}x{j['res'][1]}"
+        rv = sorted(glob.glob(os.path.join(ROOT, "reviews", "mat", m["name"], "r*.json")))
+        score = ""
+        if rv:
+            try:
+                score = f"score {json.load(open(rv[-1])).get('score')}"
+            except Exception:
+                pass
+        print(f"{m['name']:<20} {m['family']:<9} {'src' if src else '---':<4} {baked:<16} {score}")
+    return 0
+
+
+def cmd_brief(argv):
+    cat = json.load(open(os.path.join(ROOT, "docs", "catalog.json")))["assets"]
+    for a in cat:
+        if argv and a["id"] == argv[0]:
+            print(f"id: {a['id']}\nfile: assets/{a['category']}/{a['id']}.py\nname: {a['name']}\nclass: {a['class']}\nmount: {a['mount']}\n"
+                  f"reference crop: docs/ref/{a['ref']}.png (and docs/ref/board.png)\nmay compose (if they exist in assets/): {', '.join(a['deps']) or '-'}\n"
+                  f"brief: {a['brief']}")
+            return 0
+    print("unknown asset id; see docs/catalog.json")
+    return 1
+
+
+def cmd_matlist(argv):
+    cat = json.load(open(os.path.join(ROOT, "docs", "materials.json")))["materials"]
+    q = argv[0].lower() if argv else None
+    print("name | family | T = tintable, D = directional (grain along +U) | tile m | what it is, what the `special` mask does, params")
+    for m in cat:
+        line = (f"{m['name']} | {m['family']} | {'T' if m.get('tintable') else '-'}{'D' if m.get('directional') else '-'} | "
+                f"{m['tile'][0]:g}x{m['tile'][1]:g} | {m['desc']}")
+        if m.get("special", {}).get("kind") and "special" not in m["desc"].lower():
+            line += f" special = {m['special']['kind']}."
+        if q and q not in line.lower():
+            continue
+        print(line)
+    return 0
+
+
+def cmd_api(argv):
+    import ast
+    if not argv:
+        print(__doc__)
+        return 1
+    want = set(",".join(argv).split(","))
+    found = set()
+    for f in sorted(glob.glob(os.path.join(ROOT, "tk", "*.py"))):
+        src = open(f).read()
+        lines = src.splitlines()
+        for node in ast.parse(src).body:
+            if isinstance(node, (ast.FunctionDef, ast.ClassDef)) and node.name in want:
+                found.add(node.name)
+                print(f"# tk/{os.path.basename(f)}:{node.lineno}")
+                print("\n".join(lines[node.lineno - 1:node.end_lineno]))
+                print()
+    for n in sorted(want - found):
+        print(f"(no tk function named {n!r}; see docs/API.md)")
+    return 0
+
+
+def cmd_assets(argv):
+    for d in sorted(glob.glob(os.path.join(ROOT, "assets", "*"))):
+        ids = sorted(os.path.basename(f)[:-3] for f in glob.glob(os.path.join(d, "*.py")))
+        if ids and not os.path.basename(d).startswith("_"):
+            print(f"{os.path.basename(d)}: {' '.join(ids)}")
+    return 0
+
+
+def cmd_build(argv):
+    pos, kw = opts(argv)
+    if not pos:
+        print(__doc__)
+        return 1
+    args = ["--asset", pos[0]]
+    if kw.get("variants"):
+        args += ["--variants", kw["variants"]]
+    if kw.get("params"):
+        args += ["--params", kw["params"], "--name", kw.get("name", "custom")]
+    if kw.get("lods"):
+        args += ["--lods", "1"]
+    out_dir = os.path.abspath(kw["out"]) if isinstance(kw.get("out"), str) else None
+    if out_dir:
+        args += ["--out", out_dir]
+    results, other = run_blender("bl_build.py", args)
+    bad = 0
+    for r in results:
+        if r.get("error"):
+            bad += 1
+            print(f"FAIL {r['id']}/{r['variant']}:\n{r['error']}")
+            continue
+        s = r["size"]
+        print(f"{'OK  ' if r['ok'] else 'ERR '} {r['id']}/{r['variant']}: {r['tris']} tris, "
+              f"size {s[0]:.2f} x {s[1]:.2f} x {s[2]:.2f} m, {r['seconds']:.1f} s")
+        if r.get("lods"):
+            print("     lods  " + ",  ".join(f"lod{i + 1} {d['tris']} tris ({100 * d['tris'] / max(r['tris'], 1):.0f} %) {d.get('mode', 'decimated')}"
+                                           for i, d in enumerate(r["lods"]))
+                  + (f"  (+{r['lod_s']:.1f} s)" if r.get("lod_s") else ""))
+        for e in r.get("errors", []):
+            bad += 1
+            print(f"     ERROR {e}")
+        for w in r.get("warnings", []):
+            print(f"     WARN  {w}")
+    for line in other:
+        print(line)
+    if kw.get("lods") and not out_dir:
+        # out/glb/<id>/ holds the variants the review renders list: no level files next to them
+        for r in results:
+            for n in (1, 2):
+                f = os.path.join(ROOT, "out", "glb", pos[0], f"{r.get('variant')}.lod{n}.glb")
+                if not str(r.get("variant")).startswith("_") and os.path.exists(f):
+                    os.remove(f)
+    if not out_dir and not kw.get("variants") and not kw.get("params") and results and not bad:
+        # full rebuild: drop GLBs of variants that no longer exist (names starting with "_" are town builds)
+        keep = {r["variant"] for r in results}
+        for f in glob.glob(os.path.join(ROOT, "out", "glb", pos[0], "*.*")):
+            v = os.path.basename(f).rsplit(".", 1)[0]
+            if v not in keep and not v.startswith("_"):
+                os.remove(f)
+    return 1 if bad else 0
+
+
+def submit(job, timeout):
+    """Drop a job into the render queue and wait for the daemon's result."""
+    os.makedirs(QUEUE, exist_ok=True)
+    os.makedirs(os.path.join(QUEUE, "done"), exist_ok=True)
+    jid = f"{int(time.time() * 1000)}_{os.getpid()}_{job['kind']}_{job['id'].replace('/', '_')}"
+    job["job_id"] = jid
+    tmp = os.path.join(QUEUE, jid + ".tmp")
+    with open(tmp, "w") as f:
+        json.dump(job, f)
+    os.rename(tmp, os.path.join(QUEUE, jid + ".json"))
+    done = os.path.join(QUEUE, "done", jid + ".json")
+    t0 = time.time()
+    while time.time() - t0 < timeout:
+        if os.path.exists(done):
+            time.sleep(0.05)
+            return json.load(open(done))
+        hb = os.path.join(QUEUE, "daemon.json")
+        if time.time() - t0 > 20 and (not os.path.exists(hb) or time.time() - os.path.getmtime(hb) > 90):
+            print("WARN render daemon heartbeat is stale - renders may be delayed (do NOT start your own browser; just retry later)")
+            t0 += 30
+        time.sleep(0.5)
+    try:
+        os.remove(os.path.join(QUEUE, jid + ".json"))
+    except OSError:
+        pass
+    return {"ok": False, "error": f"timed out after {timeout}s waiting for the render daemon"}
+
+
+def cmd_render(argv):
+    pos, kw = opts(argv)
+    if not pos:
+        print(__doc__)
+        return 1
+    aid = pos[0]
+    if not kw.get("no-build"):
+        rc = cmd_build([aid])
+        if rc:
+            print("build has errors - not rendering")
+            return rc
+    variants = sorted(os.path.basename(p)[:-4] for p in glob.glob(os.path.join(ROOT, "out", "glb", aid, "*.glb"))
+                      if not os.path.basename(p).startswith("_"))
+    if not variants:
+        print(f"no GLBs in out/glb/{aid}/")
+        return 1
+    res = submit({"kind": "asset", "id": aid, "variants": variants}, float(kw.get("timeout", 600)))
+    if not res.get("ok"):
+        print("RENDER FAILED:", res.get("error"))
+        return 1
+    print(f"rendered {aid} in {res.get('seconds', '?')} s (queue wait {res.get('waited', '?')} s):")
+    for f in res.get("files", []):
+        print("   ", f)
+    for w in res.get("warnings", []):
+        print("    WARN", w)
+    return 0
+
+
+PAGE_VERSION = 3    # web/render.js PAGE_VERSION whose 'lod' sheet names what ships at each level
+
+
+def print_lod(r, top=16):
+    """The per-level table of a comparison build result (bl_build --lods cmp)."""
+    t0 = max(r["tris"], 1)
+    dec = r.get("dec") or [{}, {}]
+    print(f"{r['id']}/{r['variant']}: lod 0 = {r['tris']} tris, 3 levels built in {r['seconds'] + (r.get('lod_s') or 0):.1f} s "
+          f"(levels 1 + 2: {r.get('lod_s') or 0:.1f} s)")
+    picks = r.get("lod_pick") or []
+    modelled = any("authored" in (p.get("cand") or {}) for p in picks) or not picks
+    print(f"  level   budget   OLD decimated      {'NEW modelled' if modelled else 'NEW reduced '}       check   surface kept   deviation p95")
+    ok = True
+    for i, L in enumerate(r.get("lod") or []):
+        d = dec[i].get("tris")
+        old = f"{d} ({100 * d / t0:.0f} %)" if d is not None else "-"
+        new = f"{L['tris']} ({100 * L['tris'] / t0:.0f} %)"
+        print(f"  lod {L['level']}   {L.get('budget', 0):>6}   {old:<18} {new:<18} {'ok' if L['ok'] else 'REJECT':<7} "
+              f"{100 * L.get('cover', 0):.0f} %           {1000 * L.get('dev', 0):.0f} mm")
+        for w in L.get("why", []):
+            ok = False
+            print(f"          REJECTED: {w}")
+        for w in L.get("warn", []):
+            print(f"          warn: {w}")
+    for p in picks:
+        # the candidates of the level on the image metric (tk/lodimage.py) and which one a town build ships
+        print(f"  lod {p['level']} ships {p['kind']}" + (f" ({p.get('over') or 1.5} x budget allowance)" if p.get("allowance") else "") + ":  "
+              + ";  ".join(f"{k} {c['tris']} tris" + ("" if c.get("img") is None else
+                           f" image diff {c['img']:.4f} outline {c['sil']:.3f} brightness {c['lum']:.2f}"
+                           + ("" if c.get("glow") is None else f" glow {c['glow']:.2f}")
+                           + ("" if not c.get("zf") else f" glowing faces on a surface {c['zf']['z3']:.3f} m2 (lod 0 {c['zf']['z0']:.3f})")
+                           + ("" if not c.get("text") else f" lettering {'ok' if c['text'].get('ok') else 'BAD'}"))
+                           for k, c in (p.get("cand") or {}).items()))
+    for t in r.get("lod_trace") or []:
+        print(t)
+    wh = r.get("where") or {}
+    if wh:
+        rows = sorted(wh.items(), key=lambda kv: -max(kv[1][1], kv[1][0] // 4))[:top]
+        print(f"  where the triangles are (source objects before the merge; top {len(rows)} of {len(wh)}):")
+        print(f"    {'object':<34} {'lod 0':>7} {'lod 1':>7} {'lod 2':>7}")
+        for k, (a, b, c) in rows:
+            print(f"    {k[:34]:<34} {a:>7} {b:>7} {c:>7}")
+    return ok
+
+
+def cmd_lod(argv):
+    pos, kw = opts(argv)
+    if not pos:
+        print(__doc__)
+        return 1
+    aid = pos[0]
+    v = kw.get("variant", "default")
+    out = os.path.join(ROOT, "out", "lod")
+    rc = 0
+    if not kw.get("no-build"):
+        args = ["--asset", aid, "--variants", v, "--out", out, "--lods", "cmp"]
+        if kw.get("auto"):
+            args += ["--auto", "1"]
+        results, other = run_blender("bl_build.py", args)
+        r = results[0]
+        if r.get("error"):
+            print(f"FAIL {r['id']}/{r['variant']}:\n{r['error']}")
+            return 1
+        for e in r.get("errors", []):
+            print(f"ERROR {e}")
+        if not r.get("lod"):
+            print(f"{aid}: no level results (it has no META[\"lod\"] = True and the reducer gave nothing - see the warnings; "
+                  f"docs/LOD.md). `tools/tsq lod {aid} --auto` shows what the toolkit's own scaling gives without any edit.")
+            for w in r.get("warnings", []):
+                print(f"    WARN  {w}")
+            return 1
+        if not print_lod(r, int(kw.get("top", 16))):
+            rc = 1
+        for line in other:
+            print(line)
+    if kw.get("no-render"):
+        return rc
+    glb = os.path.join(out, aid, v + ".glb")
+    if not os.path.exists(glb):
+        print(f"no out/lod/{aid}/{v}.glb - run without --no-build")
+        return 1
+    job = {"kind": "lod", "id": aid, "variant": v, "dir": f"out/lod/{aid}", "version": int(os.path.getmtime(glb)),
+           "pageVersion": PAGE_VERSION}
+    res = {}
+    for _ in range(26):     # the daemon's tab reloads web/render.js every 20 jobs: an older tab answers 'unknown job kind'
+        res = submit(dict(job), float(kw.get("timeout", 600)))
+        if res.get("ok") or not ("unknown job kind" in str(res.get("error")) or "stale page" in str(res.get("error"))):
+            break
+    if not res.get("ok"):
+        print("RENDER FAILED:", res.get("error"))
+        for line in res.get("log", []) or []:
+            print("   ", line)
+        return 1
+    for f in res.get("files", []):
+        print("sheet:", f)
+    for w in res.get("warnings", []):
+        print("    WARN", w)
+    return rc
+
+
+def cmd_render_mat(argv):
+    pos, kw = opts(argv)
+    if not pos:
+        print(__doc__)
+        return 1
+    rc = 0
+    for name in ",".join(pos).split(","):
+        res = submit({"kind": "mat", "id": name}, float(kw.get("timeout", 600)))
+        if not res.get("ok"):
+            print("RENDER FAILED:", name, res.get("error"))
+            rc = 1
+            continue
+        for f in res.get("files", []):
+            print("   ", f)
+    return rc
+
+
+def cmd_status(argv):
+    hb = os.path.join(QUEUE, "daemon.json")
+    if os.path.exists(hb):
+        age = time.time() - os.path.getmtime(hb)
+        print(f"daemon heartbeat {age:.0f} s ago: {open(hb).read().strip()}")
+    else:
+        print("daemon: no heartbeat file")
+    pend = sorted(glob.glob(os.path.join(QUEUE, "*.json")))
+    pend = [p for p in pend if not p.endswith("daemon.json")]
+    print(f"pending jobs: {len(pend)}")
+    for p in pend[:20]:
+        print("   ", os.path.basename(p))
+    return 0
+
+
+def main():
+    if len(sys.argv) < 2:
+        print(__doc__)
+        return 1
+    cmd, argv = sys.argv[1], sys.argv[2:]
+    fn = {"mat": cmd_mat, "mats": cmd_mats, "build": cmd_build, "render": cmd_render,
+          "render-mat": cmd_render_mat, "status": cmd_status, "brief": cmd_brief,
+          "matlist": cmd_matlist, "api": cmd_api, "assets": cmd_assets, "lod": cmd_lod}.get(cmd)
+    if not fn:
+        print(__doc__)
+        return 1
+    return fn(argv)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

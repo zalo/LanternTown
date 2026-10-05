@@ -1,0 +1,569 @@
+From bd87ef453918c861167318a870dace304a06c95b Mon Sep 17 00:00:00 2001
+From: Johnathon Selstad <makeshifted@gmail.com>
+Date: Sat, 3 Oct 2026 13:01:14 -0700
+Subject: [PATCH] GLTFLoader: Add MSFT_lod support.
+
+A node with `MSFT_lod` is returned inside a `LOD`. Level 0 is the node
+itself, the other levels are the nodes the extension lists (or, for
+material LODs, clones of the node with the listed materials). The
+distances are derived from `MSFT_screencoverage`. Files that do not use
+the extension are loaded as before.
+
+Co-Authored-By: Claude Code <noreply@anthropic.com>
+---
+ examples/jsm/loaders/GLTFLoader.js           | 390 ++++++++++++++++++-
+ test/unit/addons/loaders/GLTFLoader.tests.js | 102 +++++
+ 2 files changed, 491 insertions(+), 1 deletion(-)
+
+diff --git a/examples/jsm/loaders/GLTFLoader.js b/examples/jsm/loaders/GLTFLoader.js
+index cc0d6f1..c8ee7fe 100644
+--- a/examples/jsm/loaders/GLTFLoader.js
++++ b/examples/jsm/loaders/GLTFLoader.js
+@@ -19,6 +19,7 @@ import {
+ 	Interpolant,
+ 	InterpolateDiscrete,
+ 	InterpolateLinear,
++	LOD,
+ 	Line,
+ 	LineBasicMaterial,
+ 	LineLoop,
+@@ -104,6 +105,7 @@ import { clone } from '../utils/SkeletonUtils.js';
+  * - EXT_mesh_gpu_instancing
+  * - EXT_texture_avif
+  * - EXT_texture_webp
++ * - MSFT_lod
+  *
+  * The following glTF 2.0 extensions are supported by separately registered plugins:
+  * - KHR_gaussian_splatting
+@@ -258,6 +260,12 @@ class GLTFLoader extends Loader {
+ 
+ 		} );
+ 
++		this.register( function ( parser ) {
++
++			return new GLTFLodExtension( parser );
++
++		} );
++
+ 	}
+ 
+ 	/**
+@@ -657,7 +665,8 @@ const EXTENSIONS = {
+ 	EXT_TEXTURE_AVIF: 'EXT_texture_avif',
+ 	EXT_MESHOPT_COMPRESSION: 'EXT_meshopt_compression',
+ 	KHR_MESHOPT_COMPRESSION: 'KHR_meshopt_compression',
+-	EXT_MESH_GPU_INSTANCING: 'EXT_mesh_gpu_instancing'
++	EXT_MESH_GPU_INSTANCING: 'EXT_mesh_gpu_instancing',
++	MSFT_LOD: 'MSFT_lod'
+ };
+ 
+ /**
+@@ -1917,6 +1926,385 @@ class GLTFMeshGpuInstancing {
+ 
+ }
+ 
++/**
++ * Level of Detail Extension
++ *
++ * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/MSFT_lod
++ *
++ * A node with levels of detail is returned inside a `LOD`. Level 0 is the node itself, the other
++ * levels are the nodes (or, for material LODs, clones of the node with the materials) the extension
++ * lists. The distances are derived from the optional `MSFT_screencoverage` extras.
++ *
++ * @private
++ */
++class GLTFLodExtension {
++
++	constructor( parser ) {
++
++		this.name = EXTENSIONS.MSFT_LOD;
++		this.parser = parser;
++
++	}
++
++	loadNode( nodeIndex ) {
++
++		const parser = this.parser;
++		const nodeDef = parser.json.nodes[ nodeIndex ];
++		const ids = this._getIds( nodeDef );
++
++		if ( ids === null ) return this._loadMaterialLOD( nodeIndex );
++
++		const bounds = this._getBounds( [ nodeIndex, ...ids ] );
++
++		if ( bounds === null ) return null;
++
++		// Material LODs only apply to the node level they are defined for.
++		const pending = [ this._loadMaterialLOD( nodeIndex ) || parser.loadNode( nodeIndex ) ];
++
++		for ( let i = 0, il = ids.length; i < il; i ++ ) {
++
++			pending.push( parser.getDependency( 'node', ids[ i ] ) );
++
++		}
++
++		return Promise.all( pending ).then( function ( levels ) {
++
++			return createLOD( levels, bounds, nodeDef.extras );
++
++		} );
++
++	}
++
++	loadAnimation( animationIndex ) {
++
++		const parser = this.parser;
++		const json = parser.json;
++		const channels = json.animations[ animationIndex ].channels;
++		const lods = new Map();
++
++		for ( let i = 0, il = channels.length; i < il; i ++ ) {
++
++			const nodeIndex = channels[ i ].target.node;
++
++			if ( nodeIndex === undefined || lods.has( nodeIndex ) || this._getIds( json.nodes[ nodeIndex ] ) === null ) continue;
++
++			lods.set( nodeIndex, parser.getDependency( 'node', nodeIndex ) );
++
++		}
++
++		if ( lods.size === 0 ) return null;
++
++		// An animation targets the node and not the LOD that contains it. The parser resolves
++		// its targets synchronously, so they are only replaced for the duration of this call.
++
++		try {
++
++			for ( const [ nodeIndex, lod ] of lods ) {
++
++				parser.cache.add( 'node:' + nodeIndex, lod.then( function () {
++
++					return parser._loadNodeShallow( nodeIndex );
++
++				} ) );
++
++			}
++
++			return parser.loadAnimation( animationIndex );
++
++		} finally {
++
++			for ( const [ nodeIndex, lod ] of lods ) {
++
++				parser.cache.add( 'node:' + nodeIndex, lod );
++
++			}
++
++		}
++
++	}
++
++	_getIds( def ) {
++
++		const extensionDef = def && def.extensions && def.extensions[ this.name ];
++
++		return extensionDef && Array.isArray( extensionDef.ids ) && extensionDef.ids.length > 0 ? extensionDef.ids : null;
++
++	}
++
++	_loadMaterialLOD( nodeIndex ) {
++
++		const parser = this.parser;
++		const json = parser.json;
++		const nodeDef = json.nodes[ nodeIndex ];
++
++		if ( nodeDef.mesh === undefined ) return null;
++
++		const primitives = json.meshes[ nodeDef.mesh ].primitives;
++		const materialIds = [];
++
++		let count = 0, extras;
++
++		for ( let i = 0, il = primitives.length; i < il; i ++ ) {
++
++			const materialDef = primitives[ i ].material !== undefined ? json.materials[ primitives[ i ].material ] : undefined;
++			const ids = this._getIds( materialDef ) || [];
++
++			if ( ids.length > count ) {
++
++				count = ids.length;
++				extras = materialDef.extras;
++
++			}
++
++			materialIds.push( ids );
++
++		}
++
++		if ( count === 0 ) return null;
++
++		// The levels of a material LOD are clones of the node, which can't
++		// have child nodes and wouldn't follow an animation of the node.
++
++		if ( ( nodeDef.children && nodeDef.children.length > 0 ) || this._isAnimated( nodeIndex ) ) return null;
++
++		// The meshes of an instanced node are not associated with their primitives.
++
++		if ( nodeDef.extensions && nodeDef.extensions[ EXTENSIONS.EXT_MESH_GPU_INSTANCING ] ) return null;
++
++		const bounds = this._getBounds( [ nodeIndex ] );
++
++		if ( bounds === null ) return null;
++
++		const pending = [ parser.loadNode( nodeIndex ) ];
++
++		for ( let i = 0; i < count; i ++ ) {
++
++			pending.push( Promise.all( materialIds.map( function ( ids ) {
++
++				return ids.length > 0 ? parser.getDependency( 'material', ids[ Math.min( i, ids.length - 1 ) ] ) : null;
++
++			} ) ) );
++
++		}
++
++		return Promise.all( pending ).then( function ( results ) {
++
++			const node = results[ 0 ];
++			const levels = [ node ];
++
++			const sources = [];
++
++			node.traverse( function ( object ) {
++
++				sources.push( object );
++
++			} );
++
++			for ( let i = 1, il = results.length; i < il; i ++ ) {
++
++				const materials = results[ i ];
++				const level = node.clone();
++
++				let index = 0;
++
++				level.traverse( function ( object ) {
++
++					const mapping = parser.associations.get( sources[ index ++ ] );
++					const material = mapping !== undefined && mapping.primitives !== undefined ? materials[ mapping.primitives ] : null;
++
++					if ( material ) {
++
++						object.material = material;
++						parser.assignFinalMaterial( object );
++
++					}
++
++				} );
++
++				levels.push( level );
++
++			}
++
++			return createLOD( levels, bounds, extras );
++
++		} );
++
++	}
++
++	_isAnimated( nodeIndex ) {
++
++		if ( this._animated === undefined ) {
++
++			const animationDefs = this.parser.json.animations || [];
++
++			this._animated = new Set();
++
++			for ( let i = 0, il = animationDefs.length; i < il; i ++ ) {
++
++				const channels = animationDefs[ i ].channels;
++
++				for ( let j = 0, jl = channels.length; j < jl; j ++ ) {
++
++					this._animated.add( channels[ j ].target.node );
++
++				}
++
++			}
++
++		}
++
++		return this._animated.has( nodeIndex );
++
++	}
++
++	// Returns the center, in the space of the parent node, and the radius, in world
++	// units, of the bounding box of the first of the given nodes that has one.
++	_getBounds( nodeIndices ) {
++
++		const nodeDefs = this.parser.json.nodes;
++		const box = new Box3();
++
++		for ( let i = 0, il = nodeIndices.length; i < il && box.isEmpty(); i ++ ) {
++
++			this._expandBox( box, nodeIndices[ i ], _identityMatrix );
++
++		}
++
++		if ( box.isEmpty() ) return null;
++
++		if ( this._parents === undefined ) {
++
++			this._parents = {};
++
++			for ( let i = 0, il = nodeDefs.length; i < il; i ++ ) {
++
++				const children = nodeDefs[ i ].children || [];
++
++				for ( let j = 0, jl = children.length; j < jl; j ++ ) {
++
++					this._parents[ children[ j ] ] = i;
++
++				}
++
++			}
++
++		}
++
++		const matrix = new Matrix4();
++
++		for ( let i = this._parents[ nodeIndices[ 0 ] ]; i !== undefined; i = this._parents[ i ] ) {
++
++			matrix.premultiply( getNodeMatrix( nodeDefs[ i ] ) );
++
++		}
++
++		return {
++			center: box.getCenter( new Vector3() ),
++			radius: box.min.distanceTo( box.max ) / 2 * matrix.getMaxScaleOnAxis()
++		};
++
++	}
++
++	_expandBox( box, nodeIndex, parentMatrix ) {
++
++		const json = this.parser.json;
++		const nodeDef = json.nodes[ nodeIndex ];
++		const matrix = getNodeMatrix( nodeDef ).premultiply( parentMatrix );
++
++		if ( nodeDef.mesh !== undefined ) {
++
++			const primitives = json.meshes[ nodeDef.mesh ].primitives;
++
++			for ( let i = 0, il = primitives.length; i < il; i ++ ) {
++
++				const accessor = json.accessors[ primitives[ i ].attributes.POSITION ];
++
++				if ( accessor === undefined || accessor.min === undefined || accessor.max === undefined ) continue;
++
++				const primitiveBox = new Box3( new Vector3().fromArray( accessor.min ), new Vector3().fromArray( accessor.max ) );
++
++				if ( accessor.normalized ) {
++
++					const boxScale = getNormalizedComponentScale( WEBGL_COMPONENT_TYPES[ accessor.componentType ] );
++					primitiveBox.min.multiplyScalar( boxScale );
++					primitiveBox.max.multiplyScalar( boxScale );
++
++				}
++
++				box.union( primitiveBox.applyMatrix4( matrix ) );
++
++			}
++
++		}
++
++		const children = nodeDef.children || [];
++
++		for ( let i = 0, il = children.length; i < il; i ++ ) {
++
++			this._expandBox( box, children[ i ], matrix );
++
++		}
++
++	}
++
++}
++
++// A level is used down to its screen coverage, the part of the screen that the bounding sphere of the LOD
++// covers. LOD switches by distance, so the coverage is converted for a reference camera with a vertical
++// field of view of 50 degrees and an aspect ratio of 16:9: distance = radius * sqrt( PI / ( 4 * aspect *
++// tan( fov / 2 ) ^ 2 * coverage ) ). Without MSFT_screencoverage each level covers a quarter of the previous one.
++const LOD_COVERAGE_TO_DISTANCE = 1.42539;
++
++function createLOD( objects, bounds, extras ) {
++
++	const coverages = extras && Array.isArray( extras.MSFT_screencoverage ) ? extras.MSFT_screencoverage : [];
++	const lod = new LOD();
++
++	lod.position.copy( bounds.center );
++
++	let distance = 0;
++
++	for ( let i = 0, il = objects.length; i <= il; i ++ ) {
++
++		if ( i > 0 ) {
++
++			const coverage = coverages[ i - 1 ] >= 0 ? coverages[ i - 1 ] : ( i < il ? Math.pow( 0.25, i ) : 0 );
++
++			distance = Math.max( distance, bounds.radius * LOD_COVERAGE_TO_DISTANCE / Math.sqrt( coverage ) );
++
++		}
++
++		// Below the last screen coverage nothing is rendered.
++		if ( i === il && distance === Infinity ) break;
++
++		// The LOD is at the center of the bounds, which is where its distance to the camera is measured from.
++		const level = new Group();
++		level.position.copy( bounds.center ).negate();
++
++		if ( i < il ) level.add( objects[ i ] );
++
++		lod.addLevel( level, distance );
++
++	}
++
++	return lod;
++
++}
++
++function getNodeMatrix( nodeDef ) {
++
++	const matrix = new Matrix4();
++
++	if ( nodeDef.matrix !== undefined ) return matrix.fromArray( nodeDef.matrix );
++
++	return matrix.compose(
++		new Vector3().fromArray( nodeDef.translation || [ 0, 0, 0 ] ),
++		new Quaternion().fromArray( nodeDef.rotation || [ 0, 0, 0, 1 ] ),
++		new Vector3().fromArray( nodeDef.scale || [ 1, 1, 1 ] )
++	);
++
++}
++
+ /* BINARY EXTENSION */
+ const BINARY_EXTENSION_HEADER_MAGIC = 'glTF';
+ const BINARY_EXTENSION_HEADER_LENGTH = 12;
+diff --git a/test/unit/addons/loaders/GLTFLoader.tests.js b/test/unit/addons/loaders/GLTFLoader.tests.js
+index 013973a..f2c3c84 100644
+--- a/test/unit/addons/loaders/GLTFLoader.tests.js
++++ b/test/unit/addons/loaders/GLTFLoader.tests.js
+@@ -134,6 +134,30 @@ function createGaussianSplatGLTF( { sphericalHarmonicsDegree = 0 } = {} ) {
+ 
+ }
+ 
++function createLodGLTF() {
++
++	const positions = new Float32Array( [ 0, 0, 0, 2, 0, 0, 0, 2, 0 ] );
++
++	return {
++		asset: { version: '2.0' },
++		scene: 0,
++		scenes: [ { nodes: [ 0 ] } ],
++		nodes: [
++			{ name: 'High', mesh: 0, translation: [ 1, 0, 0 ], extensions: { MSFT_lod: { ids: [ 1 ] } }, extras: { MSFT_screencoverage: [ 0.25, 0.01 ] } },
++			{ name: 'Low', mesh: 0, translation: [ 1, 0, 0 ] }
++		],
++		meshes: [ { primitives: [ { attributes: { POSITION: 0 } } ] } ],
++		accessors: [ { bufferView: 0, componentType: FLOAT, count: 3, type: 'VEC3', min: [ 0, 0, 0 ], max: [ 2, 2, 0 ] } ],
++		bufferViews: [ { buffer: 0, byteLength: positions.byteLength } ],
++		buffers: [ {
++			byteLength: positions.byteLength,
++			uri: 'data:application/octet-stream;base64,' + arrayBufferToBase64( positions.buffer )
++		} ],
++		extensionsUsed: [ 'MSFT_lod' ]
++	};
++
++}
++
+ export default QUnit.module( 'Addons', () => {
+ 
+ 	QUnit.module( 'Loaders', () => {
+@@ -182,6 +206,84 @@ export default QUnit.module( 'Addons', () => {
+ 
+ 			} );
+ 
++			QUnit.test( 'loads MSFT_lod nodes as LOD', async ( assert ) => {
++
++				const gltf = await new GLTFLoader().parseAsync( JSON.stringify( createLodGLTF() ), '' );
++				const lod = gltf.scene.children[ 0 ];
++				const node = gltf.scene.getObjectByName( 'High' );
++				const radius = Math.SQRT2;
++
++				assert.ok( lod.isLOD, 'creates LOD' );
++				assert.deepEqual( lod.levels.map( ( level ) => level.object.children.map( ( child ) => child.name ) ), [[ 'High' ], [ 'Low' ], []], 'adds the levels, and an empty one below the last screen coverage' );
++				assert.deepEqual( lod.position.toArray(), [ 2, 1, 0 ], 'places the LOD at the center of the bounds' );
++				closeTo( assert, lod.levels[ 1 ].distance, radius * 1.42539 / Math.sqrt( 0.25 ), 'distance of level 1' );
++				closeTo( assert, lod.levels[ 2 ].distance, radius * 1.42539 / Math.sqrt( 0.01 ), 'distance of the empty level' );
++				assert.ok( node.isMesh, 'keeps the node' );
++				assert.deepEqual( node.position.toArray(), [ 1, 0, 0 ], 'keeps the transform of the node' );
++				assert.strictEqual( gltf.parser.associations.get( node ).nodes, 0, 'keeps the association of the node' );
++
++			} );
++
++			QUnit.test( 'loads MSFT_lod materials as LOD', async ( assert ) => {
++
++				const json = createLodGLTF();
++				delete json.nodes[ 0 ].extensions;
++				json.materials = [
++					{ name: 'Fine', extensions: { MSFT_lod: { ids: [ 1 ] } }, extras: { MSFT_screencoverage: [ 0.25, 0 ] } },
++					{ name: 'Coarse' }
++				];
++				json.meshes[ 0 ].primitives[ 0 ].material = 0;
++
++				const gltf = await new GLTFLoader().parseAsync( JSON.stringify( json ), '' );
++				const lod = gltf.scene.children[ 0 ];
++				const meshes = lod.levels.map( ( level ) => level.object.children[ 0 ] );
++
++				assert.ok( lod.isLOD, 'creates LOD' );
++				assert.deepEqual( meshes.map( ( mesh ) => mesh.material.name ), [ 'Fine', 'Coarse' ], 'adds a level per material, and none below a screen coverage of 0' );
++				assert.strictEqual( meshes[ 1 ].geometry, meshes[ 0 ].geometry, 'shares the geometry' );
++				assert.strictEqual( gltf.parser.associations.get( meshes[ 0 ] ).nodes, 0, 'keeps the association of the node' );
++
++			} );
++
++			QUnit.test( 'binds animations to MSFT_lod nodes', async ( assert ) => {
++
++				const json = createLodGLTF();
++				const keyframes = new Float32Array( [ 0, 1, 1, 0, 0, 3, 0, 0 ] );
++
++				json.buffers.push( {
++					byteLength: keyframes.byteLength,
++					uri: 'data:application/octet-stream;base64,' + arrayBufferToBase64( keyframes.buffer )
++				} );
++				json.bufferViews.push( { buffer: 1, byteLength: 8 }, { buffer: 1, byteOffset: 8, byteLength: 24 } );
++				json.accessors.push(
++					{ bufferView: 1, componentType: FLOAT, count: 2, type: 'SCALAR', min: [ 0 ], max: [ 1 ] },
++					{ bufferView: 2, componentType: FLOAT, count: 2, type: 'VEC3' }
++				);
++				json.animations = [ {
++					channels: [ { sampler: 0, target: { node: 0, path: 'translation' } } ],
++					samplers: [ { input: 1, output: 2 } ]
++				} ];
++
++				const gltf = await new GLTFLoader().parseAsync( JSON.stringify( json ), '' );
++
++				assert.ok( gltf.scene.children[ 0 ].isLOD, 'creates LOD' );
++				assert.strictEqual( gltf.animations[ 0 ].tracks[ 0 ].name, 'High.position', 'targets the node, not the LOD' );
++				assert.strictEqual( gltf.scene.getObjectByName( 'High' ).parent.parent, gltf.scene.children[ 0 ], 'keeps the node in the LOD' );
++
++			} );
++
++			QUnit.test( 'does not create LOD for nodes without MSFT_lod', async ( assert ) => {
++
++				const json = createLodGLTF();
++				delete json.nodes[ 0 ].extensions;
++
++				const gltf = await new GLTFLoader().parseAsync( JSON.stringify( json ), '' );
++
++				assert.ok( gltf.scene.children[ 0 ].isMesh, 'returns the node' );
++				assert.strictEqual( gltf.scene.children.length, 1, 'does not add other nodes' );
++
++			} );
++
+ 		} );
+ 
+ 	} );
+-- 
+2.55.0
+

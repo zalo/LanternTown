@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>baked town: packed format against glTF</title>
+<style>
+html, body { margin: 0; background: #05060a; color: #d8cfc0; font: 13px/1.45 system-ui, sans-serif; }
+canvas#gl { display: block; width: 1280px; height: 720px; max-width: 100%; }
+#side { padding: 10px 14px; }
+#msg { color: #ffcf8a; }
+a { color: #9cc4ff; margin-right: 10px; white-space: nowrap; }
+pre { font: 11px/1.4 ui-monospace, monospace; white-space: pre-wrap; }
+p { margin: 4px 0; max-width: 1200px; }
+</style>
+<script type="importmap">
+{ "imports": {
+	"three": "../node_modules/three/build/three.webgpu.js",
+	"three/webgpu": "../node_modules/three/build/three.webgpu.js",
+	"three/tsl": "../node_modules/three/build/three.tsl.js",
+	"three/addons/": "../node_modules/three/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<canvas id="gl" width="1280" height="720"></canvas>
+<div id="side">
+<p>The baked town from its packed format and from the glTF files of <code>tools/bake2glb.mjs</code>, one variant per page load.
+One load is one measurement: open with the browser cache off (DevTools) for a cold one. The numbers appear below and in <code>window.__bench</code>.</p>
+<p><b>The live bake no longer keeps its packed files</b> (the .glb files are what the town loads): "packed" below is now the page's own loader reading those .glb files. The other variants read files exported from an earlier bake.</p>
+<p>whole town as the page streams it, then a 12 s walk:
+<a href="?v=packed">packed (the page's loader)</a>
+<a href="?v=exact">exact GLB per level</a>
+<a href="?v=lod&form=glb&lazy=0">MSFT_lod, one .glb, eager (tier A)</a>
+<a href="?v=lod&form=gltf&lazy=0">MSFT_lod, .bin per level, eager (tier A)</a>
+<a href="?v=lod&form=gltf&lazy=1">MSFT_lod, .bin per level, lazy (tier B)</a>
+<a href="?v=lod&form=ranged&lazy=1">MSFT_lod, one .glb by range requests, lazy (tier B; needs the kit's server on :8791)</a></p>
+<p>lowest level of the whole town:
+<a href="?v=packed&scene=lo">base.bin</a> <a href="?v=exact&scene=lo">exact_lo.glb</a> <a href="?v=portable&scene=lo">portable_lo.glb</a>
+&nbsp; near level of the 8 cells at the spawn:
+<a href="?v=packed&scene=near">packed</a> <a href="?v=exact&scene=near">exact GLB</a> <a href="?v=portable&scene=near">portable GLB</a>
+&nbsp; fine level:
+<a href="?v=packed&scene=fine">packed</a> <a href="?v=exact&scene=fine">exact GLB</a> <a href="?v=portable&scene=fine">portable GLB</a></p>
+<p>the portable files for Blender and three.js (<code>--profile dcc</code>: stock GLTFLoader + DRACOLoader, unlit materials, WebP), in a plain viewer of their own:
+<a href="view.html?file=town_lo.glb">town_lo.glb (7.0 MB)</a>
+<a href="view.html?file=town_mid.glb">town_mid.glb (13 MB)</a>
+<a href="view.html?file=town_near.glb">town_near.glb (31 MB)</a>
+<a href="view.html?file=town_best.glb">town_best.glb (52 MB)</a>
+<a href="view.html?file=town_lod.glb">town_lod.glb, stock loader (88 MB)</a>
+<a href="view.html?file=town_lod.glb&loader=b">town_lod.glb, MSFT_lod loader, lazy, by range</a>
+<a href="view.html?file=portable_lod_spawn.glb">portable_lod_spawn.glb (30 MB)</a>
+<a href="view.html?file=portable_lod_spawn.glb&loader=b">the same, MSFT_lod loader, lazy, by range</a><br>
+each carries its sky as one mesh (a fitted dome with a 4096 x 2048 panorama, 0.19 MB); the viewer takes
+<code>sky=mesh</code> (what any stock viewer shows), <code>sky=background</code> (the same picture as the scene's background, no parallax) or <code>sky=none</code>:
+<a href="view.html?file=town_near.glb&sky=background">town_near.glb, sky as background</a>
+<a href="view.html?file=town_near.glb&sky=none">town_near.glb, no sky</a></p>
+<p>other parameters: <code>tier=high|medium|low|phone</code> <code>walk=seconds</code> <code>shot=1</code> (two settled pictures as PNG data URLs in <code>__bench.shots</code>)
+<code>ranged=URL</code> (the .glb on a server that answers Range) <code>webgl=1</code></p>
+<p id="msg">starting</p>
+<pre id="out"></pre>
+</div>
+<script type="module" src="../engine/telemetry.js?page=bakeglb-bench"></script><!-- visitors report device, timings and logs back: engine/telemetry.js -->
+<script type="module" src="./bench.js"></script>
+</body>
+</html>

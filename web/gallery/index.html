@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lantern Square - live build gallery</title>
+<style>
+:root { --bg:#070b16; --panel:#0e1526; --panel2:#141d33; --line:#22304f; --txt:#e8e4d8; --dim:#8d97b0; --amber:#ffbf6a; --amber2:#ff9a3c;
+	--ok:#58d38c; --warn:#f2b84b; --bad:#ef6a5b; --blue:#6aa8ff; }
+* { box-sizing:border-box; }
+html, body { margin:0; background:var(--bg); color:var(--txt); font:14px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+body { background:radial-gradient(1200px 500px at 50% -120px, #1b2547 0%, rgba(7,11,22,0) 70%), var(--bg); min-height:100vh; }
+a { color:var(--amber); text-decoration:none; }
+header { padding:22px 18px 10px; max-width:1500px; margin:0 auto; }
+h1 { margin:0; font:600 26px/1.15 Georgia, "Times New Roman", serif; letter-spacing:.3px; color:#fff3dc; text-shadow:0 0 28px rgba(255,180,90,.35); }
+h1 small { display:block; font:400 13px/1.4 ui-sans-serif, system-ui, sans-serif; color:var(--dim); margin-top:4px; text-shadow:none; }
+.top { display:flex; gap:14px; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; }
+.btn { display:inline-block; padding:9px 16px; border-radius:999px; background:linear-gradient(180deg, #ffcf85, #f09a3e); color:#2a1503; font-weight:700;
+	box-shadow:0 0 24px rgba(255,170,70,.35); }
+.btn.off { background:#1a2238; color:var(--dim); box-shadow:none; font-weight:500; }
+.btn.alt { background:none; color:var(--amber); border:1px solid #6b5327; box-shadow:none; font-weight:600; padding:8px 15px; }
+#cta { display:flex; flex-wrap:wrap; gap:8px 10px; align-items:center; }
+.stats { display:grid; grid-template-columns:repeat(auto-fit, minmax(128px, 1fr)); gap:8px; margin:16px 0 8px; }
+.stat { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:9px 12px; }
+.stat b { display:block; font:600 20px/1.2 Georgia, serif; color:#fff; }
+.stat span { color:var(--dim); font-size:12px; }
+.bar { height:8px; background:#141c30; border-radius:99px; overflow:hidden; display:flex; margin:6px 0 2px; }
+.bar i { display:block; height:100%; }
+.live { font-size:12px; color:var(--dim); display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+.dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--ok); margin-right:5px; box-shadow:0 0 8px var(--ok); animation:pulse 2s infinite; }
+.dot.off { background:var(--bad); box-shadow:none; animation:none; }
+@keyframes pulse { 50% { opacity:.35; } }
+nav { position:sticky; top:0; z-index:5; background:rgba(7,11,22,.9); backdrop-filter:blur(8px); border-bottom:1px solid var(--line); }
+nav .in { max-width:1500px; margin:0 auto; padding:8px 18px; display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+.tab, .chip { cursor:pointer; user-select:none; border:1px solid var(--line); background:var(--panel); color:var(--dim); padding:6px 12px; border-radius:999px; font-size:13px; white-space:nowrap; }
+.tab.on { color:#2a1503; background:var(--amber); border-color:var(--amber); font-weight:700; }
+.chip { padding:4px 10px; font-size:12px; }
+.chip.on { color:#fff; border-color:var(--amber); background:#2b2314; }
+.chips { display:flex; gap:6px; flex-wrap:wrap; padding:10px 18px 0; max-width:1500px; margin:0 auto; }
+select { background:var(--panel); color:var(--txt); border:1px solid var(--line); border-radius:8px; padding:5px 8px; font-size:12px; }
+main { max-width:1500px; margin:0 auto; padding:12px 18px 80px; }
+.grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:12px; }
+.card { background:var(--panel); border:1px solid var(--line); border-radius:12px; overflow:hidden; cursor:pointer; position:relative; transition:transform .12s, border-color .12s; }
+.card:hover { transform:translateY(-2px); border-color:#3a4d7c; }
+.card .im { aspect-ratio:16/10; background:#0a0f1d center/cover no-repeat; display:flex; align-items:center; justify-content:center; color:#2c3a5e; font:600 12px/1 ui-sans-serif; letter-spacing:2px; text-transform:uppercase; }
+.card .bd { padding:8px 10px 10px; }
+.card .nm { font-weight:600; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.card .sub { color:var(--dim); font-size:12px; display:flex; justify-content:space-between; gap:8px; }
+.badge { position:absolute; top:8px; right:8px; min-width:38px; text-align:center; padding:3px 8px; border-radius:99px; font-weight:800; font-size:13px; background:#0b1020cc; border:1px solid var(--line); color:var(--dim); backdrop-filter:blur(4px); }
+.badge.ok { color:#06250f; background:var(--ok); border-color:var(--ok); }
+.badge.mid { color:#2b1c00; background:var(--warn); border-color:var(--warn); }
+.badge.bad { color:#fff; background:var(--bad); border-color:var(--bad); }
+.st { position:absolute; top:8px; left:8px; padding:2px 8px; border-radius:99px; font-size:11px; background:#0b1020cc; border:1px solid var(--line); color:var(--dim); backdrop-filter:blur(4px); }
+.st.authoring, .st.rendered, .st.revising { color:var(--amber); border-color:#5a4520; }
+.st.passed { color:var(--ok); border-color:#1f5a3a; }
+h2 { font:600 17px/1.2 Georgia, serif; color:#fff3dc; margin:22px 0 10px; display:flex; align-items:baseline; gap:10px; }
+h2 small { font:400 12px ui-sans-serif, system-ui; color:var(--dim); }
+#modal { position:fixed; inset:0; background:rgba(3,5,12,.88); z-index:20; display:none; overflow:auto; -webkit-overflow-scrolling:touch; }
+#modal.on { display:block; }
+.sheet { max-width:1280px; margin:20px auto; background:var(--panel); border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+.sheet .hd { display:flex; justify-content:space-between; gap:12px; align-items:center; padding:12px 16px; border-bottom:1px solid var(--line); position:sticky; top:0; background:var(--panel); z-index:2; }
+.sheet .hd h3 { margin:0; font:600 19px Georgia, serif; color:#fff; }
+.x { cursor:pointer; font-size:22px; color:var(--dim); padding:0 8px; }
+.views { display:flex; gap:6px; padding:10px 16px 0; flex-wrap:wrap; }
+.big { padding:10px 16px; }
+.big img { width:100%; display:block; border-radius:8px; background:#05070d; }
+.cols { display:grid; grid-template-columns:minmax(0, 1.2fr) minmax(0, 1fr); gap:18px; padding:6px 16px 20px; }
+@media (max-width:820px) { .cols { grid-template-columns:1fr; } h1 { font-size:21px; } }
+.kv { display:grid; grid-template-columns:120px 1fr 38px; gap:6px 10px; align-items:center; font-size:13px; }
+.kv .t { height:7px; background:#141c30; border-radius:99px; overflow:hidden; }
+.kv .t i { display:block; height:100%; background:linear-gradient(90deg, var(--amber2), var(--amber)); }
+ul { margin:6px 0 0; padding-left:18px; } li { margin:4px 0; color:#cfd3df; }
+.muted { color:var(--dim); } .mono { font-family:ui-monospace, Menlo, monospace; font-size:12px; }
+table { border-collapse:collapse; width:100%; font-size:12px; } td, th { text-align:left; padding:4px 8px 4px 0; border-bottom:1px solid #1a2440; color:#cfd3df; } th { color:var(--dim); font-weight:500; }
+.rounds { display:flex; gap:6px; flex-wrap:wrap; margin:6px 0 10px; }
+.rounds span { cursor:pointer; padding:3px 9px; border-radius:99px; border:1px solid var(--line); font-size:12px; color:var(--dim); }
+.rounds span.on { border-color:var(--amber); color:#fff; }
+.shots { display:grid; grid-template-columns:repeat(auto-fill, minmax(340px, 1fr)); gap:12px; }
+.shots img { width:100%; border-radius:10px; display:block; cursor:pointer; border:1px solid var(--line); }
+.refs img { width:100%; border-radius:10px; border:1px solid var(--line); display:block; margin-bottom:12px; }
+.demos { display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:12px; }
+.demo { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px 14px; display:flex; flex-direction:column; }
+.demo b { color:#fff; font-size:15px; }
+.demo p { margin:4px 0 12px; color:var(--dim); font-size:13px; flex:1; }
+.demo .go { display:flex; gap:6px; flex-wrap:wrap; }
+.demo .go a, .demo .go span { border:1px solid #6b5327; color:var(--amber); padding:5px 12px; border-radius:999px; font-size:13px; font-weight:600; white-space:nowrap; }
+.demo .go a.main { background:var(--amber); border-color:var(--amber); color:#2a1503; }
+.demo .go span { border-color:var(--line); color:var(--dim); font-weight:400; }
+.empty { padding:40px 10px; text-align:center; color:var(--dim); border:1px dashed var(--line); border-radius:12px; }
+</style>
+</head>
+<body>
+<header>
+	<div class="top">
+		<h1>Lantern Square<small>A realistic, walkable lantern-lit town square in three.js &mdash; every asset modelled parametrically with the Blender CLI, rendered on a shared GPU, judged by independent reviewers until it scores &ge; 75.</small></h1>
+		<div id="cta"></div>
+	</div>
+	<div class="stats" id="stats"></div>
+	<div class="bar" id="bar"></div>
+	<div class="live" id="live"></div>
+</header>
+<nav><div class="in" id="tabs"></div></nav>
+<div class="chips" id="chips"></div>
+<main id="main"></main>
+<div id="modal"></div>
+<script type="module" src="../engine/telemetry.js?page=gallery"></script><!-- visitors report device, timings and logs back: engine/telemetry.js -->
+<script>
+const $ = ( s ) => document.querySelector( s );
+const esc = ( s ) => String( s ?? '' ).replace( /[&<>"]/g, ( c ) => ( { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ c ] ) );
+const R = '../';                                   // server root relative to /gallery/
+const CATS = { lighting: 'Lighting', street: 'Street furniture & props', decor: 'Signs & decor', arch: 'Architecture modules', plaza: 'Plaza structures', veg: 'Vegetation', building: 'Buildings & landmarks' };
+// The walkable pages and experiments ( tab "Demos" ). [ label, path from the server root ] per link, the first one is the
+// main one; `probe`: a page that is still being built - its links show as "in progress" until that path answers.
+const DEMOS = [
+	[ 'Walk the town', [
+		{ name: 'Lantern Square', text: 'The composed town with baked lighting. It opens on High on every device; the selector on the page remembers another choice.',
+			go: [ [ 'Walk', 'town/' ], [ 'High', 'town/?quality=high' ], [ 'Medium', 'town/?quality=medium' ], [ 'Low', 'town/?quality=low' ], [ 'Phone', 'town/?quality=phone' ] ] },
+		{ name: 'The town as one GLB', text: 'One file, town_best.glb ( 53 MB: every part at its finest level, baked light in the vertex colours, Draco and WebP ), loaded by the stock three.js GLTFLoader and nothing else - no town engine, no glow sprites, no levels of detail. The sky is in the file too, as a mesh around the town. The same file opens in Blender. "Near level" ( 32 MB, 3.1 M triangles ) is the one for a phone; "Middle" is 12 MB and coarser, "Lowest" 6 MB.',
+			go: [ [ 'Walk', 'glbtown/' ], [ 'Near level', 'glbtown/?file=town_near.glb' ], [ 'Near, sky as background', 'glbtown/?file=town_near.glb&sky=background' ], [ 'Middle level', 'glbtown/?file=town_mid.glb' ], [ 'Lowest level', 'glbtown/?file=town_lo.glb' ], [ 'Orbit viewer', 'bakeglb/view.html?file=town_best.glb' ], [ 'Download (.glb)', 'out/web/_nextglb/town_best.glb' ] ] },
+		{ name: 'Studio', text: 'The streaming engine on the full-detail models: every lantern a real light, screen-space reflections. About 4 GB of GPU memory - desktop graphics cards only.',
+			go: [ [ 'Studio', 'town/?quality=studio' ], [ 'Studio medium', 'town/?quality=studio-medium' ], [ 'Studio medium, packed models', 'town/?quality=studio-medium&glb=m' ] ] },
+		{ name: 'Second town - hotel square', text: 'Another assembly of the same assets, after a second reference image. A demo: it runs on the first baked runtime and was not taken to the pass mark.',
+			go: [ [ 'Walk', 'town/?town=town2' ], [ 'Low', 'town/?town=town2&quality=low' ] ] },
+	] ],
+	[ 'Take it with you', [
+		{ name: 'Source code', text: 'Everything needed to rebuild this from scratch, zipped from the files as they are right now: the asset generators and toolkit, materials, town layouts, the build, bake and packing tools, both engines and these pages, the docs, the judges\' reviews, and prompt.md - the brief with everything learnt on the way. Generated models, textures and bakes are not in it.',
+			go: [ [ 'Download (.zip)', 'api/source.zip' ], [ 'With reference images', 'api/source.zip?refs=1' ] ] },
+		{ name: 'One-file towns (.glb)', text: 'The baked town as plain glTF, one file each, that opens in Blender 4.1 and in three.js with their stock importers: unlit materials with the baked light in the vertex colours, Draco geometry, WebP textures, the sky as a mesh ( a 2048 px panorama in the three smaller files, 4096 px in the others ); validator-clean. "With levels" carries MSFT_lod chains with 512 px textures ( in Blender: hide the three LOD empties ). No glow sprites, bloom or moving water - those are shaders of the town page.',
+			go: [ [ 'Finest, 53 MB', 'out/web/_nextglb/town_best.glb' ], [ 'Near, 32 MB', 'out/web/_nextglb/town_near.glb' ], [ 'Middle, 12 MB', 'out/web/_nextglb/town_mid.glb' ], [ 'Lowest, 6 MB', 'out/web/_nextglb/town_lo.glb' ], [ 'With levels, 88 MB', 'out/web/_nextglb/town_lod.glb' ], [ 'View finest', 'bakeglb/view.html?file=town_best.glb' ], [ 'View with levels, lazy', 'bakeglb/view.html?file=town_lod.glb&loader=b' ] ] },
+		{ name: 'LOD demo files (.glb)', text: 'The files behind the level-of-detail demos. "Thirteen chunks" is what the GLTFLoader demo loads: the chunks around the spawn, four levels each, linked by MSFT_lod; portable like the towns above. "Own vertex format" is the same chunks as the town page stores them ( an earlier bake; it needs the demo\'s material adapter, a stock viewer shows it untextured ). The last three are test models of the MSFT_lod kit: three town cells, a file made for range requests, and the smallest case.',
+			go: [ [ 'Thirteen chunks, 30 MB', 'out/web/_nextglb/portable_lod_spawn.glb' ], [ 'Own vertex format, 67 MB', 'out/web/_nextglb/exact_lod_spawn.glb' ], [ 'Kit: town cells, 10 MB', 'out/web/_nextglb/msft_lod_kit/models/town_cells.glb' ], [ 'Kit: ranged, 1.5 MB', 'out/web/_nextglb/msft_lod_kit/models/i_ranged.glb' ], [ 'Kit: node LOD, 28 kB', 'out/web/_nextglb/msft_lod_kit/models/a_node_lod.glb' ], [ 'View thirteen chunks, lazy', 'bakeglb/view.html?file=portable_lod_spawn.glb&loader=b' ] ] },
+	] ],
+	[ 'Experiments', [
+		{ name: 'KTX2 textures', text: 'Medium and High with GPU-compressed textures ( UASTC ): about half the texture memory, a larger download. "Load readout" prints what was chosen and how the load went, readable on a phone.',
+			go: [ [ 'High, KTX2 on', 'ktx/town/?quality=high&ktx=1' ], [ 'High, KTX2 off', 'ktx/town/?quality=high&ktx=0' ], [ 'Medium, KTX2 on', 'ktx/town/?quality=medium&ktx=1' ], [ 'Load readout', 'ktx/town/?quality=high&ktx=1&ktxinfo=1' ] ] },
+		{ name: 'Textures compressed on the device', text: 'Now the default on the town: the same WebP download as before, compressed in workers after it arrives ( BC7 or ASTC 4x4, whichever the GPU takes ) - a quarter of the texture memory with no larger download. Both formats ran on an iPhone: 4 MB of textures on the GPU instead of 33 on the Phone preset, swapped in under two seconds. The readout says which format was chosen; "off" is the uncompressed path, to compare.',
+			go: [ [ 'High, with readout', 'town/?quality=high&ktxinfo=1' ], [ 'High, off', 'town/?quality=high&tc=0&ktxinfo=1' ], [ 'Phone, with readout', 'town/?quality=phone&ktxinfo=1' ], [ 'Phone, ASTC forced', 'town/?quality=phone&tcforce=astc&ktxinfo=1' ], [ 'Phone, off', 'town/?quality=phone&tc=0&ktxinfo=1' ] ] },
+		{ name: 'Baked town as GLB', text: 'The live town loads its geometry as GLB files: the compressed streams of the bake in a standard container, read by a thin reader. The packed format they replaced is gone - the bake deletes it once every GLB is read back, and the exporter of the one-file towns reads the GLB files too. The benchmark compares loaders: download, decode, first frame, memory.',
+			probe: 'bakeglb/', go: [ [ 'Town', 'town/' ], [ 'Benchmark', 'bakeglb/' ] ] },
+		{ name: 'MSFT_lod test kit', text: 'Test models and a check page for level-of-detail support in the three.js GLTFLoader: the stock loader fails, a loader that builds THREE.LOD passes; a second tier checks lazy loading of the finer levels.',
+			probe: 'out/web/_nextglb/msft_lod_kit/check.html', go: [ [ 'Check page', 'out/web/_nextglb/msft_lod_kit/check.html' ], [ 'Read me', 'out/web/_nextglb/msft_lod_kit/README.md' ] ] },
+		{ name: 'GLTFLoader with MSFT_lod', text: 'Thirteen town chunks loaded by a patched three.js GLTFLoader. Tier A reads MSFT_lod into THREE.LOD with no new API; tier B adds opt-in lazy loading, fetching a finer level only when the camera asks for it. "Tint" colours each level.',
+			probe: 'gltflod/', go: [ [ 'Tier B - lazy', 'gltflod/?tier=b' ], [ 'Tier A', 'gltflod/?tier=a' ], [ 'Tier B, tinted', 'gltflod/?tier=b&tint=1' ], [ 'Patches', 'docs/gltfloader/README.md' ] ] },
+		{ name: 'Blender light probes', text: 'A test of light probes baked by the Blender CLI and read in three.js.',
+			go: [ [ 'Open', 'probetest/' ] ] },
+		{ name: 'First baked runtime', text: 'The town on the earlier baked build, kept for comparison with the current one.',
+			go: [ [ 'Phone', 'town/?legacy=1&quality=phone' ], [ 'Low', 'town/?legacy=1&quality=low' ] ] },
+		{ name: 'Asset viewer', text: 'Any single asset in 3D, with its variants - also linked from every asset card.',
+			go: [ [ 'Clock tower hall', 'viewer.html?id=clock_tower_hall' ], [ 'Globe lamp post', 'viewer.html?id=lamp_post_globe' ] ] },
+	] ],
+];
+const UP = {}; // probe path -> answered
+const TABS = [ 'assets', 'materials', 'town', 'demos', 'ref' ];
+const state = { tab: TABS.includes( location.hash.slice( 1 ) ) ? location.hash.slice( 1 ) : 'assets', cat: 'all', status: 'all', sort: 'catalog', open: null, view: 'hero', round: null, sig: '' };
+let M = null;
+// a static copy of the site ( tools/site.py ): M.static.drop names the links that have nothing behind them there
+const gone = ( h ) => ( M.static?.drop || [] ).some( ( re ) => new RegExp( re ).test( h ) );
+const noRefs = () => !! M.static || M.refs === false; // the reference images are not part of the published source
+
+const cls = ( s ) => s == null ? '' : s >= M.pass ? 'ok' : s >= 60 ? 'mid' : 'bad';
+const ago = ( t ) => { if ( ! t ) return ''; const d = Date.now() / 1000 - t; return d < 90 ? Math.round( d ) + ' s ago' : d < 5400 ? Math.round( d / 60 ) + ' min ago' : Math.round( d / 3600 ) + ' h ago'; };
+const num = ( n ) => n == null ? '-' : n >= 1e6 ? ( n / 1e6 ).toFixed( 2 ) + 'M' : n >= 1e4 ? Math.round( n / 1e3 ) + 'k' : n >= 1e3 ? ( n / 1e3 ).toFixed( 1 ) + 'k' : String( n );
+
+function header() {
+
+	const s = M.stats, q = M.queue;
+	$( '#cta' ).innerHTML = ( M.town.playable ? `<a class="btn" href="${R}town/">Walk the town &rarr;</a>` : `<span class="btn off">Town scene: in progress</span>` ) +
+		` <a class="btn alt" href="${R}api/source.zip" download title="The generators, toolkit, bake and build tools, engines, pages, docs and prompt.md as they are now, in one zip">Source code (.zip) &darr;</a>` +
+		` <a href="#demos" data-tab="demos" style="margin-left:4px">All demos</a>`;
+	const it = [
+		[ `${s.assets_passed} / ${s.assets_total}`, 'assets passed (&ge; ' + M.pass + ')' ],
+		[ s.assets_authored, 'assets authored' ],
+		[ s.assets_reviewed, 'assets judged' ],
+		[ s.avg_score || '-', 'mean asset score' ],
+		[ s.variants, 'built variants' ],
+		[ `${s.mats_passed} / ${s.mats_total}`, 'materials passed' ],
+		[ s.town_score ?? '-', 'town square score' ],
+	];
+	$( '#stats' ).innerHTML = it.map( ( [ a, b ] ) => `<div class="stat"><b>${a}</b><span>${b}</span></div>` ).join( '' );
+	const n = s.assets_total, p = s.assets_passed, rv = s.assets_reviewed - p, au = s.assets_authored - s.assets_reviewed;
+	$( '#bar' ).innerHTML = `<i style="width:${p / n * 100}%;background:var(--ok)"></i><i style="width:${rv / n * 100}%;background:var(--warn)"></i><i style="width:${Math.max( au, 0 ) / n * 100}%;background:var(--blue)"></i>`;
+	if ( M.static ) $( '#live' ).innerHTML = `<span>snapshot of ${new Date( M.static.time * 1000 ).toLocaleDateString()}</span><span>green = passed, amber = in revision, blue = authored</span>`;
+	else $( '#live' ).innerHTML = `<span><span class="dot ${q.alive ? '' : 'off'}"></span>GPU render queue: ${q.alive ? esc( q.status || 'idle' ) : 'offline'}${q.pending ? ' &middot; ' + q.pending + ' waiting' : ''} &middot; adapter ${esc( q.gpu || '?' )}</span><span>updated ${new Date( M.time * 1000 ).toLocaleTimeString()}</span><span>green = passed, amber = in revision, blue = authored</span>`;
+
+}
+
+function tabs() {
+
+	const t = [ [ 'assets', `Assets (${M.stats.assets_total})` ], [ 'materials', `Materials (${M.materials.length})` ], [ 'town', 'Town square' ], [ 'demos', 'Demos' ], [ 'ref', 'Reference' ] ].filter( ( [ k ] ) => k !== 'ref' || ! noRefs() );
+	$( '#tabs' ).innerHTML = t.map( ( [ k, l ] ) => `<span class="tab ${state.tab === k ? 'on' : ''}" data-tab="${k}">${l}</span>` ).join( '' ) +
+		( state.tab === 'assets' ? `<span style="flex:1"></span><select id="sort"><option value="catalog">catalogue order</option><option value="recent">recently updated</option><option value="score">score, high first</option><option value="low">score, low first</option></select>` : '' );
+	const so = $( '#sort' ); if ( so ) { so.value = state.sort; so.onchange = () => { state.sort = so.value; body(); }; }
+	let c = '';
+	if ( state.tab === 'assets' ) {
+
+		const cnt = {}; M.assets.forEach( ( a ) => cnt[ a.category ] = ( cnt[ a.category ] || 0 ) + 1 );
+		c = [ [ 'all', 'All' ], ...Object.entries( CATS ).filter( ( [ k ] ) => cnt[ k ] ) ].map( ( [ k, l ] ) => `<span class="chip ${state.cat === k ? 'on' : ''}" data-cat="${k}">${l}${k !== 'all' ? ' ' + cnt[ k ] : ''}</span>` ).join( '' ) +
+			'<span style="width:10px"></span>' + [ 'all', 'passed', 'revising', 'rendered', 'authoring', 'planned' ].map( ( k ) => `<span class="chip ${state.status === k ? 'on' : ''}" data-status="${k}">${k === 'all' ? 'any status' : k}</span>` ).join( '' );
+
+	}
+	$( '#chips' ).innerHTML = c;
+
+}
+
+function assetCard( a ) {
+
+	const im = a.renders.thumb ? `style="background-image:url('${R}${a.renders.thumb}')"` : '';
+	const tr = a.variants[ 0 ]?.tris;
+	return `<div class="card" data-open="a:${a.id}"><div class="im" ${im}>${a.renders.thumb ? '' : esc( a.status )}</div>
+		<span class="st ${a.status}">${a.status}${a.round > 1 ? ' &middot; r' + a.round : ''}</span>
+		${a.score != null ? `<span class="badge ${cls( a.score )}">${a.score}</span>` : ''}
+		<div class="bd"><div class="nm">${esc( a.name )}</div><div class="sub"><span class="mono">${a.id}</span><span>${a.variants.length ? a.variants.length + ' var &middot; ' + num( tr ) + ' tris' : ''}</span></div></div></div>`;
+
+}
+
+function matCard( m ) {
+
+	const u = m.swatch || m.preview;
+	return `<div class="card" data-open="m:${m.name}"><div class="im" ${u ? `style="background-image:url('${R}${u}')"` : ''}>${u ? '' : esc( m.kind )}</div>
+		<span class="st ${m.status}">${m.status}</span>${m.score != null ? `<span class="badge ${cls( m.score )}">${m.score}</span>` : ''}
+		<div class="bd"><div class="nm">${esc( m.name )}</div><div class="sub"><span>${esc( m.family || m.kind )}</span><span>${m.tile && m.kind === 'baked' ? m.tile.join( ' x ' ) + ' m' : ''}</span></div></div></div>`;
+
+}
+
+function body() {
+
+	const el = $( '#main' );
+	if ( state.tab === 'ref' && noRefs() ) state.tab = 'assets';
+	if ( state.tab === 'assets' ) {
+
+		let L = M.assets.filter( ( a ) => ( state.cat === 'all' || a.category === state.cat ) && ( state.status === 'all' || a.status === state.status ) );
+		if ( state.sort === 'recent' ) L = [ ...L ].sort( ( a, b ) => Math.max( b.render_time, b.source_time ) - Math.max( a.render_time, a.source_time ) );
+		if ( state.sort === 'score' ) L = [ ...L ].sort( ( a, b ) => ( b.score ?? - 1 ) - ( a.score ?? - 1 ) );
+		if ( state.sort === 'low' ) L = [ ...L ].sort( ( a, b ) => ( a.score ?? 999 ) - ( b.score ?? 999 ) );
+		if ( ! L.length ) { el.innerHTML = '<div class="empty">Nothing here yet.</div>'; return; }
+		if ( state.sort === 'catalog' && state.cat === 'all' ) {
+
+			el.innerHTML = Object.entries( CATS ).map( ( [ k, l ] ) => { const G = L.filter( ( a ) => a.category === k ); if ( ! G.length ) return ''; const p = G.filter( ( a ) => a.status === 'passed' ).length;
+				return `<h2>${l}<small>${p} / ${G.length} passed</small></h2><div class="grid">${G.map( assetCard ).join( '' )}</div>`; } ).join( '' );
+
+		} else el.innerHTML = `<div class="grid" style="margin-top:14px">${L.map( assetCard ).join( '' )}</div>`;
+
+	} else if ( state.tab === 'materials' ) {
+
+		const B = M.materials.filter( ( m ) => m.kind === 'baked' ), S = M.materials.filter( ( m ) => m.kind !== 'baked' );
+		el.innerHTML = `<h2>Procedural baked PBR materials<small>${M.stats.mats_passed} / ${B.length} passed &middot; authored as numpy texture programs, baked by the Blender CLI, judged on identity / detail / PBR / tiling / night read</small></h2><div class="grid">${B.map( matCard ).join( '' )}</div>
+			<h2>Shader materials<small>glass, lit windows, neon, water, emissive &mdash; built in the engine (TSL)</small></h2><div class="grid">${S.map( matCard ).join( '' )}</div>`;
+
+	} else if ( state.tab === 'town' ) {
+
+		const townHTML = ( t, title, href ) => {
+
+			const rv = t.reviews[ t.reviews.length - 1 ];
+			return `<h2>${title}<small>${t.score != null ? 'latest judge score ' + t.score + ' / 100 (round ' + t.reviews.length + ')' : 'not judged yet'}</small></h2>` +
+				( t.playable ? `<p><a class="btn" href="${R}${href}">Walk the town &rarr;</a></p>` : '' ) +
+				( t.shots.length ? `<div class="shots">${t.shots.map( ( s ) => `<img loading="lazy" src="${R}${s.thumb || s.url}" data-full="${R}${s.url}" alt="${esc( s.name )}">` ).join( '' )}</div>` : '<div class="empty">The town is composed from the passed assets by a seeded generator &mdash; screenshots appear here as soon as the first layout renders.</div>' ) +
+				( rv ? `<h2>Judge review, round ${t.reviews.length}</h2>${reviewHTML( rv, TOWN_KEYS )}` : '' );
+
+		};
+
+		el.innerHTML = townHTML( M.town, 'The composed town square', 'town/' ) +
+			( M.town2 && M.town2.shots.length ? townHTML( M.town2, 'Second town &mdash; hotel square, assembled from the same assets', 'town/?town=town2' ) : '' );
+
+	} else if ( state.tab === 'demos' ) {
+
+		const card = ( d ) => { const up = ! d.probe || UP[ d.probe ];
+			return `<div class="demo"><b>${d.name}</b><p>${d.text}</p><div class="go">${up ? d.go.filter( ( [ , h ] ) => ! gone( h ) ).map( ( [ l, h ], i ) => `<a class="${i ? '' : 'main'}" href="${R}${h}"${/\.(glb|zip)(\?|$)/.test( h ) ? ' download' : ''}>${l}${i ? '' : ' &rarr;'}</a>` ).join( '' ) : '<span>in progress</span>'}</div></div>`; };
+		const here = ( d ) => ! ( d.probe && gone( d.probe ) ) && d.go.some( ( [ , h ] ) => ! gone( h ) );
+		el.innerHTML = DEMOS.map( ( [ title, L ] ) => [ title, L.filter( here ) ] ).filter( ( [ , L ] ) => L.length ).map( ( [ title, L ] ) => `<h2>${title}</h2><div class="demos">${L.map( card ).join( '' )}</div>` ).join( '' );
+		probe();
+
+	} else {
+
+		el.innerHTML = `<h2>Art-direction reference<small>design language, mood and layout &mdash; rebuilt with real materials and construction</small></h2><div class="refs">${[ 'board', 'plaza', 'gate', 'cafe', 'monument', 'canal' ].map( ( n ) => `<img loading="lazy" src="${R}docs/ref/${n}.png" alt="${n}">` ).join( '' )}</div>`;
+
+	}
+
+}
+
+const ASSET_KEYS = [ [ 'silhouette', 'Silhouette & scale', 20 ], [ 'detail', 'Detail & construction', 20 ], [ 'materials', 'Materials & weathering', 20 ], [ 'night', 'Night read & light', 20 ], [ 'variation', 'Parametric variation', 10 ], [ 'technical', 'Technical', 10 ] ];
+const MAT_KEYS = [ [ 'identity', 'Identity', 30 ], [ 'detail', 'Detail', 20 ], [ 'pbr', 'PBR plausibility', 20 ], [ 'tiling', 'Tiling', 15 ], [ 'night', 'Night read', 15 ] ];
+const TOWN_KEYS = [ [ 'composition', 'Composition & layout', 20 ], [ 'lighting', 'Lighting & atmosphere', 20 ], [ 'realism', 'Realism & materials', 20 ], [ 'density', 'Detail density & life', 15 ], [ 'reference', 'Faithful to reference', 15 ], [ 'technical', 'Technical & performance', 10 ] ];
+
+function reviewHTML( r, keys ) {
+
+	return `<div class="kv">${keys.filter( ( [ k ] ) => r[ k ] != null ).map( ( [ k, l, mx ] ) => `<span class="muted">${l}</span><span class="t"><i style="width:${r[ k ] / mx * 100}%"></i></span><span>${r[ k ]}/${mx}</span>` ).join( '' )}</div>` +
+		( r.caps?.length ? `<p class="muted">Caps applied: ${r.caps.map( esc ).join( '; ' )}</p>` : '' ) +
+		( r.problems?.length ? `<p style="margin:12px 0 0"><b>Judge's problems</b></p><ul>${r.problems.map( ( p ) => `<li>${esc( p )}</li>` ).join( '' )}</ul>` : '' ) +
+		( r.strengths?.length ? `<p style="margin:12px 0 0"><b>Strengths</b></p><ul>${r.strengths.map( ( p ) => `<li>${esc( p )}</li>` ).join( '' )}</ul>` : '' );
+
+}
+
+function modal() {
+
+	const el = $( '#modal' );
+	if ( ! state.open ) { el.className = ''; el.innerHTML = ''; document.body.style.overflow = ''; return; }
+	const [ kind, id ] = state.open.split( ':' );
+	let h = '';
+	if ( kind === 'a' ) {
+
+		const a = M.assets.find( ( x ) => x.id === id ); if ( ! a ) { state.open = null; return modal(); }
+		const views = [ 'hero', 'sheet', 'variants' ].filter( ( v ) => a.renders[ v ] );
+		if ( ! views.includes( state.view ) ) state.view = views[ 0 ];
+		const ri = state.round != null && a.reviews[ state.round ] ? state.round : a.reviews.length - 1, r = a.reviews[ ri ];
+		h = `<div class="sheet"><div class="hd"><h3>${esc( a.name )} <span class="mono muted">${a.id}</span> ${a.score != null ? `<span class="badge ${cls( a.score )}" style="position:static">${a.score}</span>` : ''}</h3><span class="x" data-close>&times;</span></div>
+			${views.length ? `<div class="views">${views.map( ( v ) => `<span class="chip ${state.view === v ? 'on' : ''}" data-view="${v}">${{ hero: 'Night hero', sheet: 'Review sheet', variants: 'Variants' }[ v ]}</span>` ).join( '' )}</div><div class="big"><img src="${R}${a.renders[ state.view ]}"></div>` : '<div class="big"><div class="empty">No render yet.</div></div>'}
+			<div class="cols"><div>
+				<p class="muted" style="margin-top:0">${esc( CATS[ a.category ] || a.category )} &middot; ${esc( a.class )} &middot; status <b style="color:#fff">${a.status}</b>${a.render_time ? ' &middot; rendered ' + ago( a.render_time ) : ''}</p>
+				${a.reviews.length ? `<div class="rounds">${a.reviews.map( ( x, i ) => `<span class="${i === ri ? 'on' : ''}" data-round="${i}">round ${x.round ?? i + 1}: <b>${x.score}</b></span>` ).join( '' )}</div>${reviewHTML( r, ASSET_KEYS )}` : '<p class="muted">Not judged yet.</p>'}
+			</div><div>
+				<p style="margin-top:0"><b>Brief</b></p><p class="muted">${esc( a.brief )}</p>
+				${a.variants.length ? `<p><b>Variants</b> <span class="muted">(seed + params)</span></p><table><tr><th>name</th><th>tris</th><th>size w&times;d&times;h (m)</th><th>lights</th></tr>${a.variants.map( ( v ) => `<tr><td>${esc( v.name )}</td><td>${num( v.tris )}</td><td>${v.size ? v.size.map( ( x ) => x.toFixed( 2 ) ).join( ' &times; ' ) : ''}</td><td>${v.lights || ''}</td></tr>` ).join( '' )}</table>
+				<p><b>Parameters</b> <span class="muted">(default variant)</span></p><p class="mono muted">${Object.entries( a.variants[ 0 ].params || {} ).map( ( [ k, v ] ) => `${esc( k )}=${esc( typeof v === 'number' ? + v.toFixed( 3 ) : v )}` ).join( ' &nbsp; ' )}</p>` : ''}
+				${a.deps?.length ? `<p class="muted">Composes: ${a.deps.map( ( d ) => `<a href="#" data-open="a:${d}">${d}</a>` ).join( ', ' )}</p>` : ''}
+				${gone( 'viewer.html' ) ? '' : `<p><a href="${R}viewer.html?id=${a.id}" target="_blank">Open in the 3D viewer &rarr;</a></p>`}
+			</div></div></div>`;
+
+	} else if ( kind === 'm' ) {
+
+		const m = M.materials.find( ( x ) => x.name === id ); if ( ! m ) { state.open = null; return modal(); }
+		const views = [ 'swatch', 'far', 'sheet', 'preview' ].filter( ( v ) => m[ v ] );
+		if ( ! views.includes( state.view ) ) state.view = views[ 0 ];
+		const ri = state.round != null && m.reviews[ state.round ] ? state.round : m.reviews.length - 1, r = m.reviews[ ri ];
+		h = `<div class="sheet"><div class="hd"><h3>${esc( m.name )} ${m.score != null ? `<span class="badge ${cls( m.score )}" style="position:static">${m.score}</span>` : ''}</h3><span class="x" data-close>&times;</span></div>
+			${views.length ? `<div class="views">${views.map( ( v ) => `<span class="chip ${state.view === v ? 'on' : ''}" data-view="${v}">${{ swatch: 'In engine', far: 'Tiled, lantern-lit', sheet: 'Maps', preview: 'Preview' }[ v ]}</span>` ).join( '' )}</div><div class="big"><img src="${R}${m[ state.view ]}"></div>` : ''}
+			<div class="cols"><div>${m.reviews.length ? `<div class="rounds">${m.reviews.map( ( x, i ) => `<span class="${i === ri ? 'on' : ''}" data-round="${i}">round ${x.round ?? i + 1}: <b>${x.score}</b></span>` ).join( '' )}</div>${reviewHTML( r, MAT_KEYS )}` : '<p class="muted">Shader material - not judged separately.</p>'}</div>
+			<div><p style="margin-top:0"><b>Description</b></p><p class="muted">${esc( m.desc )}</p></div></div></div>`;
+
+	} else if ( kind === 'i' ) {
+
+		h = `<div class="sheet"><div class="hd"><h3>Town square</h3><span class="x" data-close>&times;</span></div><div class="big"><img src="${esc( id )}"></div></div>`;
+
+	}
+	el.innerHTML = h; el.className = 'on'; document.body.style.overflow = 'hidden';
+
+}
+
+async function probe() {
+
+	// pages still being built: ask for each ( once per call ) until it answers, then show its links
+	for ( const d of DEMOS.flatMap( ( g ) => g[ 1 ] ) ) {
+
+		if ( ! d.probe || UP[ d.probe ] || UP[ d.probe ] === null ) continue;
+		UP[ d.probe ] = null; // asked
+		const ok = await fetch( R + d.probe, { method: 'HEAD', cache: 'no-store' } ).then( ( r ) => r.ok, () => false );
+		UP[ d.probe ] = ok || undefined;
+		if ( ok && state.tab === 'demos' ) body();
+
+	}
+
+}
+
+function renderAll() { header(); tabs(); body(); modal(); }
+
+document.addEventListener( 'click', ( e ) => {
+
+	const t = e.target.closest( '[data-tab],[data-cat],[data-status],[data-open],[data-close],[data-view],[data-round],[data-full]' );
+	if ( e.target.id === 'modal' ) { state.open = null; modal(); return; }
+	if ( ! t ) return;
+	const d = t.dataset;
+	if ( d.tab ) { e.preventDefault(); state.tab = d.tab; history.replaceState( null, '', '#' + d.tab ); tabs(); body(); window.scrollTo( 0, 0 ); }
+	else if ( d.cat ) { state.cat = d.cat; tabs(); body(); }
+	else if ( d.status ) { state.status = d.status; tabs(); body(); }
+	else if ( d.open ) { e.preventDefault(); state.open = d.open; state.view = d.open[ 0 ] === 'm' ? 'swatch' : 'hero'; state.round = null; modal(); $( '#modal' ).scrollTop = 0; }
+	else if ( d.full ) { state.open = 'i:' + d.full; modal(); }
+	else if ( 'close' in d ) { state.open = null; modal(); }
+	else if ( d.view ) { state.view = d.view; const y = $( '#modal' ).scrollTop; modal(); $( '#modal' ).scrollTop = y; }
+	else if ( d.round ) { state.round = + d.round; const y = $( '#modal' ).scrollTop; modal(); $( '#modal' ).scrollTop = y; }
+
+} );
+document.addEventListener( 'keydown', ( e ) => { if ( e.key === 'Escape' && state.open ) { state.open = null; modal(); } } );
+
+async function refresh() {
+
+	try {
+
+		const r = await fetch( R + 'api/manifest', { cache: 'no-store' } );
+		const m = await r.json();
+		const sig = JSON.stringify( [ m.stats, m.assets.map( ( a ) => [ a.status, a.score, a.round, a.renders, a.variants.length ] ), m.materials.map( ( x ) => [ x.score, x.swatch, x.preview ] ), m.town, m.town2 ] );
+		M = m;
+		if ( sig !== state.sig ) { state.sig = sig; const y = $( '#modal' ).scrollTop; renderAll(); $( '#modal' ).scrollTop = y; } else header();
+		if ( state.tab === 'demos' ) probe();
+		if ( M.static ) clearInterval( timer ); // a snapshot does not change
+
+	} catch ( err ) { $( '#live' ).innerHTML = '<span><span class="dot off"></span>server unreachable - retrying</span>'; }
+
+}
+const timer = setInterval( () => { if ( ! document.hidden ) refresh(); }, 8000 );
+refresh();
+document.addEventListener( 'visibilitychange', () => { if ( ! document.hidden && ! M?.static ) refresh(); } );
+</script>
+</body>
+</html>

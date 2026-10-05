@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Lantern Town Square</title>
+<style>
+html, body { margin: 0; height: 100%; background: #05060a; color: #d8cfc0; font: 13px/1.4 system-ui, sans-serif; overflow: hidden; overscroll-behavior: none; }
+canvas#gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+#veil { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+	background: radial-gradient(ellipse at 50% 60%, #1a130a 0%, #05060a 70%); z-index: 5; transition: opacity .6s; text-align: center; padding: 20px; }
+#veil.hide { opacity: 0; pointer-events: none; }
+#veil h1 { font: 300 30px/1.1 Georgia, serif; letter-spacing: .14em; margin: 0; color: #ffcf8a; text-shadow: 0 0 24px #ff9a3055; }
+#veil p { margin: 0; opacity: .75; max-width: 46ch; }
+#bar { width: min(320px, 70vw); height: 3px; background: #ffffff18; border-radius: 2px; overflow: hidden; }
+#bar i { display: block; height: 100%; width: 0; background: #ffbf6a; transition: width .2s; }
+#go { font: inherit; font-size: 15px; padding: 10px 26px; border-radius: 22px; border: 1px solid #ffbf6a88; background: #ffbf6a1c; color: #ffdca8; cursor: pointer; display: none; }
+#go:hover { background: #ffbf6a33; }
+#hud { position: fixed; left: 10px; top: 8px; z-index: 3; font: 11px/1.5 ui-monospace, monospace; opacity: .7; white-space: pre; pointer-events: none; text-shadow: 0 1px 2px #000; }
+#ui { position: fixed; right: 10px; top: 8px; z-index: 3; display: flex; gap: 6px; }
+#ui button, #ui select { font: inherit; font-size: 12px; background: #0009; color: #d8cfc0; border: 1px solid #ffffff2a; border-radius: 6px; padding: 5px 9px; }
+#help { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 3; opacity: .6; font-size: 12px; pointer-events: none; text-shadow: 0 1px 2px #000; text-align: center; }
+#stick { position: fixed; left: 22px; bottom: 26px; width: 120px; height: 120px; border-radius: 50%; border: 1px solid #ffffff30; background: #ffffff0c; z-index: 3; display: none; touch-action: none; }
+#stick i { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px; border-radius: 50%; background: #ffbf6a55; }
+.touch #stick { display: block; }
+.touch #help { display: none; }
+.capture #ui, .capture #help, .capture #stick { display: none; }
+</style>
+<script type="importmap">
+{ "imports": {
+	"three": "../../node_modules/three/build/three.webgpu.js",
+	"three/webgpu": "../../node_modules/three/build/three.webgpu.js",
+	"three/tsl": "../../node_modules/three/build/three.tsl.js",
+	"three/addons/": "../../node_modules/three/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="veil">
+	<h1>LANTERN TOWN SQUARE</h1>
+	<p id="msg">lighting the lamps…</p>
+	<div id="bar"><i></i></div>
+	<button id="go">Walk in</button>
+</div>
+<div id="hud"></div>
+<div id="ui">
+	<select id="quality" title="render quality"><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option><option value="phone">Phone</option></select>
+	<button id="tour" title="cycle through the review viewpoints">View ▸</button>
+	<a href="../../gallery/"><button>Gallery</button></a>
+</div>
+<div id="stick"><i></i></div>
+<div id="help">click to look · WASD / arrows walk · Shift run · V next viewpoint · H stats</div>
+<script>
+window.__log = [];
+const _push = ( k, a ) => { try { window.__log.push( k + ': ' + [ ...a ].map( ( x ) => ( x && x.stack ) ? x.stack : ( typeof x === 'object' ? JSON.stringify( x ) : String( x ) ) ).join( ' ' ) ); if ( window.__log.length > 300 ) window.__log.shift(); } catch ( e ) {} };
+for ( const k of [ 'error', 'warn' ] ) { const o = console[ k ].bind( console ); console[ k ] = ( ...a ) => { _push( k, a ); o( ...a ); }; }
+window.addEventListener( 'error', ( e ) => _push( 'onerror', [ e.message, e.filename + ':' + e.lineno ] ) );
+window.addEventListener( 'unhandledrejection', ( e ) => _push( 'rejection', [ e.reason ] ) );
+</script>
+<script type="module" src="./main.js"></script>
+</body>
+</html>

@@ -9,7 +9,8 @@
     "serve": "python3 tools/serve.py"
   },
   "dependencies": {
-    "three": "^0.186.1"
+    "three": "^0.186.1",
+    "three-mesh-bvh": "^0.9.15"
   },
   "devDependencies": {
     "draco3dgltf": "^1.5.7",

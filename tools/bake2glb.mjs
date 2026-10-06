@@ -152,6 +152,20 @@
 //                         emissive moves them to <layer>_glow materials with KHR_materials_emissive_strength (one
 //                         strength and colour per material: the light above 1 survives, its variation does not)
 //   --cut-alpha X         alphaCutoff of the leaf materials (default: from the layer's alpha, same cover as the page)
+//   --ground fold|shadows|ao|none
+//                         the two pictures the page reads per pixel on the ground (bake.gao: the dark rim where things
+//                         stand on the paving; bake.gsh: the lanterns' shadows - the ground's vertices hold their light
+//                         WITHOUT shadows). A stock viewer has no such shader, so fold (default where the bake has the
+//                         pictures) multiplies the page's factor into COLOR_0 of what faces up near the terrain, with
+//                         the page's numbers (occlusion: 0.6 of the open share cubed; shadows deepened where they are
+//                         local). On the finest level of the file (fine or near) the triangles are cut where a vertex
+//                         every 0.6 m cannot hold the factor: an edge is halved while it is longer than --ground-edge
+//                         (default 0.16 m) and the factor along it leaves the straight line between its ends by more
+//                         than --ground-tol (default 0.04). That is decided from the edge's two places alone, so every
+//                         triangle that has the edge cuts it alike and no gap opens. The coarser levels take the factor
+//                         per vertex, averaged over 0.25 / 0.5 / 1 m (near / mid / lo). shadows, ao: one of the two;
+//                         none: the bake's vertices as they are (the ground without the lanterns' shadows).
+//                         --ground-edge 0: no cutting, every level per vertex.
 //   --sky mesh|none       the night sky of the town page. glTF has no background or environment a stock importer
 //                         shows, so mesh (default) writes it as one more object: the node `sky` in the scene (never in
 //                         a LOD chain), an unlit material without COLOR_0, one WebP panorama of the page's sky (gradient,
@@ -203,12 +217,12 @@ function parseArgs( argv ) {
 		cells: 'all', split: 'town', out: path.join( ROOT, 'out/web/_nextglb' ), name: null, container: 'glb', buffers: 'one', order: 'cell', meshopt: null,
 		textures: 'auto', texSize: 512, texQuality: 90, texStore: 'embed', color: 'float', exposure: 1, lights: 'none', extras: 'min',
 		verify: false, gzip: false, quiet: false, check: null, hdr: false, live: false, force: false, prune: false, noLean: false, dropPacked: false,
-		grain: null, geometry: 'draco', dracoLevel: 7, posDrop: 0, uvDrop: 0, glow: 'clamp', clip: 'hue', lamps: 'lit', cutAlpha: null, sky: null, skySize: 4096, skyQuality: 90, skyMin: 140, given: new Set() };
+		grain: null, geometry: 'draco', dracoLevel: 7, posDrop: 0, uvDrop: 0, glow: 'clamp', clip: 'hue', lamps: 'lit', cutAlpha: null, ground: null, groundEdge: 0.16, groundTol: 0.04, sky: null, skySize: 4096, skyQuality: 90, skyMin: 140, given: new Set() };
 	const flags = { '--verify': 'verify', '--gzip': 'gzip', '--quiet': 'quiet', '--hdr': 'hdr', '--live': 'live', '--force': 'force', '--prune': 'prune', '--no-lean': 'noLean', '--drop-packed': 'dropPacked' };
 	const vals = { '--mode': 'mode', '--level': 'level', '--lods': 'lods', '--msft-lod': 'lods', '--tier': 'tier', '--tiers-from': 'tiersFrom', '--cells': 'cells', '--split': 'split', '--out': 'out',
 		'--name': 'name', '--container': 'container', '--buffers': 'buffers', '--order': 'order', '--meshopt': 'meshopt', '--textures': 'textures', '--tex-size': 'texSize', '--tex-quality': 'texQuality',
 		'--tex-store': 'texStore', '--color': 'color', '--exposure': 'exposure', '--lights': 'lights', '--extras': 'extras', '--check': 'check',
-		'--profile': 'mode', '--grain': 'grain', '--geometry': 'geometry', '--draco-level': 'dracoLevel', '--pos-drop': 'posDrop', '--uv-drop': 'uvDrop', '--glow': 'glow', '--clip': 'clip', '--lamps': 'lamps', '--cut-alpha': 'cutAlpha', '--sky': 'sky', '--sky-size': 'skySize', '--sky-quality': 'skyQuality', '--sky-min': 'skyMin' };
+		'--profile': 'mode', '--grain': 'grain', '--geometry': 'geometry', '--draco-level': 'dracoLevel', '--pos-drop': 'posDrop', '--uv-drop': 'uvDrop', '--glow': 'glow', '--clip': 'clip', '--lamps': 'lamps', '--cut-alpha': 'cutAlpha', '--ground': 'ground', '--ground-edge': 'groundEdge', '--ground-tol': 'groundTol', '--sky': 'sky', '--sky-size': 'skySize', '--sky-quality': 'skyQuality', '--sky-min': 'skyMin' };
 	for ( let i = 0; i < argv.length; i ++ ) {
 
 		const a = argv[ i ];
@@ -230,9 +244,14 @@ function parseArgs( argv ) {
 	one( 'mode', [ 'exact', 'portable', 'dcc' ] ); one( 'split', [ 'town', 'cell' ] ); one( 'container', [ 'glb', 'gltf' ] ); one( 'buffers', [ 'one', 'level', 'bake' ] ); one( 'order', [ 'cell', 'coarse' ] );
 	one( 'textures', [ 'auto', 'jpeg', 'png', 'webp', 'none' ] ); one( 'texStore', [ 'embed', 'external' ] ); one( 'color', [ 'float', 'u16', 'u8' ] );
 	one( 'lights', [ 'none', 'punctual', 'empties' ] ); one( 'extras', [ 'min', 'full' ] );
+	if ( o.mode !== 'dcc' && ( o.given.has( 'ground' ) || o.given.has( 'groundEdge' ) || o.given.has( 'groundTol' ) ) ) die( '--ground, --ground-edge, --ground-tol belong to the dcc profile' );
 	if ( o.mode === 'dcc' ) {
 
 		// the dcc profile's own defaults and limits (see the header)
+		if ( o.ground !== null ) one( 'ground', [ 'fold', 'shadows', 'ao', 'none' ] );
+		for ( const k of [ 'groundEdge', 'groundTol' ] ) { o[ k ] = parseFloat( o[ k ] ); if ( ! isFinite( o[ k ] ) ) die( `--${k}: not a number` ); }
+		if ( ! ( o.groundEdge === 0 || ( o.groundEdge >= 0.02 && o.groundEdge <= 10 ) ) ) die( '--ground-edge: 0 (no cutting) or 0.02 .. 10 m' );
+		if ( ! ( o.groundTol >= 0.005 && o.groundTol <= 1 ) ) die( '--ground-tol: 0.005 .. 1' );
 		if ( ! o.given.has( 'textures' ) || o.textures === 'auto' ) o.textures = 'webp';
 		if ( ! o.given.has( 'color' ) ) o.color = 'u8';
 		if ( ! o.given.has( 'texQuality' ) ) o.texQuality = 80;
@@ -1664,13 +1683,148 @@ function fallTable() {
 
 }
 
+// The ground's two pictures (bake.gao: tools/aomap.py; bake.gsh: ground_shadows() of tools/webbake_bl.py), which the
+// page reads per pixel (lite.js, 'The ground's contact occlusion'): the dark rim where things stand on the paving,
+// and the lanterns' shadows - the ground's vertices hold the lanterns' light WITHOUT them. Here the same factor goes
+// into the vertices' colours. q: { ao, shadows, edge, tol, cut (levels whose triangles are cut), blur (level: m),
+// lattice (grid units the cut's new vertices sit on), k, pow, sharp, bias, all, span (GROUND) }; K: grid units a metre.
+// -> height( x, z ): the terrain's; at( x, z, dh, up, out ): the factor [ r, g, b ] at a place dh above the terrain
+// that faces up by `up` (0 .. 1), as the page's pixel has it; around(): its mean within r metres;
+// cuts( a, b ): whether the edge between two places (grid units) is to be halved
+const GROUND = { k: 0.6, pow: 3, sharp: 5, bias: 0.95, all: 0.5, span: 3 }; // (the page's: GAO.k, GAO.pow, and of the shadows pow, bias, all, span)
+function dccGround( bake, q, K ) {
+
+	const man = bake.man, g = man.gao, s = q.shadows ? man.gsh : null;
+	if ( ! g || ! g.file || ( q.shadows && ( ! s || ! s.file ) ) ) die( 'this bake does not have the ground pictures the file was made with (gao, gsh)' );
+	const w = g.w, h = g.h, n = w * h;
+	const raw = ( f ) => { const b = magick( [ path.join( bake.dir, f.file ), '-depth', '8', 'rgb:-' ] ); if ( b.length !== n * 3 ) die( `${f.file}: not ${w} x ${h}` ); return b; };
+	// (red: the open share, green: the terrain's height; of the shadows red: sqrt v, green: sqrt f)
+	const R = new Uint8Array( n ), H = new Uint8Array( n ), V = new Uint8Array( n ).fill( 255 ), F = new Uint8Array( n ).fill( 255 );
+	{ const b = raw( g ); for ( let i = 0; i < n; i ++ ) { R[ i ] = b[ i * 3 ]; H[ i ] = b[ i * 3 + 1 ]; } }
+	if ( s ) { if ( s.w !== w || s.h !== h ) die( `${s.file}: not on the grid of ${g.file}` ); const b = raw( s ); for ( let i = 0; i < n; i ++ ) { V[ i ] = b[ i * 3 ]; F[ i ] = b[ i * 3 + 1 ]; } }
+	const bil = ( a, w, h, u, v ) => {
+
+		u = u < 0 ? 0 : u > w - 1 ? w - 1 : u; v = v < 0 ? 0 : v > h - 1 ? h - 1 : v;
+		const i = Math.min( Math.max( w - 2, 0 ), Math.floor( u ) ), j = Math.min( Math.max( h - 2, 0 ), Math.floor( v ) ), fu = u - i, fv = v - j, o = j * w + i, dx = w > 1 ? 1 : 0, dy = h > 1 ? w : 0;
+		return ( a[ o ] * ( 1 - fu ) + a[ o + dx ] * fu ) * ( 1 - fv ) + ( a[ o + dy ] * ( 1 - fu ) + a[ o + dy + dx ] * fu ) * fv;
+
+	};
+
+	// v around a place: the level of the picture's mip chain with texels of about `span` m, as the page's sampler reads
+	// it (each level the one before it at half the size, linear between two levels)
+	let vb = null;
+	if ( s ) {
+
+		const lv = Math.max( 0, Math.log2( q.span / g.texel ) ), l0 = Math.floor( lv ), lev = [];
+		let a = Float32Array.from( V ), aw = w, ah = h;
+		for ( let l = 0; ; l ++ ) {
+
+			if ( l >= l0 ) lev.push( { a, w: aw, h: ah } );
+			if ( l > l0 ) break;
+			const bw = Math.max( 1, aw >> 1 ), bh = Math.max( 1, ah >> 1 ), b = new Float32Array( bw * bh );
+			for ( let y = 0; y < bh; y ++ ) for ( let x = 0; x < bw; x ++ ) b[ y * bw + x ] = bil( a, aw, ah, ( x + 0.5 ) * aw / bw - 0.5, ( y + 0.5 ) * ah / bh - 0.5 );
+			a = b; aw = bw; ah = bh;
+
+		}
+
+		vb = { lev, fr: lv - l0 };
+
+	}
+
+	const sm = [ 0, 0, 0, 0 ]; let so = 0, w00 = 0, w10 = 0, w01 = 0, w11 = 0;
+	const place = ( x, z ) => {
+
+		let u = ( x - g.x0 ) / g.sx * w - 0.5, v = ( z - g.z0 ) / g.sz * h - 0.5;
+		u = u < 0 ? 0 : u > w - 1 ? w - 1 : u; v = v < 0 ? 0 : v > h - 1 ? h - 1 : v;
+		const i = Math.min( w - 2, Math.floor( u ) ), j = Math.min( h - 2, Math.floor( v ) ), fu = u - i, fv = v - j;
+		so = j * w + i; w00 = ( 1 - fu ) * ( 1 - fv ) / 255; w10 = fu * ( 1 - fv ) / 255; w01 = ( 1 - fu ) * fv / 255; w11 = fu * fv / 255;
+
+	};
+	const of = ( a ) => a[ so ] * w00 + a[ so + 1 ] * w10 + a[ so + w ] * w01 + a[ so + w + 1 ] * w11;
+	const height = ( x, z ) => { place( x, z ); return of( H ) * g.hs + g.h0; };
+	const b = s ? s.band : null, f0 = g.floor;
+	const at = ( x, z, dh, up, out ) => {
+
+		place( x, z );
+		let fa = 1;
+		if ( q.ao ) fa = 1 + ( of( R ) ** q.pow - 1 ) * sstep( - 0.3, - 0.15, dh ) * ( 1 - sstep( f0 + 0.03, f0 + 0.12, dh ) ) * up * q.k;
+		out[ 0 ] = out[ 1 ] = out[ 2 ] = fa;
+		if ( ! s ) return out;
+		const wt = sstep( b[ 0 ], b[ 1 ], dh ) * ( 1 - sstep( b[ 2 ], b[ 3 ], dh ) ) * up;
+		if ( wt <= 0 ) return out;
+		const sv = of( V ), sf = of( F ), v = sv * sv, f = sf * sf;
+		const un = ( x - g.x0 ) / g.sx, vn = ( z - g.z0 ) / g.sz, L0 = vb.lev[ 0 ], L1 = vb.lev[ 1 ];
+		const s0 = bil( L0.a, L0.w, L0.h, un * L0.w - 0.5, vn * L0.h - 0.5 ), s1 = bil( L1.a, L1.w, L1.h, un * L1.w - 0.5, vn * L1.h - 0.5 ), sb = ( s0 + ( s1 - s0 ) * vb.fr ) / 255;
+		// (a shadow is deepened where it is local: against the share around the place)
+		const c = 1 + ( Math.min( 1, Math.max( 0, v / Math.max( sb * sb * q.bias, 0.02 ) ) ) ** q.sharp - 1 ) * wt;
+		const vs = v * c, half = 1 + ( c - 1 ) * q.all;
+		for ( let k = 0; k < 3; k ++ ) { const fill = s.cF[ k ] * f, lan = s.cD[ k ] * ( 1 - f ); out[ k ] *= ( fill + lan * ( v + ( vs - v ) * wt ) ) / Math.max( fill + lan * ( v + ( 1 - v ) * wt ), 1e-5 ) * half; }
+		return out;
+
+	};
+
+	// (13 places of a square grid inside the circle)
+	const DISK = []; for ( let i = - 2; i <= 2; i ++ ) for ( let j = - 2; j <= 2; j ++ ) if ( i * i + j * j <= 4 ) DISK.push( [ i / 2, j / 2 ] );
+	const tmp = [ 0, 0, 0 ];
+	const around = ( x, z, dh, up, r, out ) => {
+
+		let a0 = 0, a1 = 0, a2 = 0;
+		for ( const [ dx, dz ] of DISK ) { at( x + dx * r, z + dz * r, dh, up, tmp ); a0 += tmp[ 0 ]; a1 += tmp[ 1 ]; a2 += tmp[ 2 ]; }
+		out[ 0 ] = a0 / DISK.length; out[ 1 ] = a1 / DISK.length; out[ 2 ] = a2 / DISK.length;
+		return out;
+
+	};
+
+	// Whether the factor along the edge a - b (as on flat ground: up 1) is more than a straight line between its ends
+	// can hold - read along the edge at every texel, and beside it (a quarter of its length to both sides at the
+	// middle, an eighth at the quarters: what crosses the triangles next to it). A matter of the two places alone, in
+	// an order that does not depend on which is given first: every triangle that has the edge - in any object, cell
+	// or material - cuts it or leaves it alike, and the cut opens no gap.
+	const Fa = [ 0, 0, 0 ], Fb = [ 0, 0, 0 ], Fp = [ 0, 0, 0 ], Fq = [ 0, 0, 0 ];
+	const BESIDE = [ [ 0.5, 0.25 ], [ 0.25, 0.125 ], [ 0.75, 0.125 ] ];
+	const cuts = ( a, b ) => {
+
+		if ( ( a[ 0 ] - b[ 0 ] || a[ 1 ] - b[ 1 ] || a[ 2 ] - b[ 2 ] ) > 0 ) { const t = a; a = b; b = t; }
+		const ax = a[ 0 ] / K, ay = a[ 1 ] / K, az = a[ 2 ] / K, dx = ( b[ 0 ] - a[ 0 ] ) / K, dy = ( b[ 1 ] - a[ 1 ] ) / K, dz = ( b[ 2 ] - a[ 2 ] ) / K;
+		const len = Math.sqrt( dx * dx + dy * dy + dz * dz );
+		if ( ! ( len > q.edge ) ) return false;
+		const n = Math.min( 16, Math.max( 2, Math.ceil( len / g.texel ) ) );
+		at( ax, az, ay - height( ax, az ), 1, Fa ); at( ax + dx, az + dz, ay + dy - height( ax + dx, az + dz ), 1, Fb );
+		for ( let i = 1; i < n; i ++ ) {
+
+			const t = i / n, x = ax + dx * t, z = az + dz * t;
+			at( x, z, ay + dy * t - height( x, z ), 1, Fp );
+			for ( let k = 0; k < 3; k ++ ) if ( Math.abs( Fp[ k ] - ( Fa[ k ] + ( Fb[ k ] - Fa[ k ] ) * t ) ) > q.tol ) return true;
+
+		}
+
+		const lx = Math.sqrt( dx * dx + dz * dz );
+		if ( lx > 1e-6 ) for ( const [ t, o ] of BESIDE ) {
+
+			const x = ax + dx * t, z = az + dz * t, dh = ay + dy * t - height( x, z ), ox = - dz / lx * o * len, oz = dx / lx * o * len;
+			at( x + ox, z + oz, dh, 1, Fp ); at( x - ox, z - oz, dh, 1, Fq );
+			for ( let k = 0; k < 3; k ++ ) if ( Math.abs( ( Fp[ k ] + Fq[ k ] ) / 2 - ( Fa[ k ] + ( Fb[ k ] - Fa[ k ] ) * t ) ) > q.tol ) return true;
+
+		}
+
+		return false;
+
+	};
+
+	// (lo .. hi: the heights above the terrain within which the factor is not 1)
+	const lo = Math.min( q.ao ? - 0.3 : Infinity, b ? b[ 0 ] : Infinity ), hi = Math.max( q.ao ? f0 + 0.12 : - Infinity, b ? b[ 3 ] : - Infinity );
+	return { K, cut: q.cut || [], blur: q.blur || {}, lattice: q.lattice || 1, lo, hi, height, at, around, cuts };
+
+}
+
 // Every triangle of `pairs` ([ cell, level ]) by material: Map key -> { kind, layer, glow, n, pos (world, grid units),
 // uv (whole numbers, see above; null: none), col (4 per vertex), ix, step (all positions are multiples of it) }.
-// P: { K, S, gain( layer ), mean( layer ), glow, clip, pane (dccPane), cMax, UR, CA, noUV( layer ) }
+// P: { K, S, gain( layer ), mean( layer ), glow, clip, pane (dccPane), cMax, UR, CA, noUV( layer ), ground (dccGround; null: not folded) }
 function dccCollect( bake, P, pairs ) {
 
 	const accs = new Map();
 	let degenerate = 0, mixed = 0, over = 0, channels = 0, bright = 0, panes = 0, added = 0, globes = 0;
+	const GR = P.ground || null, ground = { tris: 0, verts: 0, cut: 0, added: 0 };
 	for ( const [ c, level ] of pairs ) {
 
 		const m = c[ level ], dec = bake.decode( m, bake.blob( c, level ) ), W = dec.W;
@@ -1697,6 +1851,7 @@ function dccCollect( bake, P, pairs ) {
 		}
 
 		const remap = new Int32Array( m.nv );
+		let reachOf = null; // (per vertex: 1 within the heights the ground's pictures act on, 2 not)
 		const bodies = P.pane ? P.pane.bodies.filter( ( b ) => [ 0, 1, 2 ].every( ( j ) => b[ j ] > m.bmin[ j ] - 0.5 && b[ j ] < m.bmax[ j ] + 0.5 ) ) : [];
 		for ( const [ key, { kind, layer, glow, tris } ] of groups ) {
 
@@ -1755,6 +1910,168 @@ function dccCollect( bake, P, pairs ) {
 				acc.col.n += 4;
 
 			};
+
+			// The ground's pictures in the opaque surfaces (P.ground, dccGround): what faces up near the terrain takes the
+			// page's factor at its vertices, and on a level that is cut (GR.cut) its triangles are halved along every edge
+			// GR.cuts() names, again and again, until the vertices can hold the factor. New vertices sit on the grid, with
+			// the UV and the light of the middle of their edge.
+			if ( GR && kind === K_OPAQUE ) {
+
+				const nv = m.nv, cutting = GR.cut.includes( level ), blur = cutting ? 0 : GR.blur[ level ] || 0, L = GR.lattice, K = P.K;
+				if ( cutting ) acc.step = gcd( acc.step, L );
+				if ( ! reachOf ) reachOf = new Uint8Array( nv );
+				const xp = new Grow( Int32Array, 768 ), xu = new Grow( Int32Array, 512 ), xl = new Grow( Float64Array, 1024 ), xr = new Grow( Uint8Array, 256 ); let nx = 0;
+				const vers = new Map(), mids = new Map();
+				// (an edge the cut itself drew inside a triangle: how many cuts deep. Such an edge belongs to that triangle's
+				// pieces alone, and past GEN it stays whole - so a sliver whose point lies on its own long edge, which the
+				// test may leave whole while it halves the parts of it, comes to an end. Edges of the bake's triangles and
+				// their halves are never held back: their neighbours cut them by the same test.)
+				const gens = new Map(), GEN = 8, ekey = ( a, b ) => ( a < b ? a * 67108864 + b : b * 67108864 + a ), gen = ( a, b ) => gens.get( ekey( a, b ) ) || 0;
+				const pN = [ 0, 0, 0 ], pA = [ 0, 0, 0 ], pB = [ 0, 0, 0 ], pC = [ 0, 0, 0 ], pO = [ 0, 0, 0 ], lA = [ 0, 0, 0, 0 ], lB = [ 0, 0, 0, 0 ], lO = [ 0, 0, 0, 0 ], fO = [ 0, 0, 0 ];
+				const posOf = ( v, o ) => {
+
+					if ( v < nv ) { const r = v * W; o[ 0 ] = mi[ 0 ] + rec[ r ] * step; o[ 1 ] = mi[ 1 ] + rec[ r + 1 ] * step; o[ 2 ] = mi[ 2 ] + rec[ r + 2 ] * step; }
+					else { const r = ( v - nv ) * 3, a = xp.a; o[ 0 ] = a[ r ]; o[ 1 ] = a[ r + 1 ]; o[ 2 ] = a[ r + 2 ]; }
+					return o;
+
+				};
+				const reach = ( p ) => { const x = p[ 0 ] / K, z = p[ 2 ] / K, dh = p[ 1 ] / K - GR.height( x, z ); return dh > GR.lo && dh < GR.hi; };
+				const near = ( v ) => { if ( v >= nv ) return xr.a[ v - nv ] === 1; let r = reachOf[ v ]; if ( ! r ) r = reachOf[ v ] = reach( posOf( v, pN ) ) ? 1 : 2; return r === 1; };
+				// a vertex's light before the factor: [ r, g, b, 1: a light seen directly (2: an opal globe) ]
+				const lightOf = ( v, o ) => {
+
+					if ( v >= nv ) { const r = ( v - nv ) * 4, a = xl.a; o[ 0 ] = a[ r ]; o[ 1 ] = a[ r + 1 ]; o[ 2 ] = a[ r + 2 ]; o[ 3 ] = a[ r + 3 ]; return o; }
+					const r = v * W;
+					let body = null;
+					if ( bodies.length && rec[ r + 9 ] >= GLOW_AUX ) {
+
+						const x = m.min[ 0 ] + rec[ r ] * m.q, y = m.min[ 1 ] + rec[ r + 1 ] * m.q, z = m.min[ 2 ] + rec[ r + 2 ] * m.q;
+						for ( const b of bodies ) if ( ( x - b[ 0 ] ) ** 2 + ( y - b[ 1 ] ) ** 2 + ( z - b[ 2 ] ) ** 2 <= b[ 3 ] ) { body = b; break; }
+
+					}
+
+					if ( body ) { const k = P.pane.body / G; o[ 0 ] = body[ 4 ] * k; o[ 1 ] = body[ 5 ] * k; o[ 2 ] = body[ 6 ] * k; o[ 3 ] = 2; return o; }
+					const e0 = rec[ r + 6 ] / 65535, e1 = rec[ r + 7 ] / 65535, e2 = rec[ r + 8 ] / 65535;
+					o[ 0 ] = e0 * e0 * P.S / G; o[ 1 ] = e1 * e1 * P.S / G; o[ 2 ] = e2 * e2 * P.S / G; o[ 3 ] = source && rec[ r + 9 ] >= GLOW_AUX ? 1 : 0;
+					return o;
+
+				};
+				const uvOf = ( v, j ) => ( v < nv ? rec[ v * W + 4 + j ] : xu.a[ ( v - nv ) * 2 + j ] );
+				// the vertex in the middle of the edge a - b (- 1: the edge stays whole)
+				const split = ( a, b ) => {
+
+					if ( ! near( a ) || ! near( b ) ) return - 1;
+					const lo = a < b ? a : b, hi = a < b ? b : a, key = lo * 67108864 + hi;
+					let mv = mids.get( key ); if ( mv !== undefined ) return mv;
+					mv = - 1;
+					const eg = gens.get( key ) || 0;
+					posOf( lo, pA ); posOf( hi, pB );
+					if ( eg <= GEN && GR.cuts( pA, pB ) ) {
+
+						pN[ 0 ] = Math.floor( ( pA[ 0 ] + pB[ 0 ] ) / ( 2 * L ) + 0.5 ) * L; pN[ 1 ] = Math.floor( ( pA[ 1 ] + pB[ 1 ] ) / ( 2 * L ) + 0.5 ) * L; pN[ 2 ] = Math.floor( ( pA[ 2 ] + pB[ 2 ] ) / ( 2 * L ) + 0.5 ) * L;
+						const same = ( p ) => p[ 0 ] === pN[ 0 ] && p[ 1 ] === pN[ 1 ] && p[ 2 ] === pN[ 2 ];
+						if ( ! same( pA ) && ! same( pB ) ) {
+
+							mv = nv + nx ++;
+							if ( eg ) { gens.set( ekey( lo, mv ), eg ); gens.set( ekey( mv, hi ), eg ); }
+							const xa = xp.need( 3 ); xa[ xp.n ] = pN[ 0 ]; xa[ xp.n + 1 ] = pN[ 1 ]; xa[ xp.n + 2 ] = pN[ 2 ]; xp.n += 3;
+							const ra = xr.need( 1 ); ra[ xr.n ++ ] = reach( pN ) ? 1 : 2;
+							if ( acc.uv ) { const u0 = Math.round( ( uvOf( lo, 0 ) + uvOf( hi, 0 ) ) / 2 ), u1 = Math.round( ( uvOf( lo, 1 ) + uvOf( hi, 1 ) ) / 2 ), ua = xu.need( 2 ); ua[ xu.n ] = u0; ua[ xu.n + 1 ] = u1; xu.n += 2; }
+							lightOf( lo, lA ); lightOf( hi, lB );
+							const la = xl.need( 4 ); la[ xl.n ] = ( lA[ 0 ] + lB[ 0 ] ) / 2; la[ xl.n + 1 ] = ( lA[ 1 ] + lB[ 1 ] ) / 2; la[ xl.n + 2 ] = ( lA[ 2 ] + lB[ 2 ] ) / 2; la[ xl.n + 3 ] = lA[ 3 ] && lB[ 3 ] ? 1 : 0; xl.n += 4;
+
+						}
+
+					}
+
+					mids.set( key, mv );
+					return mv;
+
+				};
+				// the file's vertex for v as a triangle that faces up by q eighths has it
+				const out = ( v, q ) => {
+
+					if ( q && ! near( v ) ) q = 0;
+					const plain = q === 0 && v < nv, key = v * 16 + q;
+					let o = plain ? remap[ v ] : vers.get( key );
+					if ( o !== undefined && o >= 0 ) return o;
+					o = acc.n ++;
+					posOf( v, pO );
+					const pa = acc.pos.need( 3 ), pn = acc.pos.n; pa[ pn ] = pO[ 0 ]; pa[ pn + 1 ] = pO[ 1 ]; pa[ pn + 2 ] = pO[ 2 ]; acc.pos.n += 3;
+					if ( acc.uv ) { const ua = acc.uv.need( 2 ), un = acc.uv.n; ua[ un ] = uvOf( v, 0 ); ua[ un + 1 ] = uvOf( v, 1 ); acc.uv.n += 2; }
+					lightOf( v, lO );
+					if ( lO[ 3 ] === 2 ) globes ++;
+					if ( q && ! lO[ 3 ] ) {
+
+						const x = pO[ 0 ] / K, z = pO[ 2 ] / K, dh = pO[ 1 ] / K - GR.height( x, z );
+						if ( blur ) GR.around( x, z, dh, q / 8, blur, fO ); else GR.at( x, z, dh, q / 8, fO );
+						lO[ 0 ] *= fO[ 0 ]; lO[ 1 ] *= fO[ 1 ]; lO[ 2 ] *= fO[ 2 ]; ground.verts ++;
+
+					}
+
+					colour( lO[ 0 ], lO[ 1 ], lO[ 2 ], 1, lO[ 3 ] > 0 );
+					if ( plain ) remap[ v ] = o; else vers.set( key, o );
+					return o;
+
+				};
+				let leaves = 0;
+				const leaf = ( a, b, e, q ) => { const i0 = out( a, q ), i1 = out( b, q ), i2 = out( e, q ), ixa = acc.ix.need( 3 ), n = acc.ix.n; ixa[ n ] = i0; ixa[ n + 1 ] = i1; ixa[ n + 2 ] = i2; acc.ix.n += 3; leaves ++; };
+				const dist2 = ( a, b ) => { posOf( a, pA ); posOf( b, pB ); return ( pA[ 0 ] - pB[ 0 ] ) ** 2 + ( pA[ 1 ] - pB[ 1 ] ) ** 2 + ( pA[ 2 ] - pB[ 2 ] ) ** 2; };
+				const emit = ( a, b, e, q, depth ) => {
+
+					let mab = split( a, b ), mbe = split( b, e ), mea = split( e, a );
+					const n = ( mab >= 0 ) + ( mbe >= 0 ) + ( mea >= 0 );
+					if ( n === 0 ) return leaf( a, b, e, q );
+					if ( depth > 200 ) die( `internal: the ground's cut does not end in ${c.k}:${level}` );
+					const ng = 1 + Math.max( gen( a, b ), gen( b, e ), gen( e, a ) );
+					if ( n === 3 ) { gens.set( ekey( mab, mea ), ng ); gens.set( ekey( mab, mbe ), ng ); gens.set( ekey( mea, mbe ), ng ); emit( a, mab, mea, q, depth + 1 ); emit( mab, b, mbe, q, depth + 1 ); emit( mea, mbe, e, q, depth + 1 ); emit( mab, mbe, mea, q, depth + 1 ); return; }
+					if ( n === 2 ) {
+
+						// (turned so that a - b and b - e are the cut edges; the four-sided rest by its shorter diagonal)
+						if ( mab < 0 ) { const t = a; a = b; b = e; e = t; mab = mbe; mbe = mea; }
+						else if ( mbe < 0 ) { const t = b; b = a; a = e; e = t; mbe = mab; mab = mea; }
+						gens.set( ekey( mab, mbe ), ng );
+						const first = dist2( a, mbe ) <= dist2( mab, e );
+						gens.set( first ? ekey( a, mbe ) : ekey( mab, e ), ng );
+						emit( mab, b, mbe, q, depth + 1 );
+						if ( first ) { emit( a, mab, mbe, q, depth + 1 ); emit( a, mbe, e, q, depth + 1 ); }
+						else { emit( a, mab, e, q, depth + 1 ); emit( mab, mbe, e, q, depth + 1 ); }
+						return;
+
+					}
+
+					// (turned so that a - b is the cut edge)
+					if ( mbe >= 0 ) { const t = a; a = b; b = e; e = t; mab = mbe; }
+					else if ( mea >= 0 ) { const t = b; b = a; a = e; e = t; mab = mea; }
+					gens.set( ekey( mab, e ), ng );
+					emit( a, mab, e, q, depth + 1 ); emit( mab, b, e, q, depth + 1 );
+
+				};
+				for ( let i = 0; i < tris.length; i ++ ) {
+
+					const t = tris[ i ], a = idx[ t ], b = idx[ t + 1 ], e = idx[ t + 2 ];
+					const nb = near( a ) + near( b ) + near( e );
+					// (how far it faces up, in eighths: the page's weight, from the face normal)
+					let q = 0;
+					if ( nb ) {
+
+						posOf( a, pA ); posOf( b, pB ); posOf( e, pC );
+						const ux = pB[ 0 ] - pA[ 0 ], uy = pB[ 1 ] - pA[ 1 ], uz = pB[ 2 ] - pA[ 2 ], vx = pC[ 0 ] - pA[ 0 ], vy = pC[ 1 ] - pA[ 1 ], vz = pC[ 2 ] - pA[ 2 ];
+						const n0 = uy * vz - uz * vy, n1 = uz * vx - ux * vz, n2 = ux * vy - uy * vx, ln = Math.sqrt( n0 * n0 + n1 * n1 + n2 * n2 );
+						q = ln > 0 ? Math.round( sstep( 0.5, 0.8, Math.abs( n1 ) / ln ) * 8 ) : 0;
+						if ( q ) ground.tris ++;
+
+					}
+
+					leaves = 0;
+					if ( cutting && nb >= 2 ) emit( a, b, e, q, 0 ); else leaf( a, b, e, q );
+					if ( leaves > 1 ) { ground.cut ++; ground.added += leaves - 1; added += leaves - 1; }
+
+				}
+
+				continue;
+
+			}
 
 			const f = [ 0, 0, 0, 0 ];
 			for ( let i = 0; i < tris.length; i ++ ) {
@@ -1854,7 +2171,7 @@ function dccCollect( bake, P, pairs ) {
 
 	}
 
-	return { accs, degenerate, mixed, over, channels, bright, panes, added, globes };
+	return { accs, degenerate, mixed, over, channels, bright, panes, added, globes, ground };
 
 }
 
@@ -2471,8 +2788,25 @@ function buildDcc( o, bake, tiers, cells, stem ) {
 	for ( const layer of st.layers ) tex.measure( layer );
 	const man = bake.man, UR = 2 * man.uv_range;
 	const P = { K, S: man.colour_scale * o.exposure, gain: ( layer ) => tex.gain.get( layer ) || 1, mean: ( layer ) => tex.mean.has( layer ) ? tex.mean.get( layer ) : 1, glow: o.glow === 'emissive', clip: o.clip, pane: dccPane( man, o.lamps ), cMax: o.color === 'u16' ? 65535 : 255, UR, CA: man.cut_aux || 4,
-		noUV: ( layer ) => tex.isBlank( layer ) };
-	const stats = { cells: 0, levels: 0, tris: 0, verts: 0, mixed: 0, over: 0, channels: 0, max: st.max, chains: 0, degenerate: 0, prims: 0, floatPos: 0, bakeTris: 0, geometry: 0, panes: 0, added: 0, globes: 0 };
+		noUV: ( layer ) => tex.isBlank( layer ), ground: null };
+	// the ground's pictures (--ground): the finest level of the file is cut, while that is one seen from near by
+	let gq = null;
+	if ( o.ground !== 'none' && man.gao && man.gao.file ) {
+
+		const mode = o.ground || 'fold', sh = mode !== 'ao' && !! ( man.gsh && man.gsh.file );
+		if ( mode === 'shadows' && ! sh ) die( '--ground shadows: this bake has its shadows in the vertices (no gsh)' );
+		if ( mode !== 'shadows' || sh ) {
+
+			gq = { ...GROUND, ao: mode !== 'shadows', shadows: sh, edge: o.groundEdge, tol: o.groundTol, cut: o.groundEdge > 0 && ( chain[ 0 ] === 'fine' || chain[ 0 ] === 'near' ) ? [ chain[ 0 ] ] : [], blur: { near: 0.25, mid: 0.5, lo: 1 }, lattice: 0,
+				maps: [ man.gao.v || 0, sh ? man.gsh.v || 0 : 0 ] };
+			for ( const [ c, l ] of all ) if ( gq.cut.includes( l ) ) { gq.lattice = gcd( gq.lattice, Math.round( c[ l ].q * K ) ); for ( const v of c[ l ].min ) gq.lattice = gcd( gq.lattice, Math.round( v * K ) ); }
+			gq.lattice = gq.lattice || 1;
+			P.ground = dccGround( bake, gq, K );
+
+		}
+
+	} else if ( o.ground && o.ground !== 'none' ) die( `--ground ${o.ground}: this bake has no ground pictures (gao)` );
+	const stats = { cells: 0, levels: 0, tris: 0, verts: 0, mixed: 0, over: 0, channels: 0, max: st.max, chains: 0, degenerate: 0, prims: 0, floatPos: 0, bakeTris: 0, geometry: 0, panes: 0, added: 0, globes: 0, ground: gq ? { ...gq, tris: 0, verts: 0, split: 0, more: 0 } : null };
 	stats.cells = new Set( all.map( ( [ c ] ) => c.k ) ).size;
 	g.buffer( 'main', () => ( {} ) );
 	const expect = new Map(); // node -> [ sum, sum, triangles ]
@@ -2481,7 +2815,8 @@ function buildDcc( o, bake, tiers, cells, stem ) {
 	const emit = ( u, ri ) => {
 
 		const rung = u.rungs[ ri ], at0 = g.bufs[ 0 ].length;
-		const { accs, degenerate, mixed, over, channels, panes, added, globes } = dccCollect( bake, P, rung.pairs );
+		const { accs, degenerate, mixed, over, channels, panes, added, globes, ground } = dccCollect( bake, P, rung.pairs );
+		if ( stats.ground ) { stats.ground.tris += ground.tris; stats.ground.verts += ground.verts; stats.ground.split += ground.cut; stats.ground.more += ground.added; }
 		stats.degenerate += degenerate; stats.mixed += mixed; stats.over += over; stats.channels += channels; stats.levels ++; stats.panes += panes; stats.added += added; stats.globes += globes;
 		for ( const [ c, l ] of rung.pairs ) stats.bakeTris += c[ l ].ni / 3;
 		stats.bakeTris += added;
@@ -2645,7 +2980,7 @@ function buildDcc( o, bake, tiers, cells, stem ) {
 	const gains = {}; for ( const [ layer, G ] of tex.gain ) if ( G !== 1 ) gains[ layer ] = G;
 	const texel = {}; for ( const [ layer, v ] of tex.mean ) if ( v !== 1 ) texel[ layer ] = v;
 	g.json.scenes[ 0 ].extras = { baked: { baked: man.baked, spawn: man.data && man.data.spawn, ...( sky ? { sky: sky.extras } : {} ) },
-		export: { tool: 'bake2glb', mode: 'dcc', levels: chain, grain: o.grain, geometry: o.geometry, color: o.color, exposure: o.exposure, glow: o.glow, clip: o.clip, lamps: o.lamps, grid: K, cut_uv_grid: CUT_UV_GRID, gain: gains, texel, front,
+		export: { tool: 'bake2glb', mode: 'dcc', levels: chain, grain: o.grain, geometry: o.geometry, color: o.color, exposure: o.exposure, glow: o.glow, clip: o.clip, lamps: o.lamps, grid: K, cut_uv_grid: CUT_UV_GRID, gain: gains, texel, front, ...( gq ? { ground: gq } : {} ),
 			light: 'shown = texture * COLOR_0 = the baked light * exposure on the bake\'s texture (gain: how much brighter a layer\'s image is than the bake\'s, its COLOR_0 that much darker); light above 1 after the gain: ' + ( o.clip === 'channel' ? 'each channel clamped at 1' : o.clip === 'hue' ? 'divided by its largest channel' : 'divided by its largest channel m, then mixed towards white by 1 - 1 / sqrt( max( 1, m * texel ) ), texel = the mean of the layer\'s image' ) + ( o.clip === 'channel' ? '' : '; blended glass first moves such light into its alpha (colour * alpha kept)' ),
 			fall: 'falling water: the mean of the page\'s animated sheet (its noise averaged out): alpha = baked opacity * mean cover, colour = baked light * mean share lit, by the two masks in the vertex\'s layer slot',
 			...( o.lods ? { tier: o.tier, tier_table: tiers[ o.tier ], fov: FOV, aspect: ASPECT } : {} ) } };
@@ -2666,7 +3001,7 @@ function verifyDcc( bake, file, expect ) {
 	const fail = ( msg ) => { console.error( `bake2glb: VERIFY FAILED: ${path.basename( file )}: ${msg}` ); process.exit( 2 ); };
 	const man = bake.man, K = ex.grid, UR = 2 * man.uv_range, cMax = ex.color === 'u16' ? 65535 : 255;
 	const blank = ( layer ) => man.layers[ layer ] === 'white';
-	const P = { K, S: man.colour_scale * ex.exposure, gain: ( layer ) => ( ex.gain && ex.gain[ layer ] ) || 1, mean: ( layer ) => ( ex.texel && ex.texel[ layer ] !== undefined ? ex.texel[ layer ] : 1 ), glow: ex.glow === 'emissive', clip: ex.clip || 'channel', pane: dccPane( man, ex.lamps || 'baked' ), cMax, UR, CA: man.cut_aux || 4, noUV: blank };
+	const P = { K, S: man.colour_scale * ex.exposure, gain: ( layer ) => ( ex.gain && ex.gain[ layer ] ) || 1, mean: ( layer ) => ( ex.texel && ex.texel[ layer ] !== undefined ? ex.texel[ layer ] : 1 ), glow: ex.glow === 'emissive', clip: ex.clip || 'channel', pane: dccPane( man, ex.lamps || 'baked' ), cMax, UR, CA: man.cut_aux || 4, noUV: blank, ground: ex.ground ? dccGround( bake, ex.ground, K ) : null };
 	const byKey = new Map( man.chunks.map( ( c ) => [ c.k, c ] ) );
 	const acc = ( i ) => {
 
@@ -2679,7 +3014,7 @@ function verifyDcc( bake, file, expect ) {
 
 	};
 
-	let nodes = 0, tris = 0, bakeTris = 0, prims = 0, added = 0;
+	let nodes = 0, tris = 0, bakeTris = 0, prims = 0, added = 0, cut = 0;
 	j.nodes.forEach( ( node, ni ) => {
 
 		if ( node.mesh === undefined || ! node.extras || ! node.extras.baked ) return;
@@ -2687,7 +3022,7 @@ function verifyDcc( bake, file, expect ) {
 		const want = dccCollect( bake, P, pairs ), wsum = [ 0, 0, 0 ];
 		for ( const a of want.accs.values() ) dccHash( wsum, a.pos.get(), a.uv ? a.uv.get() : null, a.col.get(), a.ix.get(), a.ix.n );
 		for ( const [ c, l ] of pairs ) bakeTris += c[ l ].ni / 3;
-		bakeTris += want.added; added += want.added;
+		bakeTris += want.added; added += want.added; cut += want.ground.added;
 		const T = node.translation || [ 0, 0, 0 ], Sc = node.scale || [ 1, 1, 1 ];
 		const sum = [ 0, 0, 0 ];
 		const box = [ Infinity, Infinity, Infinity, - Infinity, - Infinity, - Infinity ];
@@ -2730,7 +3065,7 @@ function verifyDcc( bake, file, expect ) {
 		nodes ++; tris += sum[ 2 ];
 
 	} );
-	return { nodes, tris, degenerate: bakeTris - tris, prims, added, sky: verifySky( bake, gl, fail ) };
+	return { nodes, tris, degenerate: bakeTris - tris, prims, added, cut, ground: !! ex.ground, sky: verifySky( bake, gl, fail ) };
 
 }
 
@@ -2974,7 +3309,9 @@ for ( const [ list, stem ] of jobs ) {
 
 		}
 
-		if ( s.panes ) say( `  lamps: ${s.panes} lantern pane triangles lit as the page's shader lights them (--lamps ${o.lamps})` + ( s.added ? `, cut into ${s.panes + s.added}: ${s.added} triangles more than the bake has` : '' ) + ( s.globes ? `; ${s.globes} vertices of opal globes lit` : '' ) );
+		if ( s.panes ) say( `  lamps: ${s.panes} lantern pane triangles lit as the page's shader lights them (--lamps ${o.lamps})` + ( s.added - ( s.ground ? s.ground.more : 0 ) ? `, cut into ${s.panes + s.added - ( s.ground ? s.ground.more : 0 )}: ${s.added - ( s.ground ? s.ground.more : 0 )} triangles more than the bake has` : '' ) + ( s.globes ? `; ${s.globes} vertices of opal globes lit` : '' ) );
+		if ( s.ground ) { const G = s.ground; say( `  ground: ${[ G.ao && 'contact occlusion', G.shadows && 'the lanterns\' shadows' ].filter( Boolean ).join( ' and ' )} folded into COLOR_0 at ${G.verts} vertices of ${G.tris} triangles that face up near the terrain (--ground ${o.ground || 'fold'})`
+			+ ( G.cut.length ? `; on ${G.cut.join( ', ' )} ${G.split} of them cut where the factor changes (edges over ${G.edge} m, tolerance ${G.tol}): ${G.more} triangles more than the bake has` : '; no level cut' ) ); }
 		const gained = s.images.filter( ( i ) => i.gain !== 1 );
 		if ( gained.length ) say( `  gain: ${gained.map( ( i ) => `${i.name} ${i.gain}` ).join( ', ' )}` );
 		if ( s.cutoff.length ) say( `  leaves: alphaCutoff ${s.cutoff.map( ( [ n, c ] ) => `${n} ${c}` ).join( ', ' )}` + ( s.share ? ` (share of a card kept: ${Object.entries( s.share ).map( ( [ l, v ] ) => `${bake.man.layers[ l ]} ${v.page} on the page, ${v.middle} with the page's middle value ${CUT_ALPHA}` ).join( '; ' )})` : '' ) );
@@ -2985,7 +3322,7 @@ for ( const [ list, stem ] of jobs ) {
 	if ( ! o.quiet ) process.stdout.write( line );
 	if ( o.verify ) {
 
-		if ( o.mode === 'dcc' ) { const v = verifyDcc( bake, res.main, res.expect ); say( `  verify: ${v.nodes} objects, ${v.prims} primitives, ${v.tris} triangles read back: positions, UVs and colours (at --color's depth) are the bake's, triangle by triangle (${v.degenerate} of the bake's triangles have no area${v.added ? `; ${v.added} more than the bake's, from cutting lantern panes` : ''})` + ( v.sky ? `; the sky: ${v.sky.tris} triangles facing its centre, UVs within ${v.sky.swim.toFixed( 2 )} texels of the direction, the cells ${v.sky.inside.toFixed( 1 )} m inside the shell` : '' ) ); }
+		if ( o.mode === 'dcc' ) { const v = verifyDcc( bake, res.main, res.expect ); say( `  verify: ${v.nodes} objects, ${v.prims} primitives, ${v.tris} triangles read back: positions, UVs and colours (at --color's depth) are the bake's, triangle by triangle (${v.degenerate} of the bake's triangles have no area${v.ground ? '; the ground\'s factor as the bake\'s pictures give it' : ''}${v.added ? `; ${v.added} more than the bake's, from cutting lantern panes${v.cut ? ' and the ground' : ''}` : ''})` + ( v.sky ? `; the sky: ${v.sky.tris} triangles facing its centre, UVs within ${v.sky.swim.toFixed( 2 )} texels of the direction, the cells ${v.sky.inside.toFixed( 1 )} m inside the shell` : '' ) ); }
 		else if ( o.mode === 'exact' ) { const v = verifyExact( bake, res.main, list ); say( `  verify: ${v.levels} levels, ${v.vbytes} vertex bytes and ${v.ibytes} index bytes identical to the decoded bake; draw ranges, placement and extras match` ); }
 		else { const v = verifyPortable( bake, res.main, list ); say( `  verify: ${v.levels} levels, ${v.tris} triangles, as many as the bake draws; bounds inside the bake's boxes` ); }
 

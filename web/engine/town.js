@@ -5,6 +5,7 @@
 // Coordinates in town.json are Blender's (X east, Y north, Z up, metres); three is (x, z, -y).
 
 import { THREE, createFlame, createHalo, createContactShadows, capLight } from './engine.js';
+import { fetchSafe } from './net.js';
 
 export const TIERS = {
 	// lod: scales the LOD switch distances. pool: shadow-casting lantern lights. lights: clustered light budget.
@@ -405,7 +406,7 @@ export class Town {
 		const eng = this.eng, T = this.tier;
 		// the GLBs as released (engine/glbrelease.js, tools/glbopt.mjs), or eng.assets itself; asked for alongside town.json
 		const release = import( './glbrelease.js' ).then( ( m ) => m.openRelease( eng.assets, url ) ).catch( () => eng.assets );
-		const data = this.data = await fetch( url, { cache: 'no-cache' } ).then( ( r ) => r.json() );
+		const data = this.data = await fetchSafe( url, { cache: 'no-cache' } ).then( ( r ) => r.json() );
 		this.assets = await release;
 		this.nav = new Nav( data );
 

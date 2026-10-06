@@ -26,6 +26,7 @@ import { Nav } from './town.js';
 import { ktxLayers, ktxSharpen, ktxNR, ktxInfo } from './lite_ktx.js';
 import { tcLayers, tcFirst, tcSharpen, tcNR } from './lite_tc.js';
 import { glbOn, glbBase, glbAhead, glbLevel, geoTimed, geoLevel } from './lite_glb.js';
+import { fetchSafe } from './net.js';
 
 // what each baked tier draws. mid / near: distance (m) from the camera to a cell inside which that level is shown
 // (a cell leaves a level 20 % + 2 m further out than it entered it - `hold` m at most - so walking along a border
@@ -98,7 +99,7 @@ async function bakeAge( base, town, man ) {
 
 	try {
 
-		const r = await fetch( `${base}/out/${town}/town.json`, { cache: 'no-cache' } );
+		const r = await fetchSafe( `${base}/out/${town}/town.json`, { cache: 'no-cache' } );
 		if ( ! r.ok || ! man.town ) return null;
 		const buf = await r.arrayBuffer();
 		let same = buf.byteLength === man.town.bytes;
@@ -140,7 +141,7 @@ export async function loadBake( base, tier, town = 'town', { stale = false } = {
 		// The full bake's manifest says whether it is there and current (man.lean: its folder); both are asked for at
 		// once, so these tiers do not wait for one answer after the other before their first byte of the town
 		const lean = BAKED_TIERS[ tier ].top !== 'fine' && q.get( 'lean' ) !== '0';
-		const get = ( d ) => fetch( `${d}/manifest.json`, { cache: 'no-cache' } ).then( ( r ) => ( r.ok ? r.json() : null ) );
+		const get = ( d ) => fetchSafe( `${d}/manifest.json`, { cache: 'no-cache' } ).then( ( r ) => ( r.ok ? r.json() : null ) );
 		const ahead = lean ? get( dir + '/' + LEAN_DIR ).catch( () => null ) : null;
 		let man = await get( dir );
 		if ( ! man ) return null;
@@ -1136,7 +1137,7 @@ export class BakedTown {
 
 		}, onChunk ) ) { this._wake(); return; }
 
-		const r = await fetch( `${bake.dir}/${bake.base.file}?v=${bake.baked}` );
+		const r = await fetchSafe( `${bake.dir}/${bake.base.file}?v=${bake.baked}` );
 		if ( ! r.ok ) throw new Error( `${bake.base.file}: ${r.status}` );
 		let buf = new Uint8Array( bake.base.bytes );
 		let got = 0, next = 0;
@@ -1193,7 +1194,7 @@ export class BakedTown {
 		const data = new Uint8Array( size * size * 4 * n );
 		const page = async ( name ) => {
 
-			const r = await fetch( `${bake.dir}/${name}.webp?v=${bake.baked}` );
+			const r = await fetchSafe( `${bake.dir}/${name}.webp?v=${bake.baked}` );
 			if ( ! r.ok ) throw new Error( `${name}.webp: ${r.status}` );
 			const blob = await r.blob();
 			this.bytes += blob.size;
@@ -1261,7 +1262,7 @@ export class BakedTown {
 			const data = new Uint8Array( size * size * 4 * layers.length );
 			return Promise.all( layers.map( ( i, k ) => queue( async () => {
 
-				const r = await fetch( `${bake.dir}/${t.files[ i ]}.webp?v=${bake.baked}` );
+				const r = await fetchSafe( `${bake.dir}/${t.files[ i ]}.webp?v=${bake.baked}` );
 				if ( ! r.ok ) throw new Error( `${t.files[ i ]}.webp: ${r.status}` );
 				const blob = await r.blob();
 				this.bytes += blob.size;
@@ -1334,7 +1335,7 @@ export class BakedTown {
 			const i = turn ++ % slots.length;
 			return ( slots[ i ] = slots[ i ].then( async () => {
 
-				const r = await fetch( `${bake.dir}/${file}.webp?v=${bake.baked}` );
+				const r = await fetchSafe( `${bake.dir}/${file}.webp?v=${bake.baked}` );
 				if ( ! r.ok ) throw new Error( `${file}.webp: ${r.status}` );
 				const blob = await r.blob();
 				this.bytes += blob.size;
@@ -1380,7 +1381,7 @@ export class BakedTown {
 		const k = Math.min( 1, this.T.gao || 1 ), w = Math.max( 1, Math.round( g.w * k ) ), h = Math.max( 1, Math.round( g.h * k ) );
 		const read = async ( q ) => {
 
-			const r = await fetch( `${bake.dir}/${q.file}?v=${bake.baked}.${q.v || 0}` );
+			const r = await fetchSafe( `${bake.dir}/${q.file}?v=${bake.baked}.${q.v || 0}` );
 			if ( ! r.ok ) throw new Error( `${q.file}: ${r.status}` );
 			const blob = await r.blob();
 			this.bytes += blob.size;
@@ -2601,7 +2602,7 @@ export class BakedTown {
 		if ( ! b.pvs || ! this._planes || new URLSearchParams( location.search ).get( 'occ' ) === '0' ) return;
 		try {
 
-			const r = await fetch( `${b.dir}/${b.pvs.file}?v=${b.baked}.${b.pvs.v || 0}` ); // (v: sets can be made again for the same bake)
+			const r = await fetchSafe( `${b.dir}/${b.pvs.file}?v=${b.baked}.${b.pvs.v || 0}` ); // (v: sets can be made again for the same bake)
 			if ( ! r.ok ) return;
 			const p = await r.json();
 			if ( p.v !== 1 || p.baked !== b.baked ) return; // (of another bake)
@@ -2662,7 +2663,7 @@ export class BakedTown {
 		let bytes = glbOn( this ) && ! m.url ? await glbLevel( this, c.m.k, name, m ) : null;
 		if ( ! bytes ) {
 
-			const r = await fetch( m.url || `${this.bake.dir}/${m.file}?v=${this.bake.baked}` );
+			const r = await fetchSafe( m.url || `${this.bake.dir}/${m.file}?v=${this.bake.baked}` );
 			if ( ! r.ok ) throw new Error( `${m.file}: ${r.status}` );
 			bytes = new Uint8Array( await r.arrayBuffer() );
 			this.bytes += bytes.length;
@@ -2695,12 +2696,14 @@ export class BakedTown {
 			}
 
 			geoLevel( this, t0, t1, m.len );
+			c.fails = 0;
 
 		} catch ( e ) {
 
 			c.failed = ( c.failed || 0 ) | ( 1 << l );
 			const w = 'baked town: ' + ( e.message || e );
-			if ( ! this.warnings.includes( w ) ) this.warnings.push( w );
+			if ( ! this.warnings.includes( w ) ) { this.warnings.push( w ); console.warn( w ); }
+			if ( e.net ) this._again( c, l );
 
 		} finally {
 
@@ -2709,6 +2712,36 @@ export class BakedTown {
 			this._wake();
 
 		}
+
+	}
+
+	// a level the network did not bring (net.js gave up on it) is not gone for good: it may be asked for again after
+	// a wait that doubles with every failure of the cell (5 s .. 60 s), and at once when the page is shown or online again
+	_again( c, l ) {
+
+		const bit = 1 << l, free = () => {
+
+			if ( ! ( c.lost & bit ) ) return;
+			c.lost &= ~ bit; c.failed &= ~ bit;
+			this._dirty = true;
+			this._wake();
+
+		};
+
+		c.lost = ( c.lost || 0 ) | bit;
+		c.fails = ( c.fails || 0 ) + 1;
+		setTimeout( free, Math.min( 60, 2.5 * 2 ** c.fails ) * 1000 );
+		if ( this._back || typeof window === 'undefined' ) return;
+		this._back = () => {
+
+			if ( document.hidden ) return;
+			for ( const k of this.chunks ) if ( k.lost ) { k.failed &= ~ k.lost; k.lost = 0; this._dirty = true; }
+			this._wake();
+
+		};
+
+		window.addEventListener( 'online', this._back );
+		document.addEventListener( 'visibilitychange', this._back );
 
 	}
 

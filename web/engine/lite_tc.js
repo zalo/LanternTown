@@ -29,6 +29,7 @@
 import * as THREE from 'three';
 import { encodeBC7 } from './bc7m6.js';
 import { solidASTC } from './astc4.js';
+import { fetchSafe } from './net.js';
 
 const Q = new URLSearchParams( location.search );
 const now = () => performance.now();
@@ -256,7 +257,7 @@ function array( town, size, files, srgb, set, fill = [ 0, 0, 0, 255 ] ) {
 			try {
 
 				const t = now();
-				const r = await fetch( `${bake.dir}/${file}.webp?v=${bake.baked}`, GATED && town.wait !== 'all' ? { priority: 'low' } : {} );
+				const r = await fetchSafe( `${bake.dir}/${file}.webp?v=${bake.baked}`, GATED && town.wait !== 'all' ? { priority: 'low' } : {} );
 				if ( ! r.ok ) throw new Error( `${file}.webp: ${r.status}` );
 				const blob = await r.blob();
 				town.bytes += blob.size; S.bytes += blob.size; S.ms.fetch += now() - t;
@@ -296,7 +297,7 @@ export async function tcLayers( town ) {
 		const mips = levels( size, n );
 		const blob = async ( name ) => {
 
-			const r = await fetch( `${bake.dir}/${name}.webp?v=${bake.baked}` );
+			const r = await fetchSafe( `${bake.dir}/${name}.webp?v=${bake.baked}` );
 			if ( ! r.ok ) throw new Error( `${name}.webp: ${r.status}` );
 			const b = await r.blob();
 			town.bytes += b.size; S.bytes += b.size;

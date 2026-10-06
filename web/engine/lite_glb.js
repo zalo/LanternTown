@@ -23,6 +23,11 @@
 // short, of another bake) ends in the packed file of the same level and a line in town.warnings; where they are not,
 // it is the error the packed file's would have been. town.geo says what was loaded and how long it took (the town
 // page: __stats.geo).
+// The files are read through net.js: a request that stops arriving (a tab back from the background, a link that
+// dropped) is asked for again from where it stopped. base.glb is asked for until it is whole; a level that the
+// network did not bring is an error with `net: true`, which the runtime asks for again later (BakedTown._fetch).
+
+import { openBytes, netStats, FOREVER } from './net.js';
 
 export const GLB_V = 1; // LIVE_V of tools/bake2glb.mjs: manifest.glb.v
 export const DEFAULT_FMT = 'glb'; // ?fmt=packed: the packed files, of a bake that keeps them
@@ -45,7 +50,8 @@ export function geoState( town ) {
 		base: { file: null, bytes: 0, json: 0, t: { ask: 0, answer: 0, read: 0, toc: 0, first: 0, done: 0 } },
 		// levels: the files fetched while walking; net: ms from asking to the last byte, build: ms from there to the mesh (sums)
 		// last: when the latest of them stood
-		levels: { files: 0, bytes: 0, json: 0, net: 0, build: 0, slowest: 0, last: 0 } };
+		levels: { files: 0, bytes: 0, json: 0, net: 0, build: 0, slowest: 0, last: 0 },
+		io: netStats }; // (requests asked for again, see net.js)
 	if ( asked === 'glb' && ! has ) fallback( town, new Error( 'the bake names no .glb files (node tools/bake2glb.mjs <bake dir> --live)' ) );
 	if ( asked === 'packed' && only && town.warnings ) town.warnings.push( 'baked town: ?fmt=packed, but this bake keeps no packed files: loading its .glb files' );
 	return G;
@@ -210,7 +216,7 @@ export function glbAhead( town ) {
 	const G = geoState( town ), bake = town.bake;
 	if ( G.fmt !== 'glb' || G.ahead || G.base.t.ask || new URLSearchParams( location.search ).get( 'glbahead' ) === '0' ) return;
 	G.base.t.ask = Math.round( now() );
-	G.ahead = fetch( `${bake.dir}/${bake.glb.base.file}?v=${bake.baked}` ).then( ( r ) => { G.base.t.answer = Math.round( now() ); return r; }, ( e ) => ( { failed: e } ) );
+	G.ahead = openBytes( `${bake.dir}/${bake.glb.base.file}?v=${bake.baked}`, null, FOREVER );
 
 }
 
@@ -224,13 +230,12 @@ export async function glbBase( town, put, onChunk ) {
 	let next = 0;
 	try {
 
-		const ahead = G.ahead;
+		const b = G.ahead || openBytes( `${bake.dir}/${file}?v=${bake.baked}`, null, FOREVER );
 		G.ahead = null;
-		const r = ahead ? await ahead : await fetch( `${bake.dir}/${file}?v=${bake.baked}` );
-		if ( r.failed ) throw r.failed;
+		const r = await b.status();
 		if ( ! r.ok ) throw new Error( `${file}: ${r.status}` );
-		if ( ! T.answer ) T.answer = Math.round( now() );
-		const S = new GlbReader( file, bake.baked );
+		if ( ! T.answer ) T.answer = Math.round( b.answered || now() );
+		let S = new GlbReader( file, bake.baked );
 		const flush = () => {
 
 			if ( S.map && ! T.toc ) T.toc = Math.round( now() );
@@ -247,21 +252,13 @@ export async function glbBase( town, put, onChunk ) {
 
 		};
 
-		if ( r.body && r.body.getReader ) {
+		for ( ;; ) {
 
-			const rd = r.body.getReader();
-			for ( ;; ) {
-
-				const { done, value } = await rd.read();
-				if ( done ) break;
-				S.push( value );
-				flush();
-
-			}
-
-		} else {
-
-			S.push( new Uint8Array( await r.arrayBuffer() ) );
+			const p = await b.read();
+			if ( p.done ) break;
+			// (the server sent the file from its start again: read anew; the cells built so far stand)
+			if ( p.restart ) { S = new GlbReader( file, bake.baked ); continue; }
+			S.push( p.value );
 			flush();
 
 		}
@@ -289,10 +286,19 @@ export async function glbLevel( town, cell, level, m ) {
 	const bake = town.bake, G = geoState( town ), file = glbName( m.file );
 	try {
 
-		const r = await fetch( `${bake.dir}/${file}?v=${bake.baked}` );
+		const b = openBytes( `${bake.dir}/${file}?v=${bake.baked}` );
+		const r = await b.status();
 		if ( ! r.ok ) throw new Error( `${file}: ${r.status}` );
-		const S = new GlbReader( file, bake.baked );
-		S.push( new Uint8Array( await r.arrayBuffer() ) );
+		let S = new GlbReader( file, bake.baked );
+		for ( ;; ) {
+
+			const p = await b.read();
+			if ( p.done ) break;
+			if ( p.restart ) S = new GlbReader( file, bake.baked );
+			else S.push( p.value );
+
+		}
+
 		const bytes = S.complete ? S.level( cell, level, m ) : null;
 		if ( ! bytes ) throw new Error( `${file} is cut short (stale bake?)` );
 		town.bytes += S.got;
@@ -301,6 +307,7 @@ export async function glbLevel( town, cell, level, m ) {
 
 	} catch ( e ) {
 
+		if ( e.net ) throw e; // (the network, not the file: the caller asks again later)
 		fallback( town, e );
 		return null;
 

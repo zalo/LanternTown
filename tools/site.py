@@ -81,6 +81,8 @@ def plan(town2=False, glb=True, data=True):
             site[f"node_modules/three/{sub}/{r}"] = p
     for n in ("LICENSE", "package.json"):
         add(os.path.join(ROOT, "node_modules", "three", n), f"node_modules/three/{n}")
+    for n in ("build/index.module.js", "LICENSE", "package.json"):     # glbtown/?walk=bvh imports it (the one file, on demand)
+        add(os.path.join(ROOT, "node_modules", "three-mesh-bvh", n), f"node_modules/three-mesh-bvh/{n}")
     for p, r in walk(os.path.join(ROOT, "docs"), skip_dirs={"ref"}):
         if os.path.splitext(r)[1] in (".md", ".json", ".patch"):
             site[f"docs/{r}"] = p

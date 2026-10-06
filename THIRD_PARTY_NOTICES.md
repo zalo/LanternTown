@@ -35,6 +35,7 @@ The MIT licence text that applies to the three.js and Sonic Ether material:
 | Package | Use | Licence |
 |---|---|---|
 | [three](https://github.com/mrdoob/three.js) | renderer, loaders, post-processing nodes | MIT |
+| [three-mesh-bvh](https://github.com/gkjohnson/three-mesh-bvh) | collision with a model's own triangles on `web/glbtown/?walk=bvh` (`web/glbtown/bvhwalk.js` follows its character-movement example) | MIT |
 | [meshoptimizer](https://github.com/zeux/meshoptimizer) | simplification and vertex/index compression in the bake | MIT |
 | [draco3dgltf](https://github.com/google/draco) | Draco geometry in the portable GLB exports | Apache-2.0 |
 

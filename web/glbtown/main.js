@@ -93,6 +93,36 @@ try {
 	let meshes = 0; const mats = new Set();
 	gltf.scene.traverse( ( o ) => { if ( o.isMesh ) { meshes ++; mats.add( o.material ); o.matrixAutoUpdate = false; } } );
 	S.meshes = meshes; S.materials = mats.size; S.extensions = gltf.parser.json.extensionsUsed;
+	// ?vc=0: the file without its baked light - the vertex colours (COLOR_0) ignored, the albedo textures alone, unlit
+	// (?lit=1: lit instead by a plain sky light and a sun, the unlit materials swapped for standard ones, to see the shapes)
+	if ( Q.get( 'vc' ) === '0' ) {
+
+		const lit = Q.get( 'lit' ) === '1', swap = new Map();
+		gltf.scene.traverse( ( o ) => {
+
+			if ( ! o.isMesh || o.userData.sky === true ) return; // (the sky keeps its picture)
+			const m = o.material;
+			if ( lit ) {
+
+				if ( ! swap.has( m ) ) swap.set( m, new THREE.MeshStandardMaterial( { map: m.map, color: m.color, transparent: m.transparent, opacity: m.opacity, alphaTest: m.alphaTest, side: m.side, depthWrite: m.depthWrite, roughness: 0.85, metalness: 0, name: m.name } ) );
+				o.material = swap.get( m );
+
+			} else { m.vertexColors = false; m.needsUpdate = true; }
+
+		} );
+		if ( lit ) {
+
+			scene.add( new THREE.HemisphereLight( 0xbfd4ff, 0x3a2a1a, num( 'skylight', 1.2 ) ) );
+			const sun = new THREE.DirectionalLight( 0xfff1d6, num( 'sun', 2.2 ) );
+			sun.position.set( 40, 30, 60 );
+			scene.add( sun );
+
+		}
+
+		S.vc = lit ? 'off, lit' : 'off';
+
+	}
+
 	// the sky: a node of the file marked extras.sky. As a background, the same picture is read by view direction
 	// (GLTFLoader textures have flipY off, hence the node and not scene.background = texture)
 	let sky = null;

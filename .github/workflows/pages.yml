@@ -1,24 +1,26 @@
 # The static site on GitHub Pages: this repository's pages and engine + the generated data of one release.
 #
 # The repository holds source only. Everything generated (the baked town, the gallery's pictures, the one-file
-# .glb towns, the gallery's frozen data) is one tar, written on the authoring machine and kept as a release asset:
+# .glb towns, the gallery's frozen data) is the assets of one release, written on the authoring machine in parts
+# named by their content, so that only what changed is uploaded:
 #
-#     python3 tools/site.py --data-out out/site-data.tar
-#     gh release create data-1 out/site-data.tar --title "Site data 1" --notes "Generated data for the Pages site"
+#     python3 tools/site.py --upload data        # writes out/site-data/ and brings the release `data` up to date
 #
-# Once: Settings > Pages > Source: GitHub Actions. Then run this workflow from the Actions tab.
-# After a new bake: upload a new release and change DATA_TAG (or give the tag when starting the run).
+# Once: Settings > Pages > Source: GitHub Actions. Then run this workflow from the Actions tab (or it runs by itself
+# after a push to main). After a new bake: --upload again, then run it again.
 name: pages
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       data_tag:
-        description: Release that holds site-data.tar (empty - the DATA_TAG of the workflow file)
+        description: Release that holds the site data (empty - the DATA_TAG of the workflow file)
         required: false
 
 env:
-  DATA_TAG: data-1
+  DATA_TAG: data
 
 permissions:
   contents: read
@@ -44,9 +46,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ inputs.data_tag || env.DATA_TAG }}
-        run: gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern site-data.tar
+        run: gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir site-data
       - name: Assemble
-        run: python3 tools/site.py --out _site --data site-data.tar --copy
+        run: python3 tools/site.py --out _site --data site-data --copy
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -3,8 +3,9 @@
 GitHub Pages, Cloudflare Pages, any file server. Same URL layout as the live server, so the pages run unchanged.
 
     python3 tools/site.py [--out out/site] [--town2] [--no-glb] [--copy] [--dry]
-    python3 tools/site.py --data-out out/site-data.tar [--town2] [--no-glb]     the generated part alone, as one tar
-    python3 tools/site.py --out _site --data site-data.tar                      a checkout's pages + that tar
+    python3 tools/site.py --data-out out/site-data [--town2] [--no-glb]         the generated part alone, in parts
+    python3 tools/site.py --upload data [--town2] [--no-glb]                    ..and the parts that changed to a release
+    python3 tools/site.py --out _site --data site-data/                         a checkout's pages + those parts
 
 In:   the pages (web/, without the development copies and the pages that need the server), three.js out of
       node_modules/, docs/ (without the reference images), the baked town (out/web/_next, phone set included),
@@ -21,15 +22,23 @@ Files are hard links to the originals where the disk allows it (--copy: real cop
 The summary at the end holds the result against the hosts' limits. --dry: the summary only.
 
 The repository holds the source only; everything generated stays in out/. --data-out writes the site's generated
-part (what the site has below out/, and api/manifest) as one uncompressed tar - its content is compressed already -
-to keep outside the repository, e.g. as a release asset. --data builds the site in a clean checkout from that tar:
-pages, three.js and documents come from the checkout, nothing is read from out/ but the MSFT_lod kit's sources.
-.github/workflows/pages.yml does that for GitHub Pages.
+part (what the site has below out/, and api/manifest) as parts to keep outside the repository, e.g. as the assets of
+one GitHub release: uncompressed tars - their content is compressed already - named by the hash of what is in them
+(`<group>-<hash>.tar`), and site-data.json, the list of them. A file over PART_MB is a part of its own; the others
+are gathered by group (the bake, the one-file .glb towns, the pictures, ..) into PART_N tars each, by a hash of the
+path, so that a change touches the parts it is in and no other. --upload TAG writes the parts and brings the release
+up to date through `gh`: parts it has stay, parts it lacks go up, parts the list no longer names are deleted, the
+list replaced - a new bake uploads the bake, a new picture its part, nothing else. --data builds the site in a clean
+checkout from the parts (a folder, or the list): pages, three.js and documents come from the checkout, nothing is
+read from out/ but the MSFT_lod kit's sources. .github/workflows/pages.yml does that for GitHub Pages.
 """
+import hashlib
+import io
 import json
 import os
 import re
 import shutil
+import subprocess
 import sys
 import tarfile
 import time
@@ -45,6 +54,7 @@ GLBS = ["town_best.glb", "town_near.glb", "town_mid.glb", "town_lo.glb", "town_l
 # gallery links ( and whole cards, by their `probe` ) with nothing behind them on a static site
 DROP = [r"^town/\?quality=studio", r"refs=1", r"^ktx/", r"^probetest/", r"legacy=1", r"^viewer\.html", r"^bakeglb/$"]
 LIMITS = [("GitHub Pages", 1000e6, 100e6, None), ("Cloudflare Pages (free)", None, 25 * 1024 * 1024, 20000)]
+PART_MB, PART_N = 24, 8   # a file over this is a part of its own; the rest of a group goes into this many parts
 
 
 def walk(top, rel="", skip_dirs=(), skip=()):
@@ -130,39 +140,128 @@ def plan(town2=False, glb=True, data=True):
     return site, m, missing
 
 
-def write_data(path, site, manifest_bytes):
-    """the generated part of the site as one tar"""
-    n = size = 0
-    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
-    with tarfile.open(path, "w") as tar:
-        for dst, src in sorted(site.items()):
-            if dst.startswith("out/"):
-                tar.add(src, arcname=dst, recursive=False)
-                n += 1
-                size += os.path.getsize(src)
-        info = tarfile.TarInfo("api/manifest")
-        info.size = len(manifest_bytes)
-        info.mtime = int(time.time())
-        import io
-        tar.addfile(info, io.BytesIO(manifest_bytes))
-    print(f"site: {path}: {n + 1} files, {size / 1e6:.1f} MB of generated data, tar {os.path.getsize(path) / 1e6:.1f} MB")
+def group_of(dst):
+    """the part group of a file of the site's generated data: what changes together"""
+    if dst.startswith("out/web/_next/"):
+        return "bake"
+    if dst.startswith("out/web/_nextglb/"):
+        return "glb"
+    if dst.startswith("out/web/_"):
+        return "bake-" + dst.split("/")[2].strip("_")                     # a second town, the materials, the town pictures
+    if dst.startswith("out/web/"):
+        return "pictures"
+    return "meta"
+
+
+def file_hash(path):
+    h = hashlib.sha1()
+    with open(path, "rb") as fh:
+        for chunk in iter(lambda: fh.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def plan_parts(site, manifest_bytes):
+    """-> {part name: [(path in the site, source path or bytes)]} - the names carry a hash of the parts' content"""
+    files = [(dst, src) for dst, src in sorted(site.items()) if dst.startswith("out/")]
+    files.append(("api/manifest", manifest_bytes))
+    groups = {}
+    for dst, src in files:
+        g = group_of(dst)
+        if isinstance(src, str) and os.path.getsize(src) > PART_MB * 1e6:
+            key = (g, dst)                                                 # its own part
+        else:
+            key = (g, int(hashlib.sha1(dst.encode()).hexdigest()[:8], 16) % PART_N)
+        groups.setdefault(key, []).append((dst, src))
+    parts = {}
+    for (g, k), members in sorted(groups.items(), key=lambda x: (x[0][0], str(x[0][1]))):
+        h = hashlib.sha1()
+        for dst, src in members:
+            h.update(dst.encode() + b"\0" + (file_hash(src) if isinstance(src, str) else hashlib.sha1(src).hexdigest()).encode() + b"\0")
+        stem = re.sub(r"[^\w.\-]+", "_", os.path.basename(k)) if isinstance(k, str) else str(k)
+        parts[f"{g}-{stem}-{h.hexdigest()[:12]}.tar"] = members
+    return parts
+
+
+def write_data(folder, site, manifest_bytes):
+    """the generated part of the site as parts in `folder`: the tars named by the list, site-data.json, and no others.
+    Parts already there with the right name are left as they are. -> the list"""
+    os.makedirs(folder, exist_ok=True)
+    parts = plan_parts(site, manifest_bytes)
+    written = kept = size = 0
+    for name, members in parts.items():
+        path = os.path.join(folder, name)
+        if os.path.isfile(path):
+            kept += 1
+        else:
+            with tarfile.open(path + ".part", "w") as tar:
+                for dst, src in members:
+                    if isinstance(src, str):
+                        tar.add(src, arcname=dst, recursive=False)
+                    else:
+                        info = tarfile.TarInfo(dst)
+                        info.size = len(src)
+                        info.mtime = int(time.time())
+                        tar.addfile(info, io.BytesIO(src))
+            os.replace(path + ".part", path)
+            written += 1
+        size += os.path.getsize(path)
+    for n in os.listdir(folder):
+        if n not in parts and n != "site-data.json":
+            os.remove(os.path.join(folder, n))                             # a part of an earlier run
+    index = {"parts": sorted(parts), "files": sum(len(m) for m in parts.values()), "bytes": size, "time": time.time()}
+    with open(os.path.join(folder, "site-data.json"), "w") as fh:
+        json.dump(index, fh, indent=1)
+    print(f"site: {folder}: {len(parts)} parts, {written} written, {kept} as they were, {index['files']} files, {size / 1e6:.1f} MB")
+    return index
+
+
+def upload_data(tag, folder, index):
+    """bring the release `tag` up to date with the parts in `folder` (gh: the repository of the checkout)"""
+    def gh(*args, **kw):
+        r = subprocess.run(["gh", *args], capture_output=True, text=True, **kw)
+        if r.returncode:
+            sys.exit(f"site: gh {' '.join(args[:3])}: {r.stderr.strip() or r.stdout.strip()}")
+        return r.stdout
+    try:
+        have = {a["name"]: a["size"] for a in json.loads(gh("release", "view", tag, "--json", "assets"))["assets"]}
+    except SystemExit:
+        gh("release", "create", tag, "--title", f"Site data ({tag})", "--notes",
+           "The generated data of the GitHub Pages site, in parts: tools/site.py --upload. Not for reading by hand.")
+        have = {}
+    want = set(index["parts"])
+    up = [n for n in sorted(want) if n not in have or have[n] != os.path.getsize(os.path.join(folder, n))]
+    gone = [n for n in sorted(have) if n not in want and n != "site-data.json"]
+    for n in gone:
+        gh("release", "delete-asset", tag, n, "--yes")
+    for i, n in enumerate(up):
+        print(f"site: upload {i + 1}/{len(up)} {n} ({os.path.getsize(os.path.join(folder, n)) / 1e6:.1f} MB)", flush=True)
+        gh("release", "upload", tag, os.path.join(folder, n), "--clobber")
+    gh("release", "upload", tag, os.path.join(folder, "site-data.json"), "--clobber")
+    mb = sum(os.path.getsize(os.path.join(folder, n)) for n in up) / 1e6
+    print(f"site: release {tag}: {len(up)} parts uploaded ({mb:.1f} MB), {len(want) - len(up)} already there, {len(gone)} deleted")
 
 
 def read_data(path, out):
-    """unpack a --data-out tar below `out` -> {path in the site: bytes}; plain files with plain relative names only"""
+    """unpack the parts of a --data-out folder (or its site-data.json) below `out` -> {path in the site: bytes};
+    plain files with plain relative names only"""
+    folder = os.path.dirname(os.path.abspath(path)) if path.endswith(".json") else os.path.abspath(path)
+    with open(os.path.join(folder, "site-data.json")) as fh:
+        index = json.load(fh)
     got = {}
-    with tarfile.open(path, "r") as tar:
-        for m in tar:
-            name = m.name
-            if not m.isfile() or name.startswith("/") or ".." in name.split("/") or not re.match(r"^[\w./\-]+$", name):
-                sys.exit(f"site: {path}: unexpected entry {name!r}")
-            f = os.path.join(out, *name.split("/"))
-            os.makedirs(os.path.dirname(f), exist_ok=True)
-            with tar.extractfile(m) as src, open(f, "wb") as fh:
-                shutil.copyfileobj(src, fh, 1 << 20)
-            got[name] = m.size
+    for part in index["parts"]:
+        with tarfile.open(os.path.join(folder, part), "r") as tar:
+            for m in tar:
+                name = m.name
+                if not m.isfile() or name.startswith("/") or ".." in name.split("/") or not re.match(r"^[\w./\-]+$", name):
+                    sys.exit(f"site: {part}: unexpected entry {name!r}")
+                f = os.path.join(out, *name.split("/"))
+                os.makedirs(os.path.dirname(f), exist_ok=True)
+                with tar.extractfile(m) as src, open(f, "wb") as fh:
+                    shutil.copyfileobj(src, fh, 1 << 20)
+                got[name] = m.size
     if "api/manifest" not in got:
-        sys.exit(f"site: {path} has no api/manifest - not a tar written by --data-out")
+        sys.exit(f"site: {path} has no api/manifest - not written by --data-out")
     return got
 
 
@@ -175,8 +274,12 @@ def main():
     made = {".nojekyll": b""}
     if m is not None:
         made["api/manifest"] = json.dumps(m, separators=(",", ":")).encode()
-    if opt("--data-out"):
-        return write_data(opt("--data-out"), site, made["api/manifest"])
+    if opt("--data-out") or opt("--upload"):
+        folder = os.path.abspath(opt("--data-out") or os.path.join(ROOT, "out", "site-data"))
+        index = write_data(folder, site, made["api/manifest"])
+        if opt("--upload"):
+            upload_data(opt("--upload"), folder, index)
+        return
     unpacked = {}
     if "--dry" not in args:
         import srczip

@@ -111,19 +111,21 @@ with little room to grow.
 
 ### GitHub Pages without the data in the repository
 
-The repository stays small (source only); the site's generated part travels as one file beside it:
+The repository stays small (source only); the site's generated part travels as the assets of one
+release beside it, in parts named by their content, so that only what changed is uploaded:
 
 ```bash
-python3 tools/site.py --data-out out/site-data.tar      # on the machine that has out/: ~830 MB, one tar
-gh release create data-1 out/site-data.tar --title "Site data 1" --notes "Generated data for the Pages site"
+python3 tools/site.py --upload data     # on the machine that has out/: writes out/site-data/ (~830 MB in
+                                        # ~40 parts) and brings the release `data` up to date through gh
 ```
 
-`.github/workflows/pages.yml` (run by hand from the Actions tab) checks the repository out, installs
-three.js, downloads `site-data.tar` from the release named by its `DATA_TAG`, runs
-`python3 tools/site.py --out _site --data site-data.tar` and deploys the folder. Pages has to be set
-to "GitHub Actions" as its source once (Settings > Pages). So the pages and the engine on the site
-are always the repository's, and the baked town they load is the release the workflow names: after a
-new bake, upload a new release and change `DATA_TAG`.
+`.github/workflows/pages.yml` (on every push to `main`, or by hand from the Actions tab) checks the
+repository out, installs three.js, downloads the parts from the release named by its `DATA_TAG`, runs
+`python3 tools/site.py --out _site --data site-data` and deploys the folder. Pages has to be set to
+"GitHub Actions" as its source once (Settings > Pages). So the pages and the engine on the site are
+always the repository's, and the baked town they load is the release the workflow names: after a new
+bake, `--upload` again (the bake's parts go up, the pictures and `.glb` files stay) and run the
+workflow again.
 
 Deploying from a branch instead also works (`out/site/` pushed to a `gh-pages` branch; the folder
 holds the `.nojekyll` file that needs), at the price of every bake staying in that branch's history.

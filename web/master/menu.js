@@ -10,18 +10,12 @@ export function createVeil() {
 
 	return {
 		progress( share ) { $( 'bar' ).firstElementChild.style.width = Math.round( share * 100 ) + '%'; },
-		// the town is there: say how to walk, and wait for the visitor behind a button (a pointer lock needs a click)
+		// the town is there: the veil goes (a pointer lock needs a click: the first on the canvas takes it)
 		ready( canvas, touch ) {
 
 			$( 'msg' ).textContent = touch ? 'left stick to walk · drag to look' : 'click to look around · WASD to walk · Shift to run';
 			$( 'bar' ).style.display = 'none';
-			$( 'go' ).style.display = 'block';
-			$( 'go' ).onclick = () => {
-
-				$( 'veil' ).classList.add( 'hide' );
-				if ( ! touch ) canvas.requestPointerLock?.();
-
-			};
+			$( 'veil' ).classList.add( 'hide' );
 
 		},
 		fail( error ) { $( 'msg' ).textContent = 'failed to start: ' + ( error.message || error ); },

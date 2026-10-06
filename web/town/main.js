@@ -717,15 +717,10 @@ async function main() {
 	canvas.addEventListener( 'pointerup', lookEnd );
 	canvas.addEventListener( 'pointercancel', lookEnd );
 
+	// the town is there: the veil goes, the help line says how to walk (a pointer lock needs a click: the first on the canvas)
 	$( 'msg' ).textContent = touch ? 'left stick to walk · drag to look' : 'click to look around · WASD to walk · Shift to run';
 	$( 'bar' ).style.display = 'none';
-	$( 'go' ).style.display = 'block';
-	$( 'go' ).onclick = () => {
-
-		$( 'veil' ).classList.add( 'hide' );
-		if ( ! touch ) canvas.requestPointerLock?.();
-
-	};
+	$( 'veil' ).classList.add( 'hide' );
 
 	const clock = new THREE.Clock();
 	let acc = 0, frames = 0, fps = 0, tSec = 0;

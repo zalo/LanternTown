@@ -136,7 +136,10 @@ def plan(town2=False, glb=True, data=True):
         m["town2"] = None
     m = freeze(m)
     m["queue"] = {"alive": False}
-    m["static"] = {"time": time.time(), "drop": drop}
+    # (the time of the newest file, not of this run: the frozen data is the same bytes for the same files, and its
+    # part is uploaded again only when they change)
+    m["static"] = {"time": max(os.path.getmtime(p) for d, p in site.items() if d.startswith("out/")), "drop": drop}
+    m["time"] = m["static"]["time"]
     return site, m, missing
 
 

@@ -8,9 +8,67 @@ town, lit and baked offline, and drawn with three.js (`WebGPURenderer`, WebGL 2 
 ![The square from the gate](docs/img/gate.jpg)
 ![The fountain court](docs/img/fountain.jpg)
 
+**Live:** https://zalo.github.io/LanternTown/ - the [walk](https://zalo.github.io/LanternTown/town/) and the
+[gallery](https://zalo.github.io/LanternTown/gallery/). More routes under [Try it](#try-it).
+
 The project was built by coding agents under one person's direction. `prompt.md` is the brief with
 everything learnt on the way folded in: give it to an agent to reproduce the project, or read it
 as the long-form design document.
+
+## Try it
+
+Everything below runs from the GitHub Pages site. The walk needs WebGPU or WebGL 2; the quality menu on the
+page toggles the lens flare, the ground shadows and the preset without a reload.
+
+**Walk the town**
+
+- [High](https://zalo.github.io/LanternTown/town/) (the default) ·
+  [Medium](https://zalo.github.io/LanternTown/town/?quality=medium) ·
+  [Low](https://zalo.github.io/LanternTown/town/?quality=low) ·
+  [Phone](https://zalo.github.io/LanternTown/town/?quality=phone)
+
+**The town as one GLB** - the stock three.js `GLTFLoader`, nothing of ours in the loader
+
+- [Walk the finest file](https://zalo.github.io/LanternTown/glbtown/) (53 MB)
+- The coarser levels alone, what the level-of-detail system switches between:
+  [near](https://zalo.github.io/LanternTown/glbtown/?file=town_near.glb) ·
+  [middle](https://zalo.github.io/LanternTown/glbtown/?file=town_mid.glb) ·
+  [lowest](https://zalo.github.io/LanternTown/glbtown/?file=town_lo.glb) ·
+  [near, sky as a plain background](https://zalo.github.io/LanternTown/glbtown/?file=town_near.glb&sky=background)
+- [Orbit viewer](https://zalo.github.io/LanternTown/bakeglb/view.html?file=town_best.glb)
+- [Capsule collision with three-mesh-bvh](https://zalo.github.io/LanternTown/glbtown/?file=town_best.glb&walk=bvh&collide=town_lo.glb)
+  against the lowest level (a prototype; add `&bvhshow=1` to see the collision mesh)
+
+**`MSFT_lod` and the lazy `GLTFLoader`** - the patches in `docs/gltfloader/`
+
+- [Tier B, levels loaded lazily by range requests](https://zalo.github.io/LanternTown/gltflod/?tier=b) ·
+  [Tier A, no API change](https://zalo.github.io/LanternTown/gltflod/?tier=a) ·
+  [Tier B with each level tinted](https://zalo.github.io/LanternTown/gltflod/?tier=b&tint=1)
+- [The lazy loader on the one-file town with levels](https://zalo.github.io/LanternTown/bakeglb/view.html?file=town_lod.glb&loader=b) (88 MB, read in parts)
+- [The test kit's check page](https://zalo.github.io/LanternTown/out/web/_nextglb/msft_lod_kit/check.html) ·
+  [the patches](https://zalo.github.io/LanternTown/docs/gltfloader/README.md)
+
+**Textures compressed on the device** - WebP on the wire, GPU formats in memory, encoded at load time
+
+- [High, with a readout](https://zalo.github.io/LanternTown/town/?quality=high&ktxinfo=1) ·
+  [High, off](https://zalo.github.io/LanternTown/town/?quality=high&tc=0&ktxinfo=1) ·
+  [Phone, ASTC forced](https://zalo.github.io/LanternTown/town/?quality=phone&tcforce=astc&ktxinfo=1)
+
+**Downloads** - portable GLBs (unlit, baked light in the vertex colours, Draco, WebP) that open in Blender and three.js
+
+- One-file towns: [finest, 53 MB](https://zalo.github.io/LanternTown/out/web/_nextglb/town_best.glb) ·
+  [near, 32 MB](https://zalo.github.io/LanternTown/out/web/_nextglb/town_near.glb) ·
+  [middle, 12 MB](https://zalo.github.io/LanternTown/out/web/_nextglb/town_mid.glb) ·
+  [lowest, 6 MB](https://zalo.github.io/LanternTown/out/web/_nextglb/town_lo.glb) ·
+  [with `MSFT_lod` levels, 88 MB](https://zalo.github.io/LanternTown/out/web/_nextglb/town_lod.glb)
+- Level-of-detail demo files: [thirteen chunks around the spawn, 30 MB](https://zalo.github.io/LanternTown/out/web/_nextglb/portable_lod_spawn.glb) ·
+  [the same in the bake's own vertex format, 67 MB](https://zalo.github.io/LanternTown/out/web/_nextglb/exact_lod_spawn.glb)
+- [The source and `prompt.md` as one zip](https://zalo.github.io/LanternTown/api/source.zip) ·
+  [all of the above as cards](https://zalo.github.io/LanternTown/gallery/#demos)
+
+Not on the static site, because they read the full-detail models or need the local server: the Studio presets,
+the 3D asset viewer, the second town, the KTX2 and light-probe experiments and the benchmark (`python3
+tools/serve.py` serves them all).
 
 ## What is in here
 

@@ -196,6 +196,14 @@ range requests out of a single `.glb`). `web/gltflod/` is the demo, and `tools/b
 writes the town as portable GLBs (unlit, vertex-colour light, Draco, WebP, `MSFT_lod`) that open
 in Blender and in three.js.
 
+## Reusing the pipeline for another environment
+
+`skill/` packages everything here as a Claude Code skill, `parametric-environment`: the process in phases, the
+rubrics and brief templates, the measured lessons (what made assets pass, what the bake and the look needed, what
+cost time), and a ready-to-copy project with the toolkit, tools, runtime, materials and asset generators.
+`python3 skill/install.py` installs it to `~/.claude/skills/parametric-environment/`. It is written for any
+walkable environment, not only a town at night; the lantern town is its worked example.
+
 ## Credits
 
 The mood takes after the lamplit storybook town squares of late-90s and 2000s adventure games;

@@ -12,7 +12,7 @@ In:   the pages (web/, without the development copies and the pages that need th
       out/town/town.json, the gallery's pictures, the one-file .glb towns and LOD demo files (--no-glb: not those),
       the MSFT_lod test kit; --town2: the second town too.
 Made: api/manifest - the gallery's data, frozen (tools/manifest.py), with a `static` part that tells the gallery
-      which of its links have nothing behind them here; api/source.zip (tools/srczip.py); .nojekyll (GitHub Pages
+      which of its links have nothing behind them here; api/source.zip and api/skill.zip (tools/srczip.py); .nojekyll (GitHub Pages
       would otherwise skip every folder that starts with "_").
 Out:  the full-detail models (out/glb: the Studio preset and the 3D asset viewer), the first baked runtime, the
       benchmark's files, the reference images, telemetry (web/engine/telemetry.js posts to api/telemetry, which a
@@ -287,6 +287,7 @@ def main():
     if "--dry" not in args:
         import srczip
         made["api/source.zip"] = srczip.build(False)[0]
+        made["api/skill.zip"] = srczip.build_skill()[0]
         if os.path.isdir(out):
             if not os.path.isfile(os.path.join(out, ".nojekyll")):
                 sys.exit(f"site: {out} exists and is not a site folder made by this tool - not touching it")

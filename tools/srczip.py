@@ -3,6 +3,8 @@
 
     python3 tools/srczip.py [--refs] [-o FILE]     write the zip to FILE (default: print what would go in)
     GET /api/source.zip[?refs=1]                   tools/serve.py: built on request from the files as they are now
+    python3 tools/srczip.py --skill [-o FILE]      the Claude Code skill `parametric-environment` as one zip: skill/
+    GET /api/skill.zip                             (SKILL.md, references, templates) with this source as its project/
 
 In: the asset generators, materials, toolkit, tools (build, bake, pack, checks), town layouts, web pages and engines,
 docs, judge reviews, prompt.md and the package files. Out: everything generated (out/), node_modules, the three.js
@@ -19,7 +21,9 @@ import threading
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 NAME = "LanternTown"
-DIRS = ["assets", "materials", "tk", "tools", "town", "town2", "web", "docs"]
+DIRS = ["assets", "materials", "tk", "tools", "town", "town2", "web", "docs", "skill"]
+SKILL = "parametric-environment"       # the skill's folder name in its zip (and under ~/.claude/skills)
+SKILL_DOCS = ("AUTHORING.md", "QUALITY.md", "TOWN_QUALITY.md", "MATERIALS.md", "LOD.md", "API.md", "API_TEX.md")
 TOP = ["README.md", "LICENSE", "THIRD_PARTY_NOTICES.md", "prompt.md", "package.json", "package-lock.json", ".gitignore", ".github/workflows/pages.yml"]
 # source kept beside generated data: (folder, its sub-folders too?)
 EXTRA = [("out/web/_nextglb/msft_lod_kit", False)]
@@ -140,11 +144,49 @@ def build(refs=False):
         return _cache[refs][1], name
 
 
+def build_skill():
+    """-> (zip bytes, file name): the skill as skill/install.py assembles it - SKILL.md, references/ (with the docs
+    the references point at), templates/, and this source (less skill/ itself) as project/. Unzip into
+    ~/.claude/skills/ and Claude Code lists it as /parametric-environment."""
+    with _lock:
+        got, big = files(False)
+        sig = hashlib.sha1(("skill\n" + "\n".join(f"{rel} {st.st_mtime_ns} {st.st_size}" for _, rel, st in got)).encode()).hexdigest()
+        hit = _cache.get("skill")
+        if hit and hit[0] == sig:
+            return hit[1], hit[2]
+        newest = max(st.st_mtime for _, _, st in got)
+        t = time.localtime(newest)
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as z:
+            for path, rel, st in got:
+                if rel.startswith("skill/"):
+                    name = SKILL + "/" + rel[len("skill/"):]         # SKILL.md, references/, templates/, install.py
+                else:
+                    name = f"{SKILL}/project/{rel}"
+                try:
+                    with open(path, "rb") as f:
+                        data = f.read()
+                except OSError:
+                    continue
+                info = zipfile.ZipInfo(name, time.localtime(st.st_mtime)[:6])
+                info.compress_type = zipfile.ZIP_DEFLATED
+                info.external_attr = (st.st_mode & 0o777) << 16
+                z.writestr(info, data)
+                if rel.startswith("docs/") and rel[len("docs/"):] in SKILL_DOCS:
+                    info = zipfile.ZipInfo(f"{SKILL}/references/docs/{rel[len('docs/'):]}", time.localtime(st.st_mtime)[:6])
+                    info.compress_type = zipfile.ZIP_DEFLATED
+                    info.external_attr = 0o644 << 16
+                    z.writestr(info, data)
+        name = f"{SKILL}-skill-{time.strftime('%Y%m%d-%H%M', t)}.zip"
+        _cache["skill"] = (sig, buf.getvalue(), name)
+        return _cache["skill"][1], name
+
+
 def main():
     args = sys.argv[1:]
     refs = "--refs" in args
     if "-o" in args:
-        body, name = build(refs)
+        body, name = build_skill() if "--skill" in args else build(refs)
         dst = args[args.index("-o") + 1]
         with open(dst, "wb") as f:
             f.write(body)

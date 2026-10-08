@@ -64,6 +64,7 @@ page toggles the lens flare, the ground shadows and the preset without a reload.
 - Level-of-detail demo files: [thirteen chunks around the spawn, 30 MB](https://zalo.github.io/LanternTown/out/web/_nextglb/portable_lod_spawn.glb) ·
   [the same in the bake's own vertex format, 67 MB](https://zalo.github.io/LanternTown/out/web/_nextglb/exact_lod_spawn.glb)
 - [The source and `prompt.md` as one zip](https://zalo.github.io/LanternTown/api/source.zip) ·
+  [the pipeline as a Claude Code skill, `parametric-environment`](https://zalo.github.io/LanternTown/api/skill.zip) ·
   [all of the above as cards](https://zalo.github.io/LanternTown/gallery/#demos)
 
 Not on the static site, because they read the full-detail models or need the local server: the Studio presets,
@@ -201,7 +202,9 @@ in Blender and in three.js.
 `skill/` packages everything here as a Claude Code skill, `parametric-environment`: the process in phases, the
 rubrics and brief templates, the measured lessons (what made assets pass, what the bake and the look needed, what
 cost time), and a ready-to-copy project with the toolkit, tools, runtime, materials and asset generators.
-`python3 skill/install.py` installs it to `~/.claude/skills/parametric-environment/`. It is written for any
+`python3 skill/install.py` installs it to `~/.claude/skills/parametric-environment/`; the same thing zipped is
+[api/skill.zip](https://zalo.github.io/LanternTown/api/skill.zip) on the site (`python3 tools/srczip.py --skill -o skill.zip`
+makes it locally) - unzip it into `~/.claude/skills/`. It is written for any
 walkable environment, not only a town at night; the lantern town is its worked example.
 
 ## Credits

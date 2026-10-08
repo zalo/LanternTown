@@ -10,6 +10,7 @@ URL layout (all pages use RELATIVE urls so they work behind the /lp/<port>/ prox
     /docs/, /reviews/, /town-data/ -> docs/, reviews/, town/
     GET  /api/manifest   live project manifest for the gallery (tools/manifest.py)
     GET  /api/source.zip[?refs=1]   the project's source as one zip, built from the files as they are (tools/srczip.py)
+    GET  /api/skill.zip             the Claude Code skill `parametric-environment` with that source as its project/
     POST /api/upload?path=renders/<...>.png|webp|json&token=...   (render page -> out/renders)
     POST /api/telemetry  what a visitor's browser reports back (web/engine/telemetry.js -> tools/telemetry.py, out/.telemetry/)
 A page that asks for it (<script type="importmap" data-stamp>, the town's) goes out with every script of its own folder
@@ -281,11 +282,15 @@ class Handler(SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(body)
             return
-        if self.path.split("?", 1)[0].endswith("/api/source.zip"):
-            # the project's source as it is now (tools/srczip.py); ?refs=1: with the reference images
+        if self.path.split("?", 1)[0].endswith(("/api/source.zip", "/api/skill.zip")):
+            # the project's source as it is now (tools/srczip.py); ?refs=1: with the reference images;
+            # skill.zip: the Claude Code skill with this source as its project/
             q = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
             try:
-                body, name = tool("srczip").build(q.get("refs", ["0"])[0] not in ("", "0"))
+                if self.path.split("?", 1)[0].endswith("/api/skill.zip"):
+                    body, name = tool("srczip").build_skill()
+                else:
+                    body, name = tool("srczip").build(q.get("refs", ["0"])[0] not in ("", "0"))
             except Exception as e:
                 return self._reply(500, {"ok": False, "error": str(e)})
             self.send_response(200)
